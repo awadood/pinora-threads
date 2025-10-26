@@ -11,7 +11,6 @@ use RuntimeException;
 /**
  * It ensures that the array is either empty or contains integer value.
  *
- * @package App\Http\Rules
  * @author Abdul Wadood
  */
 class IntegerArrayRule implements ValidationRule
@@ -21,17 +20,14 @@ class IntegerArrayRule implements ValidationRule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString $fail
-     * @return void
+     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         try {
             $builder = ValidatorBuilder::forArray($this->pattern);
             $builder->build()->validate($value);
-        } catch (ArrayFailedValidation | RuntimeException $ex) {
+        } catch (ArrayFailedValidation|RuntimeException $ex) {
             $fail($ex->getMessage());
         }
     }

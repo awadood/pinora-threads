@@ -3,8 +3,8 @@
 namespace App\Models\Traits;
 
 use Illuminate\Support\Str;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Trait to implement default Spatie Activity Log configuration.
@@ -16,8 +16,6 @@ trait Loggable
 
     /**
      * Define the Activity Log options with smart defaults.
-     * 
-     * @return \Spatie\Activitylog\LogOptions
      */
     public function getActivitylogOptions(): LogOptions
     {
@@ -31,21 +29,16 @@ trait Loggable
 
     /**
      * The default description for activity log.
-     *
-     * @param string $eventName
-     * @return string
      */
     public function descriptionForEvent(string $eventName): string
     {
         $modelName = Str::snake(class_basename($this), ' ');
 
-        return $modelName . ' has been ' . $eventName . '.';
+        return $modelName.' has been '.$eventName.'.';
     }
 
     /**
      * Generate a default, useful log name based on the model class.
-     *
-     * @return string
      */
     public function getLogName(): string
     {

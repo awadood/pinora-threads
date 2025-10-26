@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
  * Class LetterSpaceNumRule
- * @package App\Http\Rules
+ *
  * @author Abdul Wadood
  */
 class LetterSpaceNumRule implements ValidationRule
@@ -15,14 +15,11 @@ class LetterSpaceNumRule implements ValidationRule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
-     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString $fail
-     * @return void
+     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[a-zA-Z0-9 .&%-]*$/i', $value)) {
+        if (! preg_match('/^[a-zA-Z0-9 .&%-]*$/i', $value)) {
             $fail(trans('validation.letters_spaces_num'));
         }
     }
@@ -33,8 +30,5 @@ class LetterSpaceNumRule implements ValidationRule
      *
      * @return string
      */
-    public function message()
-    {
-        return;
-    }
+    public function message() {}
 }

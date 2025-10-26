@@ -38,13 +38,13 @@ class PermissionSeeder extends Seeder
 
         $adminRole = Role::firstOrCreate(['name' => Roles::ADMIN]);
         $adminRole->syncPermissions($permissions);
-        
+
         // Standard User Role (Gets basic permissions)
         $managerRole = Role::firstOrCreate(['name' => Roles::MANAGER]);
         $managerRole->givePermissionTo([
             Permissions::PRODUCT_CREATE,
         ]);
-        
+
         $this->command->info('Roles and permissions synchronized.');
     }
 }

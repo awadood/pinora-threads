@@ -10,8 +10,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Auth
     Route::post('logout', [AuthController::class, 'logout']);
 
-    //User
+    // User
     Route::get('/user', [UserController::class, 'user']);
 
-    //add middleware permission:permission-name where needed
+    // add middleware permission:permission-name where needed
 });

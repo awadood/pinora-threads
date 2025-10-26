@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class BaseRepository
- * @package App\Repository
+ *
  * @author Abdul Wadood
  */
 abstract class BaseRepository implements IBaseRepository
@@ -19,51 +19,52 @@ abstract class BaseRepository implements IBaseRepository
     protected string $model;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function all(array $columns = ['*']): Collection|static
     {
-        return call_user_func($this->model . '::all', $columns);
+        return call_user_func($this->model.'::all', $columns);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function find($id): ?Model
     {
-        return call_user_func($this->model . '::find', $id);
+        return call_user_func($this->model.'::find', $id);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function create(array $attributes): Model
     {
-        if (!array_key_exists('active', $attributes)) {
+        if (! array_key_exists('active', $attributes)) {
             $attributes['active'] = true;
         }
 
-        return call_user_func($this->model . '::create', $attributes);
+        return call_user_func($this->model.'::create', $attributes);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function destroy($ids): int
     {
-        return call_user_func($this->model . '::destroy', $ids);
+        return call_user_func($this->model.'::destroy', $ids);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function disableIfNotDestroy($entity): int
     {
         try {
-            return call_user_func($this->model . '::destroy', $entity->id);
+            return call_user_func($this->model.'::destroy', $entity->id);
         } catch (Exception $exception) {
             if ($exception->getCode() == self::FOREIGN_KEY_VIOLATION) {
                 $entity->update(['active' => false]);
+
                 return 1;
             }
 
@@ -74,7 +75,7 @@ abstract class BaseRepository implements IBaseRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function search(array $criteria): Collection|static
     {

@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
                         'code' => $code,
                         'message' => $message,
                         'trace' => $throwable->getTrace(),
-                    ]
+                    ],
                 ]);
             };
 
@@ -49,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 $t instanceof NotFoundHttpException => $respond(404, 'Resource not found.', $t),
 
-                $t instanceof OutOfStockException  => $respond($t->getCode(), $t->getMessage(), $t),
+                $t instanceof OutOfStockException => $respond($t->getCode(), $t->getMessage(), $t),
 
                 default => $respond(500, $t->getMessage(), $t),
             };

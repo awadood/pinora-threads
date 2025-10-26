@@ -7,38 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class IBaseRepository
- * @package App\Repository\Contracts
+ *
  * @author Abdul Wadood
  */
 interface IBaseRepository
 {
     /**
-     * @param string[] $columns
+     * @param  string[]  $columns
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
     public function all(array $columns = ['*']): Collection|static;
 
-    /**
-     * @param $id
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
     public function find($id): ?Model;
 
-    /**
-     * @param array $attributes
-     * @return \Illuminate\Database\Eloquent\Model
-     */
     public function create(array $attributes): Model;
 
-    /**
-     * @param $ids
-     * @return int
-     */
     public function destroy($ids): int;
 
     /**
-     * @param $entity
-     * @return int
      * @throws \Exception
      */
     public function disableIfNotDestroy($entity): int;
@@ -48,8 +34,8 @@ interface IBaseRepository
      * criteria is an empty error, all the records will fetched against the
      * given client_id.
      *
-     * @param int $clientId
-     * @param array $criteria the conditions combined with or operator
+     * @param  int  $clientId
+     * @param  array  $criteria  the conditions combined with or operator
      * @return \Illuminate\Database\Eloquent\Collection|$this
      */
     public function search(array $criteria): Collection|static;

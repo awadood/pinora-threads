@@ -6,8 +6,7 @@ use Exception;
 
 /**
  * Class OutOfStockException
- * 
- * @package App\Exceptions
+ *
  * @author Abdul Wadood
  */
 class OutOfStockException extends Exception

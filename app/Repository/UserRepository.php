@@ -7,7 +7,7 @@ use App\Repository\Contracts\IUserRepository;
 
 /**
  * Class UserRepository
- * @package App\Repository
+ *
  * @author Abdul Wadood
  */
 class UserRepository extends BaseRepository implements IUserRepository
