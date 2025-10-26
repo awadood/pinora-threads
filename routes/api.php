@@ -12,4 +12,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     //User
     Route::get('/user', [UserController::class, 'user']);
+
+    //add middleware permission:permission-name where needed
 });

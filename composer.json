@@ -11,7 +11,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/telescope": "^5.14",
         "laravel/tinker": "^2.10.1",
-        "lezhnev74/pasvl": "^1.0"
+        "lezhnev74/pasvl": "^1.0",
+        "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
