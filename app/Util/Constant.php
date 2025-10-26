@@ -10,5 +10,6 @@ namespace App\Util;
  */
 class Constant
 {
-    public const A_CONSTANT = 'v';
+    public const DATE = 'Y-m-d';
+    public const DATE_TIME = 'Y-m-d H:i:s';
 }
