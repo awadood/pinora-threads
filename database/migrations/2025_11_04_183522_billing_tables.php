@@ -1,0 +1,223 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Invoices
+        Schema::create('invoices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained(); // snapshot reads from orders
+            $table->bigInteger('number')->unique(); // display number (your format)
+            $table->char('currency_code', 3);
+            $table->decimal('amount_due', 12, 2); // total to collect for this invoice
+            $table->enum('status', ['issued', 'voided', 'paid']);
+            $table->timestampTz('issued_at')->useCurrent();
+            $table->timestampTz('due_at')->nullable();
+            $table->timestampTz('paid_at')->nullable();
+            $table->jsonb('meta')->nullable(); // optional (billing notes, PDF link, etc.)
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['order_id', 'status']);
+            $table->index(['issued_at']);
+        });
+
+        // Payments - One row per successful money movement (auth, capture, sale, COD collection).
+        Schema::create('payments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained();
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices'); // present for COD, or if you issue invoices
+            $table->char('currency_code', 3);
+            $table->enum('method', ['stripe', 'paypal', 'payfast', 'cod', 'easypaisa', 'jazzcash'])->comment('expand as needed');
+            $table->enum('action', ['auth', 'capture', 'sale', 'cod_collection'])->comment('US: auth->capture; PK: sale');
+            $table->enum('status', ['pending', 'succeeded', 'failed', 'cancelled']);
+            $table->decimal('amount', 12, 2);
+            $table->string('gateway_txn_id')->nullable(); // provider transaction id
+            $table->string('idempotency_key')->nullable()->unique(); // prevent double posting
+            $table->timestampTz('processed_at')->nullable();
+            $table->jsonb('request_payload')->nullable(); // minimal audit
+            $table->jsonb('response_payload')->nullable();
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['order_id', 'status']);
+            $table->index(['gateway_txn_id']);
+            $table->index(['processed_at']);
+        });
+
+        // Payment Attempts - Every try (redirect, 3DS, fail, retry). Link to payment if it ultimately produced one.
+        Schema::create('payment_attempts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained();
+            $table->foreignId('payment_id')->nullable()->constrained('payments');
+            $table->char('currency_code', 3);
+            $table->enum('method', ['stripe', 'paypal', 'payfast', 'cod', 'easypaisa', 'jazzcash']);
+            $table->enum('action', ['auth', 'capture', 'sale', 'cod_collection']);
+            $table->enum('status', ['pending', 'succeeded', 'failed', 'requires_action'])->default('pending');
+            $table->decimal('amount', 12, 2)->default(0);
+
+            $table->string('error_code')->nullable();
+            $table->string('error_message')->nullable();
+            $table->string('idempotency_key')->nullable()->unique();
+            $table->string('remote_ip')->nullable();
+
+            $table->jsonb('request_payload')->nullable();
+            $table->jsonb('response_payload')->nullable();
+
+            $table->timestampTz('attempted_at')->useCurrent();
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['order_id', 'attempted_at']);
+            $table->index(['status', 'attempted_at']);
+        });
+
+        // Refunds
+        Schema::create('refunds', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained();
+            $table->foreignId('payment_id')->constrained('payments'); // refund against the captured/settled payment
+            $table->char('currency_code', 3);
+            $table->decimal('amount', 12, 2); // app enforces == order total (full) if required
+            $table->enum('status', ['requested', 'approved', 'processed', 'failed', 'cancelled'])->default('requested');
+            $table->string('gateway_refund_id')->nullable();
+            $table->string('reason')->nullable();
+            $table->timestampTz('processed_at')->nullable();
+            $table->string('idempotency_key')->nullable()->unique();
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['order_id', 'status']);
+            $table->index(['payment_id']);
+            $table->index(['processed_at']);
+        });
+
+        Schema::create('shipments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained()->unique();
+            $table->foreignId('stock_id')->constrained();
+            $table->enum('method', [
+                'pickup', // customer picks from store
+                'self', // your own employee delivery
+                'courier', // USPS/UPS/FedEx/TCS/Leopards/M&P, etc.
+            ]);
+
+            // Carrier fields only relevant when method='courier'
+            $table->string('carrier')->nullable(); // e.g., 'USPS','UPS','FEDEX','LEOPARDS','TCS'
+            $table->string('tracking_number')->nullable();
+            $table->string('tracking_url')->nullable();
+
+            // Status lifecycle kept simple for both manual and courier paths
+            $table->enum('status', [
+                'pending',          // created, not yet shipped
+                'out_for_delivery', // employee/courier picked up
+                'in_transit',       // courier in movement
+                'delivered',
+                'returned',
+                'cancelled',
+                'failed',
+            ]);
+
+            // Money snapshots (audit & reconciliation)
+            $table->string('currency_code', 3);
+            $table->decimal('shipping_charge', 12, 2)->comment('what customer paid (snapshot from order.total_shipping)');
+            $table->decimal('shipping_cost', 12, 2)->comment('what we paid the carrier / internal cost');
+            $table->decimal('shipping_tax', 12, 2)->comment('tax owed on shipping, if applicable (US-state rules)');
+
+            // Timestamps across the journey
+            $table->timestampTz('shipped_at')->nullable();
+            $table->timestampTz('delivered_at')->nullable();
+            $table->timestampTz('returned_at')->nullable();
+
+            // Artifacts / audit blobs
+            $table->string('label_url')->nullable();        // S3 link if you generate a label later
+            $table->jsonb('carrier_payload')->nullable();   // raw courier response (when applicable)
+            $table->jsonb('notes')->nullable();             // ops notes (driver name, attempt notes, etc.)
+
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            // Helpful indexes
+            $table->index(['status', 'shipped_at']);
+            $table->index(['tracking_number']);
+            $table->index(['method', 'carrier']);
+        });
+
+        // Promotions
+        Schema::create('promotions', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->timestampTz('from_date');
+            $table->timestampTz('to_date')->nullable();
+            $table->enum('applies_via', ['auto', 'coupon'])->default('auto');
+            $table->unsignedSmallInteger('usage_per_user')->nullable(); // null means unlimited use
+            $table->jsonb('rules');
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('active')->default(false);
+            $table->enum('status', ['scheduled', 'ongoing', 'completed', 'paused']);
+            $table->timestampsTz();
+
+            $table->index(['active', 'from_date', 'to_date']);
+        });
+
+        Schema::create('promotion_coupons', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('promotion_id')->constrained();
+            $table->string('code')->unique();
+            $table->unsignedSmallInteger('usage_limit')->nullable();
+            $table->unsignedSmallInteger('usage_per_user')->nullable();
+            $table->timestampTz('expiry')->nullable();
+            $table->timestampsTz();
+        });
+
+        Schema::create('promotion_redemptions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('promotion_id')->constrained();
+            $table->foreignId('promotion_coupon_id')->nullable()->constrained();
+            $table->foreignId('user_id')->nullable()->constrained();
+            $table->foreignId('order_id')->nullable()->constrained();
+            $table->timestampTz('redeemed_at')->useCurrent();
+            $table->string('currency_code', 3);
+            $table->decimal('cart_amount', 12, 2);
+            $table->decimal('discount_amount', 12, 2);
+            $table->string('idempotency_key')->nullable()->unique();
+            $table->timestampsTz();
+
+            $table->unique(['order_id', 'promotion_id']);
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['promotion_id', 'promotion_coupon_id']);
+            $table->index(['user_id', 'promotion_id']);
+            $table->index(['redeemed_at']); // time-window reports
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('promotion_redemptions');
+        Schema::dropIfExists('promotion_coupons');
+        Schema::dropIfExists('promotions');
+        Schema::dropIfExists('shipments');
+        Schema::dropIfExists('refunds');
+        Schema::dropIfExists('payment_attempts');
+        Schema::dropIfExists('payments');
+        Schema::dropIfExists('invoices');
+    }
+};

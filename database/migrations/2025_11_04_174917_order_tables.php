@@ -1,0 +1,109 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('carts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('cookie_key')->unique(); // server+cookie persistence
+            $table->char('currency_code', 3);
+            $table->timestampTz('expires_at')->nullable(); // housekeeping
+            $table->timestampTz('checked_out_at')->nullable(); // conversion marker
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+        });
+
+        Schema::create('cart_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('quantity');
+            $table->timestampsTz();
+
+            $table->unique(['cart_id', 'product_variant_id']);
+        });
+
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('number')->unique(); // unix timestamp. 10 digits
+            $table->foreignId('user_id')->constrained(); // a user would have been created after placing order
+            $table->string('currency_code', 3);
+            $table->enum('status', ['pending', 'paid', 'picking', 'shipped', 'delivered', 'closed', 'cancelled', 'refunded'])->default('pending');
+            $table->foreignId('billing_address_id')->nullable()->constrained('addresses');
+            $table->foreignId('shipping_address_id')->nullable()->constrained('addresses');
+            $table->jsonb('shipping_address');
+            $table->jsonb('billing_address');
+
+            $table->boolean('tax_inclusive')->default(false); // US=false, PK=true
+            $table->decimal('items_subtotal', 12, 2);
+            $table->decimal('total_discount', 12, 2);
+            $table->decimal('total_tax', 12, 2);
+            $table->decimal('total_shipping', 12, 2);
+            $table->decimal('total', 12, 2); // payable
+            $table->jsonb('discount')->nullable(); // applied discount
+            $table->jsonb('shipment')->nullable(); // shipment summary
+            $table->jsonb('promotions')->nullable(); // applied promotions
+            $table->jsonb('taxes')->nullable(); // applied taxes
+
+            $table->string('payment_method')->nullable();     // 'stripe','paypal','cod', etc.
+            $table->string('payment_txn_id')->nullable();     // gateway transaction id
+            $table->string('idempotency_key')->nullable()->unique();
+
+            $table->string('shipping_method')->nullable();    // 'flat','pickup','courier code'
+            $table->string('tracking_number')->nullable();
+            $table->string('carrier')->nullable();            // 'USPS','UPS','TCS', etc.
+
+            $table->timestampTz('paid_at')->nullable();
+            $table->timestampTz('shipped_at')->nullable();
+            $table->timestampTz('delivered_at')->nullable();
+            $table->timestampTz('cancelled_at')->nullable();
+            $table->timestampTz('refunded_at')->nullable();
+            $table->timestampsTz();
+
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['number']);
+            $table->index(['status', 'created_at']);
+        });
+
+        Schema::create('order_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained();
+            $table->foreignId('product_id')->constrained();
+            $table->foreignId('product_variant_id')->constrained();
+            $table->string('product_name');
+            $table->string('sku');
+            $table->jsonb('variant');
+            $table->unsignedInteger('quantity');
+            $table->decimal('unit_price', 12, 2);
+            $table->decimal('subtotal', 12, 2); // unit*qty
+            $table->decimal('discount', 12, 2);
+            $table->decimal('tax', 12, 2);
+            $table->decimal('total', 12, 2); // subtotal - discount + tax
+            $table->timestampsTz();
+
+            $table->index(['order_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('order_items');
+        Schema::dropIfExists('orders');
+        Schema::dropIfExists('cart_items');
+        Schema::dropIfExists('carts');
+    }
+};
