@@ -1,0 +1,63 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * StockMovement Eloquent model.
+ *
+ * @author Abdul Wadood
+ */
+class StockMovement extends AbstractModel
+{
+    protected $fillable = [
+        'stock_id',
+        'variant_id',
+        'type',
+        'quantity_delta',
+        'stock_batch_id',
+        'order_id',
+        'performed_by',
+        'reason',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [];
+    }
+
+    // Lifecycle
+
+    // Relationships
+
+    public function stock(): BelongsTo
+    {
+        return $this->belongsTo(Stock::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(StockBatch::class, 'stock_batch_id');
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function performedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'performed_by');
+    }
+}

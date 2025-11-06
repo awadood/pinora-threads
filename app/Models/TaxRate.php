@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
 /**
- * Class TaxRate
+ * TaxRate Eloquent model.
  *
  * @author Abdul Wadood
  */
@@ -14,11 +12,11 @@ class TaxRate extends AbstractModel
     protected $fillable = [
         'code',
         'amount',
-        'is_percentage',
+        'percentage',
         'refundable',
         'country_code',
-        'region_code',
-        'post_code',
+        'state_code',
+        'zipcode',
         'zip_is_range',
         'zip_from',
         'zip_to',
@@ -33,14 +31,14 @@ class TaxRate extends AbstractModel
     protected function casts(): array
     {
         return [
-            'amount' => 'float',
+            'percentage' => 'boolean',
+            'refundable' => 'boolean',
+            'zip_is_range' => 'boolean',
+            'active' => 'boolean',
         ];
     }
 
-    // Relationships
+    // Lifecycle
 
-    public function calculations(): HasMany
-    {
-        return $this->hasMany(TaxCalculation::class);
-    }
+    // Relationships
 }

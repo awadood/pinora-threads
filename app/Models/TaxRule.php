@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
 /**
- * Class TaxRule
+ * TaxRule Eloquent model.
  *
  * @author Abdul Wadood
  */
@@ -16,13 +14,25 @@ class TaxRule extends AbstractModel
         'priority',
         'position',
         'calculate_subtotal',
+        'applies_to_shipping',
         'active',
     ];
 
-    // Relationships
-
-    public function calculations(): HasMany
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->hasMany(TaxCalculation::class);
+        return [
+            'calculate_subtotal' => 'boolean',
+            'applies_to_shipping' => 'boolean',
+            'active' => 'boolean',
+        ];
     }
+
+    // Lifecycle
+
+    // Relationships
 }

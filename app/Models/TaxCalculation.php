@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Class TaxCalculation
+ * TaxCalculation Eloquent model.
  *
  * @author Abdul Wadood
  */
@@ -14,25 +14,37 @@ class TaxCalculation extends AbstractModel
     protected $fillable = [
         'tax_rate_id',
         'tax_rule_id',
-        'customer_tax_class_id',
+        'user_tax_class_id',
         'product_tax_class_id',
     ];
 
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [];
+    }
+
+    // Lifecycle
+
     // Relationships
 
-    public function rate(): BelongsTo
+    public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class);
     }
 
-    public function rule(): BelongsTo
+    public function taxRule(): BelongsTo
     {
         return $this->belongsTo(TaxRule::class);
     }
 
-    public function customerTaxClass(): BelongsTo
+    public function userTaxClass(): BelongsTo
     {
-        return $this->belongsTo(TaxClass::class, 'customer_tax_class_id');
+        return $this->belongsTo(TaxClass::class, 'user_tax_class_id');
     }
 
     public function productTaxClass(): BelongsTo

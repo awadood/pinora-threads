@@ -74,6 +74,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('customer_group_user');
+        Schema::dropIfExists('customer_groups');
         Schema::dropIfExists('addresses');
         Schema::dropIfExists('customer_profiles');
     }

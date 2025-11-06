@@ -2,26 +2,40 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Class CustomerGroup
+ * CustomerGroup Eloquent model.
  *
  * @author Abdul Wadood
  */
-class CustomerGroup extends AbstractModel
+class CustomerGroup extends AbstractLoggableModel
 {
     protected $fillable = [
         'name',
-        'default',
+        'code',
         'active',
-        'client_id',
+        'notes',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
+
+    // Lifecycle
 
     // Relationships
 
-    public function customers(): HasMany
+    public function users(): BelongsToMany
     {
-        return $this->hasMany(Customer::class, 'group_id');
+        return $this->belongsToMany(User::class, 'customer_group_user');
     }
 }

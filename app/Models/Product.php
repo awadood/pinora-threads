@@ -3,42 +3,79 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Class Product
+ * Product Eloquent model.
  *
  * @author Abdul Wadood
  */
-class Product extends AbstractModel
+class Product extends AbstractLoggableModel
 {
     protected $fillable = [
+        'sku',
         'name',
-        'barcode',
-        'size',
-        'color',
-        'usage',
-        'company',
-        'company_contact',
-        'group_id',
-        'client_id',
+        'slug',
+        'type',
+        'description',
+        'tax_class_id',
+        'active',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
+
+    // Lifecycle
 
     // Relationships
 
-    public function group(): BelongsTo
+    public function taxClass(): BelongsTo
     {
-        return $this->belongsTo(ProductGroup::class, 'group_id');
+        return $this->belongsTo(TaxClass::class);
     }
 
-    public function stockItems(): HasMany
+    public function variants(): HasMany
     {
-        return $this->hasMany(ProductStockItem::class);
+        return $this->hasMany(ProductVariant::class);
     }
 
-    public function stockItemStatus(): HasOne
+    public function prices(): HasMany
     {
-        return $this->hasOne(ProductStockItemStatus::class, '', '');
+        return $this->hasMany(ProductPrice::class);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductMedia::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_product');
+    }
+
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_product')->withPivot(['sort'])->withTimestamps();
+    }
+
+    public function relatedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'related_products', 'product_id', 'related_product_id');
+    }
+
+    public function relatedByProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'related_products', 'related_product_id', 'product_id');
     }
 }

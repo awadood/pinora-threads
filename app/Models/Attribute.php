@@ -2,16 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 /**
- * Class Attribute
+ * Attribute Eloquent model.
  *
  * @author Abdul Wadood
  */
 class Attribute extends AbstractModel
 {
     protected $fillable = [
-        'name',
+        'code',
+        'label',
+        'type',
+        'active',
     ];
 
-    public $timestamps = false;
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+        ];
+    }
+
+    // Lifecycle
+
+    // Relationships
+
+    public function options(): HasMany
+    {
+        return $this->hasMany(AttributeOption::class);
+    }
 }

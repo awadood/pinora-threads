@@ -3,33 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Class PromotionCoupon
+ * PromotionCoupon Eloquent model.
  *
  * @author Abdul Wadood
  */
 class PromotionCoupon extends AbstractModel
 {
     protected $fillable = [
+        'promotion_id',
         'code',
         'usage_limit',
-        'usage_per_customer',
-        'times_used',
+        'usage_per_user',
         'expiry',
-        'promotion_id',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [];
+    }
+
+    // Lifecycle
 
     // Relationships
 
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
-    }
-
-    public function couponUses(): HasMany
-    {
-        return $this->hasMany(PromotionCouponUse::class);
     }
 }

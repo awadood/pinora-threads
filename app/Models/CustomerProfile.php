@@ -5,26 +5,44 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Class CustomerProfile
+ * CustomerProfile Eloquent model.
  *
  * @author Abdul Wadood
  */
-class CustomerProfile extends AbstractModel
+class CustomerProfile extends AbstractLoggableModel
 {
     protected $fillable = [
-        'total_booking_services',
-        'canceled_booking_services',
-        'refunded_booking_services',
-        'total_purchased_products',
-        'total_payments',
-        'outstanding_balance',
-        'customer_id',
+        'user_id',
+        'tax_class_id',
+        'marketing_email_opt_in',
+        'marketing_sms_opt_in',
+        'preferred_currency',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'marketing_email_opt_in' => 'boolean',
+            'marketing_sms_opt_in' => 'boolean',
+        ];
+    }
+
+    // Lifecycle
 
     // Relationships
 
-    public function customer(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function taxClass(): BelongsTo
+    {
+        return $this->belongsTo(TaxClass::class);
     }
 }

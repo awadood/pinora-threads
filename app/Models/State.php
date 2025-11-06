@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * State Eloquent model.
+ *
+ * @author Abdul Wadood
+ */
+class State extends AbstractModel
+{
+    protected $fillable = [
+        'code',
+        'name',
+        'country_code',
+    ];
+
+    protected $primaryKey = 'code';
+
+    protected $keyType = 'string';
+
+    public $timestamps = false;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [];
+    }
+
+    // Lifecycle
+
+    // Relationships
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_code', 'code');
+    }
+}

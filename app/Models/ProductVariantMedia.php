@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * ProductVariantMedia Eloquent model.
+ *
+ * @author Abdul Wadood
+ */
+class ProductVariantMedia extends AbstractModel
+{
+    protected $fillable = [
+        'product_variant_id',
+        'type',
+        'url',
+        'position',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [];
+    }
+
+    // Lifecycle
+
+    // Relationships
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+}
