@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * CustomerGroupUser Eloquent model.
  *
  * @author Abdul Wadood
+ *
+ * @property-read \App\Models\CustomerGroup|null $group
+ * @property-read \App\Models\User|null $user
+ *
+ * @method static \Database\Factories\CustomerGroupUserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerGroupUser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerGroupUser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CustomerGroupUser query()
+ *
+ * @mixin \Eloquent
  */
 class CustomerGroupUser extends AbstractModel
 {

@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * CategoryProduct Eloquent model.
  *
  * @author Abdul Wadood
+ *
+ * @property-read \App\Models\Category|null $category
+ * @property-read \App\Models\Product|null $product
+ *
+ * @method static \Database\Factories\CategoryProductFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CategoryProduct newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CategoryProduct newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|CategoryProduct query()
+ *
+ * @mixin \Eloquent
  */
 class CategoryProduct extends AbstractModel
 {

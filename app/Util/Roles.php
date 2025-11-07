@@ -13,5 +13,9 @@ class Roles
 
     public const ADMIN = 'Admin';
 
-    public const MANAGER = 'Manager';
+    public const INVENTORY_MANAGER = 'Inventory Manager'; // catalog and stocks
+
+    public const MARKETING_MANAGER = 'Marketing Manager'; // promos and content
+
+    public const CUSTOMER_SUPPORT = 'Customer Support'; // orders and refunds
 }

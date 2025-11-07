@@ -8,6 +8,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * ProductVariantAttribute Eloquent model.
  *
  * @author Abdul Wadood
+ *
+ * @property int $product_variant_id
+ * @property int $attribute_id
+ * @property int|null $option_id
+ * @property string|null $value
+ * @property-read \App\Models\Attribute $attribute
+ * @property-read \App\Models\AttributeOption|null $option
+ * @property-read \App\Models\ProductVariant $variant
+ *
+ * @method static \Database\Factories\ProductVariantAttributeFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute whereAttributeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute whereOptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute whereProductVariantId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductVariantAttribute whereValue($value)
+ *
+ * @mixin \Eloquent
  */
 class ProductVariantAttribute extends AbstractModel
 {

@@ -1,12 +1,16 @@
 <?php
 
 use App\Exceptions\OutOfStockException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -18,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -30,28 +35,37 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null; // fall back to Laravel's default exception handler
             }
 
-            $respond = function (int $code, string $message, Throwable $throwable): JsonResponse {
+            $make = function (int $status, string $message, array $errors, array $headers, Throwable $t): JsonResponse {
                 return response()->json([
                     'error' => [
-                        'code' => $code,
+                        'status' => $status,
                         'message' => $message,
-                        'trace' => $throwable->getTrace(),
+                        'errors' => $errors ?? null,
+                        'trace' => config('app.env') !== 'production' ? $t->getTrace() : null,
                     ],
-                ]);
+                ], $status, $headers);
             };
 
             return match (true) {
+                // common exceptions
+                $t instanceof HttpExceptionInterface => $make(
+                    $t->getStatusCode(), $t->getMessage() ?? 'Http Error', [], $t->getHeaders(), $t),
+                $t instanceof AuthenticationException => $make(401, $t->getMessage(), [], [], $t),
+                $t instanceof AuthorizationException => $make(403, $t->getMessage(), [], [], $t),
+                $t instanceof NotFoundHttpException => $make(404, 'Resource not found.', [], [], $t),
+                $t instanceof ValidationException => $make($t->status, $t->getMessage(), $t->errors(), [], $t),
+
+                // database exceptions
                 $t instanceof QueryException => match ((string) $t->getCode()) {
-                    '23505' => $respond(500, 'Database is currently unavailable.', $t),
-                    '7' => $respond(500, 'Unique constraint violation', $t),
-                    default => $respond(500, 'Database error', $t),
+                    '23505' => $make(500, 'Database is currently unavailable.', [], [], $t),
+                    '7' => $make(500, 'Unique constraint violation', [], [], $t),
+                    default => $make(500, 'Database error', [], [], $t),
                 },
 
-                $t instanceof NotFoundHttpException => $respond(404, 'Resource not found.', $t),
+                // business exceptions
+                $t instanceof OutOfStockException => $make($t->getCode(), $t->getMessage(), [], [], $t),
 
-                $t instanceof OutOfStockException => $respond($t->getCode(), $t->getMessage(), $t),
-
-                default => $respond(500, $t->getMessage(), $t),
+                default => $make(500, $t->getMessage(), [], [], $t),
             };
         });
     })->create();

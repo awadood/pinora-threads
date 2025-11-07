@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Util\Permissions;
 use App\Util\Roles;
 use Illuminate\Database\Seeder;
@@ -34,13 +35,15 @@ class PermissionSeeder extends Seeder
 
         // 3. CREATE ROLES
         $this->command->info('Seeding Roles...');
-        Role::firstOrCreate(['name' => Roles::SUPER_ADMIN]);
+        $rootUser = Role::firstOrCreate(['name' => Roles::SUPER_ADMIN]);
+        $user = User::where('email', 'admin@pinnorafashion.com')->first();
+        $user->assignRole($rootUser);
 
         $adminRole = Role::firstOrCreate(['name' => Roles::ADMIN]);
         $adminRole->syncPermissions($permissions);
 
         // Standard User Role (Gets basic permissions)
-        $managerRole = Role::firstOrCreate(['name' => Roles::MANAGER]);
+        $managerRole = Role::firstOrCreate(['name' => Roles::INVENTORY_MANAGER]);
         $managerRole->givePermissionTo([
             Permissions::PRODUCT_CREATE,
         ]);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')->unique()->constrained();
             $table->foreignId('tax_class_id')->constrained();
             $table->boolean('marketing_email_opt_in')->default(false)
                 ->comment('Stay compliant (CAN-SPAM/CPRA best practices): only email people who consents.');

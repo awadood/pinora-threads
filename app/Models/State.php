@@ -8,6 +8,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * State Eloquent model.
  *
  * @author Abdul Wadood
+ *
+ * @property string $code
+ * @property string $name
+ * @property string $country_code
+ * @property-read \App\Models\Country $country
+ *
+ * @method static \Database\Factories\StateFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State whereCountryCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|State whereName($value)
+ *
+ * @mixin \Eloquent
  */
 class State extends AbstractModel
 {

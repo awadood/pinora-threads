@@ -3,43 +3,50 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    // SPA cookie session
+    public function loginCookie(Request $request)
     {
-        // 1. Validate the input
         $request->validate(['email' => 'required|email', 'password' => 'required']);
 
-        // 2. Attempt authentication
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
-            ]);
+        if (! auth()->attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages(['email' => ['Invalid credentials.']]);
         }
+        $request->session()->regenerate();
 
-        // 3. Get the authenticated user
-        $user = $request->user();
-
-        // 4. Create and return the API token. Token name is arbitrary, but required by Sanctum
-        $token = $user->createToken('access_token')->plainTextToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ]);
+        return response()->json(['user' => $request->user()]);
     }
 
-    /**
-     * Destroy an authenticated session. (Logout)
-     */
-    public function logout(Request $request)
+    // PAT (mobile/integrations)
+    public function loginToken(Request $request)
     {
-        // Delete the current access token being used
-        $request->user()->currentAccessToken()->delete();
+        $request->validate(['email' => 'required|email', 'password' => 'required']);
 
-        return response()->json(['message' => 'Logged out successfully.'], 200);
+        if (! auth()->attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages(['email' => ['Invalid credentials.']]);
+        }
+        $user = $request->user();
+        $token = $user->createToken('access_token')->plainTextToken;
+
+        return response()->json(['user' => $request->user(), 'token' => $token]);
+    }
+
+    public function logoutCookie(Request $request)
+    {
+        auth()->guard()->logout(); // ends cookie session if present
+        $request->session()->invalidate();
+        $request->session()->regenerateToken(); // rotate CSRF to avoid 419s on next request
+
+        return response()->json([], 204);
+    }
+
+    public function logoutToken(Request $request)
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json([], 204);
     }
 }
