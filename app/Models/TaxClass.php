@@ -3,25 +3,9 @@
 namespace App\Models;
 
 /**
- * TaxClass Eloquent model.
+ * Describes tax applicability classes for products and customers.
  *
  * @author Abdul Wadood
- *
- * @property int $id
- * @property string $name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- *
- * @method static \Database\Factories\TaxClassFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxClass whereUpdatedAt($value)
- *
- * @mixin \Eloquent
  */
 class TaxClass extends AbstractModel
 {

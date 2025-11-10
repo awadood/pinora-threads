@@ -6,36 +6,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Wishlist Eloquent model.
+ * Stores a user’s saved items for later purchase or sharing.
  *
  * @author Abdul Wadood
- *
- * @property int $id
- * @property int $user_id
- * @property string $title
- * @property bool $public
- * @property string|null $share_token UUID or hash for shareable link
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Spatie\Activitylog\Models\Activity> $activities
- * @property-read int|null $activities_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\WishlistItem> $items
- * @property-read int|null $items_count
- * @property-read \App\Models\User $user
- *
- * @method static \Database\Factories\WishlistFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist wherePublic($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereShareToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereTitle($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Wishlist whereUserId($value)
- *
- * @mixin \Eloquent
  */
 class Wishlist extends AbstractLoggableModel
 {

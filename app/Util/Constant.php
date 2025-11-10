@@ -12,4 +12,6 @@ class Constant
     public const DATE = 'Y-m-d';
 
     public const DATE_TIME = 'Y-m-d H:i:s';
+
+    public const STANDARD = 'STANDARD';
 }

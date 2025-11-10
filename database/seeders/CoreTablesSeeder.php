@@ -36,6 +36,12 @@ class CoreTablesSeeder extends Seeder
             ['code' => 'USD', 'name' => 'US Dollar'],
             ['code' => 'PKR', 'name' => 'Pakistani Rupee'],
         ], ['code'], ['name']);
+
+        DB::table('customer_groups')->upsert([
+            ['code' => 'STANDARD', 'name' => 'Standard'],
+            ['code' => 'B2B', 'name' => 'B2B'],
+            ['code' => 'VIP', 'name' => 'VIP'],
+        ], ['code'], ['name']);
     }
 
     private function seedTable(string $table, array $rows): void

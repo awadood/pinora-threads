@@ -5,40 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * StockBatch Eloquent model.
+ * Groups received inventory into batches with lot/expiry metadata.
  *
  * @author Abdul Wadood
- *
- * @property int $id
- * @property int $stock_id
- * @property int $variant_id
- * @property string $received_at
- * @property string $currency_code
- * @property string $unit_cost
- * @property int $qty_received
- * @property int $qty_remaining
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Currency $currency
- * @property-read \App\Models\Stock $stock
- * @property-read \App\Models\ProductVariant $variant
- *
- * @method static \Database\Factories\StockBatchFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereCurrencyCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereQtyReceived($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereQtyRemaining($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereReceivedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereStockId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereUnitCost($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|StockBatch whereVariantId($value)
- *
- * @mixin \Eloquent
  */
 class StockBatch extends AbstractModel
 {

@@ -5,27 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * ProductPrice Eloquent model.
+ * Base price list entry for a product (currency, amount, rules).
  *
  * @author Abdul Wadood
- *
- * @property int $product_id
- * @property string $currency_code
- * @property string $amount
- * @property string|null $compare_at
- * @property-read \App\Models\Currency $currency
- * @property-read \App\Models\Product $product
- *
- * @method static \Database\Factories\ProductPriceFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereAmount($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereCompareAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereCurrencyCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProductPrice whereProductId($value)
- *
- * @mixin \Eloquent
  */
 class ProductPrice extends AbstractModel
 {

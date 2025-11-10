@@ -9,6 +9,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 /**
  * Trait to implement default Spatie Activity Log configuration.
  * Can be used by any model, including the User model.
+ *
+ * @author Abdul Wadood
  */
 trait Loggable
 {

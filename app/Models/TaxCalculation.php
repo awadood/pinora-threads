@@ -5,31 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * TaxCalculation Eloquent model.
+ * Stores computed tax breakdowns for carts, orders, and lines.
  *
  * @author Abdul Wadood
- *
- * @property int $id
- * @property int $tax_rate_id
- * @property int $tax_rule_id
- * @property int $user_tax_class_id
- * @property int $product_tax_class_id
- * @property-read \App\Models\TaxClass $productTaxClass
- * @property-read \App\Models\TaxRate $taxRate
- * @property-read \App\Models\TaxRule $taxRule
- * @property-read \App\Models\TaxClass $userTaxClass
- *
- * @method static \Database\Factories\TaxCalculationFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation whereProductTaxClassId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation whereTaxRateId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation whereTaxRuleId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaxCalculation whereUserTaxClassId($value)
- *
- * @mixin \Eloquent
  */
 class TaxCalculation extends AbstractModel
 {

@@ -6,37 +6,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Cart Eloquent model.
+ * Holds a shopper’s in-progress items, pricing, and promotion context.
  *
  * @author Abdul Wadood
- *
- * @property int $id
- * @property int|null $user_id
- * @property string $cookie_key
- * @property string $currency_code
- * @property string|null $expires_at
- * @property string|null $checked_out_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Currency $currency
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\CartItem> $items
- * @property-read int|null $items_count
- * @property-read \App\Models\User|null $user
- *
- * @method static \Database\Factories\CartFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereCheckedOutAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereCookieKey($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereCurrencyCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Cart whereUserId($value)
- *
- * @mixin \Eloquent
  */
 class Cart extends AbstractModel
 {
