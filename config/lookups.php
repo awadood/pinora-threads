@@ -27,9 +27,9 @@ return [
 
         // Shipment lifecycle (manual & courier)
         'shipment_statuses' => [
-            ['code' => 'pending',          'name' => 'Pending',          'sort_order' => 10],
-            ['code' => 'out_for_delivery', 'name' => 'Out for Delivery', 'sort_order' => 20],
-            ['code' => 'in_transit',       'name' => 'In Transit',       'sort_order' => 30],
+            ['code' => 'pending',          'name' => 'Pending',          'sort_order' => 10], // created, not yet shipped
+            ['code' => 'out_for_delivery', 'name' => 'Out for Delivery', 'sort_order' => 20], // employee/courier picked up
+            ['code' => 'in_transit',       'name' => 'In Transit',       'sort_order' => 30], // courier in movement
             ['code' => 'delivered',        'name' => 'Delivered',        'sort_order' => 40],
             ['code' => 'returned',         'name' => 'Returned',         'sort_order' => 50],
             ['code' => 'cancelled',        'name' => 'Cancelled',        'sort_order' => 60],

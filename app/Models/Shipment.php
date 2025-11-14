@@ -14,11 +14,11 @@ class Shipment extends AbstractLoggableModel
     protected $fillable = [
         'order_id',
         'stock_id',
-        'method',
+        'shipment_method_code',
         'carrier',
         'tracking_number',
         'tracking_url',
-        'status',
+        'shipment_status_code',
         'currency_code',
         'shipping_charge',
         'shipping_cost',
@@ -61,5 +61,15 @@ class Shipment extends AbstractLoggableModel
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_code', 'code');
+    }
+
+    public function method(): BelongsTo
+    {
+        return $this->belongsTo(ShipmentMethod::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(ShipmentStatus::class);
     }
 }

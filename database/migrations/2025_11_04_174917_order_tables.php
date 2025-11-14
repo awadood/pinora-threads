@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\OrderStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -38,7 +39,7 @@ return new class extends Migration
             $table->bigInteger('number')->unique(); // unix timestamp. 10 digits
             $table->foreignId('user_id')->constrained(); // a user would have been created after placing order
             $table->string('currency_code', 3);
-            $table->enum('status', ['pending', 'paid', 'picking', 'shipped', 'delivered', 'closed', 'cancelled', 'refunded'])->default('pending');
+            $table->string('order_status_code')->default(OrderStatus::PENDING);
             $table->foreignId('billing_address_id')->nullable()->constrained('addresses');
             $table->foreignId('shipping_address_id')->nullable()->constrained('addresses');
             $table->jsonb('shipping_address');
@@ -71,6 +72,7 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->foreign('currency_code')->references('code')->on('currencies');
+            $table->foreign('order_status_code')->references('code')->on('order_statuses');
 
             $table->index(['number']);
             $table->index(['status', 'created_at']);

@@ -16,7 +16,7 @@ class Refund extends AbstractLoggableModel
         'payment_id',
         'currency_code',
         'amount',
-        'status',
+        'refund_status_code',
         'gateway_refund_id',
         'reason',
         'processed_at',
@@ -49,6 +49,11 @@ class Refund extends AbstractLoggableModel
 
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_code', 'code');
+        return $this->belongsTo(Currency::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(RefundStatus::class);
     }
 }

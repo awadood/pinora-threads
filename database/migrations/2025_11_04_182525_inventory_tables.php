@@ -57,13 +57,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('stock_id')->constrained('stocks')->cascadeOnDelete();
             $table->foreignId('variant_id')->constrained('product_variants')->cascadeOnDelete();
-            $table->enum('type', ['purchase', 'sale', 'refund', 'adjustment', 'transfer_in', 'transfer_out']);
+            $table->string('stock_movement_type_code');
             $table->integer('quantity_delta')->comment('positive value for moving in and negative for moving out');
             $table->foreignId('stock_batch_id')->nullable()->constrained()->nullOnDelete(); // link for FIFO
             $table->foreignId('order_id')->nullable()->constrained('orders')->comment('add when orders exist');
             $table->foreignId('performed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('reason')->nullable();
             $table->timestampsTz();
+
+            $table->foreign('stock_movement_type_code')->references('code')->on('stock_movement_types');
 
             $table->index(['stock_id', 'variant_id', 'created_at']);
         });

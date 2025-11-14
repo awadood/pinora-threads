@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RefundStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +19,7 @@ return new class extends Migration
             $table->bigInteger('number')->unique(); // display number (your format)
             $table->char('currency_code', 3);
             $table->decimal('amount_due', 12, 2); // total to collect for this invoice
-            $table->enum('status', ['issued', 'voided', 'paid']);
+            $table->string('invoice_status_code'); // e.g. issued, voided, paid
             $table->timestampTz('issued_at')->useCurrent();
             $table->timestampTz('due_at')->nullable();
             $table->timestampTz('paid_at')->nullable();
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->foreign('currency_code')->references('code')->on('currencies');
+            $table->foreign('invoice_status_code')->references('code')->on('invoice_statuses');
 
             $table->index(['order_id', 'status']);
             $table->index(['issued_at']);
@@ -37,9 +39,9 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained();
             $table->foreignId('invoice_id')->nullable()->constrained('invoices'); // present for COD, or if you issue invoices
             $table->char('currency_code', 3);
-            $table->enum('method', ['stripe', 'paypal', 'payfast', 'cod', 'easypaisa', 'jazzcash'])->comment('expand as needed');
+            $table->string('payment_method_code')->comment('expand as needed');
             $table->enum('action', ['auth', 'capture', 'sale', 'cod_collection'])->comment('US: auth->capture; PK: sale');
-            $table->enum('status', ['pending', 'succeeded', 'failed', 'cancelled']);
+            $table->string('payment_status_code');
             $table->decimal('amount', 12, 2);
             $table->string('gateway_txn_id')->nullable(); // provider transaction id
             $table->string('idempotency_key')->nullable()->unique(); // prevent double posting
@@ -49,6 +51,8 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->foreign('currency_code')->references('code')->on('currencies');
+            $table->foreign('payment_method_code')->references('code')->on('payment_methods');
+            $table->foreign('payment_status_code')->references('code')->on('payment_statuses');
 
             $table->index(['order_id', 'status']);
             $table->index(['gateway_txn_id']);
@@ -90,7 +94,7 @@ return new class extends Migration
             $table->foreignId('payment_id')->constrained('payments'); // refund against the captured/settled payment
             $table->char('currency_code', 3);
             $table->decimal('amount', 12, 2); // app enforces == order total (full) if required
-            $table->enum('status', ['requested', 'approved', 'processed', 'failed', 'cancelled'])->default('requested');
+            $table->string('refund_status_code')->default(RefundStatus::REQUESTED);
             $table->string('gateway_refund_id')->nullable();
             $table->string('reason')->nullable();
             $table->timestampTz('processed_at')->nullable();
@@ -98,6 +102,7 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->foreign('currency_code')->references('code')->on('currencies');
+            $table->foreign('refund_status_code')->references('code')->on('refund_statuses');
 
             $table->index(['order_id', 'status']);
             $table->index(['payment_id']);
@@ -108,7 +113,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->unique();
             $table->foreignId('stock_id')->constrained();
-            $table->enum('method', [
+            $table->string('shipment_method_code', [
                 'pickup', // customer picks from store
                 'self', // your own employee delivery
                 'courier', // USPS/UPS/FedEx/TCS/Leopards/M&P, etc.
@@ -120,15 +125,7 @@ return new class extends Migration
             $table->string('tracking_url')->nullable();
 
             // Status lifecycle kept simple for both manual and courier paths
-            $table->enum('status', [
-                'pending',          // created, not yet shipped
-                'out_for_delivery', // employee/courier picked up
-                'in_transit',       // courier in movement
-                'delivered',
-                'returned',
-                'cancelled',
-                'failed',
-            ]);
+            $table->string('shipment_status_code');
 
             // Money snapshots (audit & reconciliation)
             $table->string('currency_code', 3);
@@ -149,6 +146,8 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->foreign('currency_code')->references('code')->on('currencies');
+            $table->foreign('shipment_method_code')->references('code')->on('shipment_methods');
+            $table->foreign('shipment_status_code')->references('code')->on('shipment_statuses');
 
             // Helpful indexes
             $table->index(['status', 'shipped_at']);

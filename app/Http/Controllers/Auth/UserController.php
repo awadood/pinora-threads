@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
-use App\Repository\Contracts\IUserRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class UserController extends Controller
+class UserController
 {
-    public function __construct(private IUserRepository $repository) {}
+    public function __construct() {}
 
     /**
      * Get the authenticated user's profile data.

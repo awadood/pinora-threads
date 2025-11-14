@@ -16,9 +16,9 @@ class Payment extends AbstractLoggableModel
         'order_id',
         'invoice_id',
         'currency_code',
-        'method',
+        'payment_method_code',
         'action',
-        'status',
+        'payment_status_code',
         'amount',
         'gateway_txn_id',
         'idempotency_key',
@@ -56,7 +56,17 @@ class Payment extends AbstractLoggableModel
 
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_code', 'code');
+        return $this->belongsTo(Currency::class);
+    }
+
+    public function method(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(PaymentStatus::class);
     }
 
     public function attempts(): HasMany

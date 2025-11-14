@@ -17,7 +17,7 @@ class Order extends AbstractLoggableModel
         'number',
         'user_id',
         'currency_code',
-        'status',
+        'order_status_code',
         'billing_address_id',
         'shipping_address_id',
         'shipping_address',
@@ -74,7 +74,12 @@ class Order extends AbstractLoggableModel
 
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_code', 'code');
+        return $this->belongsTo(Currency::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(OrderStatus::class);
     }
 
     public function items(): HasMany

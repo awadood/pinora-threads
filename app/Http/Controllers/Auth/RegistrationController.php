@@ -7,7 +7,7 @@ use App\Http\Rules\PhoneNumberRule;
 use App\Models\CustomerGroup;
 use App\Models\CustomerProfile;
 use App\Models\User;
-use App\Util\Constant;
+use App\Support\Constant;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,10 +35,10 @@ class RegistrationController extends Controller
 
         $standardGroup = CustomerGroup::where('code', Constant::STANDARD)->first();
         $user->customerGroups()->syncWithoutDetaching([$standardGroup->id]);
-        
+
         // TODO consider setting the customer for role, profile, tax, events, notificaitons
 
-        //$user->assignRole('customer'); // Optional
+        // $user->assignRole('customer'); // Optional
 
         CustomerProfile::firstOrCreate([
             'user_id' => $user->id,
@@ -48,8 +48,8 @@ class RegistrationController extends Controller
             'marketing_email_opt_in' => false,
             'marketing_sms_opt_in' => false,
         ]);
-        //event(new Registered($user)); // Fire Registered event (hooks for emails/analytics)
-        //$user->sendEmailVerificationNotification(); //Optional - how to handle notifications
+        // event(new Registered($user)); // Fire Registered event (hooks for emails/analytics)
+        // $user->sendEmailVerificationNotification(); //Optional - how to handle notifications
 
         $response = ['user' => $user];
 

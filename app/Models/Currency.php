@@ -3,7 +3,7 @@
 namespace App\Models;
 
 /**
- * Supported currency with ISO code and formatting for prices.
+ * Supported currency with ISO-4217 code and formatting for prices.
  *
  * @author Abdul Wadood
  */
@@ -17,6 +17,8 @@ class Currency extends AbstractModel
     protected $primaryKey = 'code';
 
     protected $keyType = 'string';
+
+    public $incrementing = false;
 
     public $timestamps = false;
 

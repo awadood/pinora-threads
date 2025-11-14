@@ -21,6 +21,8 @@ class State extends AbstractModel
 
     protected $keyType = 'string';
 
+    public $incrementing = false;
+
     public $timestamps = false;
 
     /**
@@ -39,6 +41,6 @@ class State extends AbstractModel
 
     public function country(): BelongsTo
     {
-        return $this->belongsTo(Country::class, 'country_code', 'code');
+        return $this->belongsTo(Country::class);
     }
 }

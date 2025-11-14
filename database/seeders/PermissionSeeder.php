@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Util\Permissions;
-use App\Util\Roles;
+use App\Support\Permissions;
+use App\Support\Roles;
 use Illuminate\Database\Seeder;
 use ReflectionClass;
 use Spatie\Permission\Models\Permission;
@@ -42,11 +42,10 @@ class PermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => Roles::ADMIN]);
         $adminRole->syncPermissions($permissions);
 
+        // TODO the permissions and roles has yet to be decided
         // Standard User Role (Gets basic permissions)
-        $managerRole = Role::firstOrCreate(['name' => Roles::INVENTORY_MANAGER]);
-        $managerRole->givePermissionTo([
-            Permissions::PRODUCT_CREATE,
-        ]);
+        // $managerRole = Role::firstOrCreate(['name' => Roles::INVENTORY_MANAGER]);
+        // $managerRole->givePermissionTo([]);
 
         $this->command->info('Roles and permissions synchronized.');
     }

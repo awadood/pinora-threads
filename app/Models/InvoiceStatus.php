@@ -5,15 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * ISO-standard country definition used by addresses and taxation.
+ * Represents an invoice lifecycle state (e.g., draft, issued, paid, overdue).
  *
  * @author Abdul Wadood
  */
-class Country extends AbstractModel
+class InvoiceStatus extends AbstractModel
 {
+    const ISSUED = 'issued';
+
+    const VOIDED = 'voided';
+
+    const PAID = 'paid';
+
     protected $fillable = [
         'code',
         'name',
+        'sort_order',
+        'active',
     ];
 
     protected $primaryKey = 'code';
@@ -22,7 +30,7 @@ class Country extends AbstractModel
 
     public $incrementing = false;
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Get the attributes that should be cast.
@@ -31,15 +39,18 @@ class Country extends AbstractModel
      */
     protected function casts(): array
     {
-        return [];
+        return [
+            'sort_order' => 'integer',
+            'active' => 'boolean',
+        ];
     }
 
     // Lifecycle
 
     // Relationships
 
-    public function states(): HasMany
+    public function invoices(): HasMany
     {
-        return $this->hasMany(State::class);
+        return $this->hasMany(Invoice::class);
     }
 }

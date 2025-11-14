@@ -17,7 +17,7 @@ class Invoice extends AbstractLoggableModel
         'number',
         'currency_code',
         'amount_due',
-        'status',
+        'invoice_status_code',
         'issued_at',
         'due_at',
         'paid_at',
@@ -47,7 +47,12 @@ class Invoice extends AbstractLoggableModel
 
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_code', 'code');
+        return $this->belongsTo(Currency::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(InvoiceStatus::class);
     }
 
     public function payments(): HasMany
