@@ -2,16 +2,37 @@
 
 namespace App\Providers;
 
-use App\Repository\Contracts\IUserRepository;
-use App\Repository\UserRepository;
-use App\Util\Roles;
+use App\Repository\BaseRepository;
+use App\Repository\Contracts\IBaseRepository;
+use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     public $bindings = [
-        IUserRepository::class => UserRepository::class,
+
+        IBaseRepository::class => BaseRepository::class,
+
+        // Catalog
+
+        // Content
+
+        // Core
+
+        // Customer
+
+        // Inventory
+
+        // Order
+
+        // Payment
+
+        // Promotion
+
+        // Shipping
+
+        // Tax
     ];
 
     /**
