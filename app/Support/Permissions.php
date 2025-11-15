@@ -10,6 +10,13 @@ namespace App\Support;
  */
 final class Permissions
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Core permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
     // Countries
     public const CTRY_CREATE = 'core.country.create';
 
@@ -93,4 +100,102 @@ final class Permissions
     public const SMT_UPDATE = 'core.stock.movement.type.update';
 
     public const SMT_DESTROY = 'core.stock.movement.type.destroy';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Core permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    // Catalog: Attributes
+    public const ATTR_CREATE = 'catalog.attribute.create';
+
+    public const ATTR_UPDATE = 'catalog.attribute.update';
+
+    public const ATTR_DESTROY = 'catalog.attribute.destroy';
+
+    public const ATTROPT_CREATE = 'catalog.attribute.option.create';
+
+    public const ATTROPT_UPDATE = 'catalog.attribute.option.update';
+
+    public const ATTROPT_DESTROY = 'catalog.attribute.option.destroy';
+
+    // Catalog: Categories
+    public const CAT_CAT_CREATE = 'catalog.category.create';
+
+    public const CAT_CAT_UPDATE = 'catalog.category.update';
+
+    public const CAT_CAT_DESTROY = 'catalog.category.destroy';
+
+    // Catalog: Collections
+    public const CAT_COLL_CREATE = 'catalog.collection.create';
+
+    public const CAT_COLL_UPDATE = 'catalog.collection.update';
+
+    public const CAT_COLL_DESTROY = 'catalog.collection.destroy';
+
+    // Catalog: Products
+    public const CAT_PROD_CREATE = 'catalog.product.create';
+
+    public const CAT_PROD_UPDATE = 'catalog.product.update';
+
+    public const CAT_PROD_DESTROY = 'catalog.product.destroy';
+
+    // Catalog: Product media
+    public const CAT_PMEDIA_CREATE = 'catalog.product.media.create';
+
+    public const CAT_PMEDIA_UPDATE = 'catalog.product.media.update';
+
+    public const CAT_PMEDIA_DESTROY = 'catalog.product.media.destroy';
+
+    // Catalog: Product prices
+    public const CAT_PPRICE_CREATE = 'catalog.product.price.create';
+
+    public const CAT_PPRICE_UPDATE = 'catalog.product.price.update';
+
+    public const CAT_PPRICE_DESTROY = 'catalog.product.price.destroy';
+
+    // Catalog: Product variants
+    public const CAT_PVAR_CREATE = 'catalog.product.variant.create';
+
+    public const CAT_PVAR_UPDATE = 'catalog.product.variant.update';
+
+    public const CAT_PVAR_DESTROY = 'catalog.product.variant.destroy';
+
+    // Catalog: Variant media
+    public const CAT_PVMEDIA_CREATE = 'catalog.product.variant.media.create';
+
+    public const CAT_PVMEDIA_UPDATE = 'catalog.product.variant.media.update';
+
+    public const CAT_PVMEDIA_DESTROY = 'catalog.product.variant.media.destroy';
+
+    // Catalog: Variant prices
+    public const CAT_PVPRICE_CREATE = 'catalog.product.variant.price.create';
+
+    public const CAT_PVPRICE_UPDATE = 'catalog.product.variant.price.update';
+
+    public const CAT_PVPRICE_DESTROY = 'catalog.product.variant.price.destroy';
+
+    // Catalog: Bundles
+    public const CAT_PBUNDLE_CREATE = 'catalog.product.bundle.create';
+
+    public const CAT_PBUNDLE_UPDATE = 'catalog.product.bundle.update';
+
+    public const CAT_PBUNDLE_DESTROY = 'catalog.product.bundle.destroy';
+
+    // Catalog: Related products
+    public const CAT_RELATED_CREATE = 'catalog.product.related.create';
+
+    public const CAT_RELATED_DESTROY = 'catalog.product.related.destroy';
+
+    // Catalog: Category <-> Product pivot
+    public const CAT_CATPROD_CREATE = 'catalog.category.product.create';
+
+    public const CAT_CATPROD_DESTROY = 'catalog.category.product.destroy';
+
+    // Catalog: Collection <-> Product pivot
+    public const CAT_COLPROD_CREATE = 'catalog.collection.product.create';
+
+    public const CAT_COLPROD_DESTROY = 'catalog.collection.product.destroy';
 }

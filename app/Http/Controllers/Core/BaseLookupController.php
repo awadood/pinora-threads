@@ -13,11 +13,11 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * BaseLookupController
- *
  * Shared CRUD + explicit filter/sort for small lookup tables.
  * Children must set: $modelClass, $resourceClass, $allowedFilters, $allowedSorts.
  * Children only implement `rules()` and thin wrappers for show/update/destroy to keep type-safe bindings.
+ *
+ * @author Abdul Wadood
  */
 abstract class BaseLookupController extends Controller
 {

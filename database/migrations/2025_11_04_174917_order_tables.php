@@ -75,7 +75,7 @@ return new class extends Migration
             $table->foreign('order_status_code')->references('code')->on('order_statuses');
 
             $table->index(['number']);
-            $table->index(['status', 'created_at']);
+            $table->index(['order_status_code', 'created_at']);
         });
 
         Schema::create('order_items', function (Blueprint $table) {

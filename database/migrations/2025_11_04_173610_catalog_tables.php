@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('label');
             $table->enum('type', ['text', 'select'])->default('text');
             $table->boolean('active')->default(true);
+            $table->timestampsTz();
         });
 
         // Attribute options for selectable atributes
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
             $table->string('value');
             $table->unsignedSmallInteger('sort');
+            $table->timestampsTz();
 
             $table->unique(['attribute_id', 'value']);
         });

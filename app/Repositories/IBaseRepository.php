@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repository\Contracts;
+namespace App\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 interface IBaseRepository
 {
     /**
-     * Base query for the model.
+     * Base query builder for the model.
      */
     public function query(): Builder;
 

@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Repository;
+namespace App\Repositories;
 
-use App\Repository\Contracts\IBaseRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +19,7 @@ abstract class BaseRepository implements IBaseRepository
     /**
      * @var class-string<TModel>
      */
-    protected string $model;
+    protected string $modelClass;
 
     /**
      * Columns you allow in search() to avoid accidental/unsafe queries.
@@ -42,7 +41,7 @@ abstract class BaseRepository implements IBaseRepository
     public function query(): Builder
     {
         /** @var Builder */
-        return ($this->model)::query();
+        return ($this->modelClass)::query();
     }
 
     public function all(array $columns = ['*']): Collection
@@ -61,15 +60,12 @@ abstract class BaseRepository implements IBaseRepository
             $attributes['active'] = true;
         }
 
-        /** @var Model */
-        $model = $this->query()->create($attributes);
-
-        return $model;
+        return $this->query()->create($attributes);
     }
 
     public function destroy(int|string|array $ids): int
     {
-        return ($this->model)::destroy($ids);
+        return ($this->modelClass)::destroy($ids);
     }
 
     public function disableIfNotDestroy(Model $entity): int

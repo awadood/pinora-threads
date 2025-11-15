@@ -5,6 +5,20 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\Catalog\AttributeController;
+use App\Http\Controllers\Catalog\AttributeOptionController;
+use App\Http\Controllers\Catalog\CategoryController;
+use App\Http\Controllers\Catalog\CategoryProductController;
+use App\Http\Controllers\Catalog\CollectionController;
+use App\Http\Controllers\Catalog\CollectionProductController;
+use App\Http\Controllers\Catalog\ProductBundleController;
+use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductMediaController;
+use App\Http\Controllers\Catalog\ProductPriceController;
+use App\Http\Controllers\Catalog\ProductVariantController;
+use App\Http\Controllers\Catalog\ProductVariantMediaController;
+use App\Http\Controllers\Catalog\ProductVariantPriceController;
+use App\Http\Controllers\Catalog\RelatedProductController;
 use App\Http\Controllers\Core\CountryController;
 use App\Http\Controllers\Core\CurrencyController;
 use App\Http\Controllers\Core\CustomerGroupController;
@@ -29,7 +43,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// login and Password flows
+// Login and password flows
 Route::post('/login', [AuthController::class, 'loginToken']); // PAT
 Route::post('/register', [RegistrationController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:6,1');
@@ -61,9 +75,137 @@ Route::get('shipment-methods/{shipment_method}', [ShipmentMethodController::clas
 Route::get('stock-movement-types', [StockMovementTypeController::class, 'index']);
 Route::get('stock-movement-types/{stock_movement_type}', [StockMovementTypeController::class, 'show']);
 
+// Catalog - Read only, used by frontend (PLP/PDP, filters, menus).
+Route::get('attributes', [AttributeController::class, 'index']); // maybe optional // ?filter[type.eq]=select&filter[active.eq]=1
+Route::get('attributes/{code}', [AttributeController::class, 'showByCode']); // by code instead of id, if you choose
+Route::get('attributes/{code}/options', [AttributeOptionController::class, 'indexByAttribute']); // color options, etc.
+Route::get('categories', [CategoryController::class, 'index']); // category tree / flat list
+Route::get('categories/{slug}', [CategoryController::class, 'showBySlug']); // details + children
+Route::get('categories/{slug}/products', [ProductController::class, 'indexByCategory']); // PLP by category
+Route::get('collections', [CollectionController::class, 'index']); // list active collections
+Route::get('collections/{slug}', [CollectionController::class, 'showBySlug']);
+Route::get('collections/{slug}/products', [ProductController::class, 'indexByCollection']);
+Route::get('products', [ProductController::class, 'index']); // Product listing. Typical filters: ?filter[type.eq]=simple&filter[active.eq]=1&filter[price.gte]=1000 etc.
+Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
+Route::get('products/{slug}/variants', [ProductVariantController::class, 'indexByProductSlug']); // variant matrix on PDP
+Route::get('products/{slug}/media', [ProductMediaController::class, 'indexByProductSlug']); // gallery
+Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
+Route::get('product-variants/{id}', [ProductVariantController::class, 'show']); // rarely needed on storefront
+Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
+Route::get('product-variants/{id}/prices', [ProductVariantPriceController::class, 'indexByVariant']);
+
 /*
 |--------------------------------------------------------------------------
-| Protected core table routes — create, update, destroy
+| Sanctum protected APIs - Auth
+|--------------------------------------------------------------------------
+|
+| The following routes are about login and passoword flows
+|
+*/
+
+// sanctum protected APIs
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    // Auth
+    Route::post('logout', [AuthController::class, 'logoutToken']);
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
+    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1']);
+
+    // Who am I
+    Route::get('/user', [UserController::class, 'user']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Catalog
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Attributes
+    Route::post('attributes', [AttributeController::class, 'store'])->middleware('permission:'.P::ATTR_CREATE);
+    Route::put('attributes/{attribute}', [AttributeController::class, 'update'])->middleware('permission:'.P::ATTR_UPDATE);
+    Route::delete('attributes/{attribute}', [AttributeController::class, 'destroy'])->middleware('permission:'.P::ATTR_DESTROY);
+    Route::post('attribute-options', [AttributeOptionController::class, 'store'])->middleware('permission:'.P::ATTROPT_CREATE);
+    Route::put('attribute-options/{attribute_option}', [AttributeOptionController::class, 'update'])->middleware('permission:'.P::ATTROPT_UPDATE);
+    Route::delete('attribute-options/{attribute_option}', [AttributeOptionController::class, 'destroy'])->middleware('permission:'.P::ATTROPT_DESTROY);
+
+    // Categories
+    Route::post('categories', [CategoryController::class, 'store'])->middleware('permission:'.P::CAT_CAT_CREATE);
+    Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('permission:'.P::CAT_CAT_UPDATE);
+    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:'.P::CAT_CAT_DESTROY);
+
+    // Collections
+    Route::post('collections', [CollectionController::class, 'store'])->middleware('permission:'.P::CAT_COLL_CREATE);
+    Route::put('collections/{collection}', [CollectionController::class, 'update'])->middleware('permission:'.P::CAT_COLL_UPDATE);
+    Route::delete('collections/{collection}', [CollectionController::class, 'destroy'])->middleware('permission:'.P::CAT_COLL_DESTROY);
+
+    // Products
+    Route::post('products', [ProductController::class, 'store'])->middleware('permission:'.P::CAT_PROD_CREATE);
+    Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:'.P::CAT_PROD_UPDATE);
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:'.P::CAT_PROD_DESTROY);
+
+    // Product Media
+    Route::post('products/{product}/media', [ProductMediaController::class, 'store'])->middleware('permission:'.P::CAT_PMEDIA_CREATE);
+    Route::put('product-media/{media}', [ProductMediaController::class, 'update'])->middleware('permission:'.P::CAT_PMEDIA_UPDATE);
+    Route::delete('product-media/{media}', [ProductMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PMEDIA_DESTROY);
+
+    // Product level prices
+    Route::post('products/{product}/prices', [ProductPriceController::class, 'store'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
+    Route::put('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'update'])->middleware('permission:'.P::CAT_PPRICE_UPDATE);
+    Route::delete('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'destroy'])->middleware('permission:'.P::CAT_PPRICE_DESTROY);
+
+    // Product variants
+    Route::post('products/{product}/variants', [ProductVariantController::class, 'store'])->middleware('permission:'.P::CAT_PVAR_CREATE);
+    Route::put('product-variants/{variant}', [ProductVariantController::class, 'update'])->middleware('permission:'.P::CAT_PVAR_UPDATE);
+    Route::delete('product-variants/{variant}', [ProductVariantController::class, 'destroy'])->middleware('permission:'.P::CAT_PVAR_DESTROY);
+
+    // Product variant media
+    Route::post('product-variants/{variant}/media', [ProductVariantMediaController::class, 'store'])->middleware('permission:'.P::CAT_PVMEDIA_CREATE);
+    Route::put('product-variant-media/{media}', [ProductVariantMediaController::class, 'update'])->middleware('permission:'.P::CAT_PVMEDIA_UPDATE);
+    Route::delete('product-variant-media/{media}', [ProductVariantMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PVMEDIA_DESTROY);
+
+    // Product variant prices
+    Route::post('product-variants/{variant}/prices', [ProductVariantPriceController::class, 'store'])->middleware('permission:'.P::CAT_PVPRICE_CREATE);
+    Route::put('product-variants/{variant}/prices/{currency_code}', [ProductVariantPriceController::class, 'update'])->middleware('permission:'.P::CAT_PVPRICE_UPDATE);
+    Route::delete('product-variants/{variant}/prices/{currency_code}', [ProductVariantPriceController::class, 'destroy'])->middleware('permission:'.P::CAT_PVPRICE_DESTROY);
+
+    // Product bundles - mapping bundle product -> child variants
+    Route::post('product-bundles', [ProductBundleController::class, 'store'])->middleware('permission:'.P::CAT_PBUNDLE_CREATE);
+    Route::put('product-bundles/{bundle}', [ProductBundleController::class, 'update'])->middleware('permission:'.P::CAT_PBUNDLE_UPDATE);
+    Route::delete('product-bundles/{bundle}', [ProductBundleController::class, 'destroy'])->middleware('permission:'.P::CAT_PBUNDLE_DESTROY);
+
+    // Related products
+    Route::post('related-products', [RelatedProductController::class, 'store'])->middleware('permission:'.P::CAT_RELATED_CREATE);
+    Route::delete('related-products/{product}/{related_product}', [RelatedProductController::class, 'destroy'])->middleware('permission:'.P::CAT_RELATED_DESTROY);
+
+    // Category <-> Product pivot
+    Route::post('category-products', [CategoryProductController::class, 'store'])->middleware('permission:'.P::CAT_CATPROD_CREATE);
+    Route::delete('category-products/{category}/{product}', [CategoryProductController::class, 'destroy'])->middleware('permission:'.P::CAT_CATPROD_DESTROY);
+
+    // Collection <-> Product pivot
+    Route::post('collection-products', [CollectionProductController::class, 'store'])->middleware('permission:'.P::CAT_COLPROD_CREATE);
+    Route::delete('collection-products/{collection}/{product}', [CollectionProductController::class, 'destroy'])->middleware('permission:'.P::CAT_COLPROD_DESTROY);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Content
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
+
+Route::middleware('auth:sanctum')->group(function () {});
+
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Core
 |--------------------------------------------------------------------------
 |
 | These routes are barley used for managing status tables
@@ -71,6 +213,7 @@ Route::get('stock-movement-types/{stock_movement_type}', [StockMovementTypeContr
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+
     // Countries
     Route::post('countries', [CountryController::class, 'store'])->middleware('permission:'.P::CTRY_CREATE);
     Route::put('countries/{country}', [CountryController::class, 'update'])->middleware('permission:'.P::CTRY_UPDATE);
@@ -134,42 +277,77 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Protected mutations
+| Sanctum protected APIs - Customer
 |--------------------------------------------------------------------------
 |
-| The following routes are mostly role based access.
+| These routes are for admin with permissions.
 |
 */
 
-// sanctum protected APIs
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Auth
-    Route::post('logout', [AuthController::class, 'logoutToken']);
-    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
-    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1']);
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Inventory
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // User
-    Route::get('/user', [UserController::class, 'user']);
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Catalog
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Order
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // Content
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Core
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Payment
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // Customer
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Inventory
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Promotion
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // Order
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Payment
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Shipping
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // Promotion
+Route::middleware('auth:sanctum')->group(function () {});
 
-    // Shipping
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Tax
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
 
-    // Tax
-
-});
+Route::middleware('auth:sanctum')->group(function () {});

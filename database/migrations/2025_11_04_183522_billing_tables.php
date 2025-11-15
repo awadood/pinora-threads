@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreign('currency_code')->references('code')->on('currencies');
             $table->foreign('invoice_status_code')->references('code')->on('invoice_statuses');
 
-            $table->index(['order_id', 'status']);
+            $table->index(['invoice_status_code', 'order_id']);
             $table->index(['issued_at']);
         });
 
@@ -54,7 +54,7 @@ return new class extends Migration
             $table->foreign('payment_method_code')->references('code')->on('payment_methods');
             $table->foreign('payment_status_code')->references('code')->on('payment_statuses');
 
-            $table->index(['order_id', 'status']);
+            $table->index(['order_id', 'payment_status_code']);
             $table->index(['gateway_txn_id']);
             $table->index(['processed_at']);
         });
@@ -104,7 +104,7 @@ return new class extends Migration
             $table->foreign('currency_code')->references('code')->on('currencies');
             $table->foreign('refund_status_code')->references('code')->on('refund_statuses');
 
-            $table->index(['order_id', 'status']);
+            $table->index(['order_id', 'refund_status_code']);
             $table->index(['payment_id']);
             $table->index(['processed_at']);
         });
@@ -113,11 +113,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->unique();
             $table->foreignId('stock_id')->constrained();
-            $table->string('shipment_method_code', [
-                'pickup', // customer picks from store
-                'self', // your own employee delivery
-                'courier', // USPS/UPS/FedEx/TCS/Leopards/M&P, etc.
-            ]);
+            $table->string('shipment_method_code');
 
             // Carrier fields only relevant when method='courier'
             $table->string('carrier')->nullable(); // e.g., 'USPS','UPS','FEDEX','LEOPARDS','TCS'
@@ -150,9 +146,9 @@ return new class extends Migration
             $table->foreign('shipment_status_code')->references('code')->on('shipment_statuses');
 
             // Helpful indexes
-            $table->index(['status', 'shipped_at']);
+            $table->index(['shipment_status_code', 'shipped_at']);
             $table->index(['tracking_number']);
-            $table->index(['method', 'carrier']);
+            $table->index(['shipment_method_code', 'carrier']);
         });
 
         // Promotions
