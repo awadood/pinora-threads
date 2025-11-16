@@ -252,6 +252,30 @@ final class Permissions
     |
     */
 
+    public const INVT_STOCK_CREATE = 'inventory.stock.create';
+
+    public const INVT_STOCK_UPDATE = 'inventory.stock.update';
+
+    public const INVT_STOCK_DESTROY = 'inventory.stock.destroy';
+
+    public const INVT_STOCKLVL_CREATE = 'inventory.stock_level.create';
+
+    public const INVT_STOCKLVL_UPDATE = 'inventory.stock_level.update';
+
+    public const INVT_STOCKLVL_DESTROY = 'inventory.stock_level.destroy';
+
+    public const INVT_STOCKBATCH_CREATE = 'inventory.stock_batch.create';
+
+    public const INVT_STOCKBATCH_UPDATE = 'inventory.stock_batch.update';
+
+    public const INVT_STOCKBATCH_DESTROY = 'inventory.stock_batch.destroy';
+
+    public const INVT_STOCKMOVE_CREATE = 'inventory.stock_movement.create';
+
+    public const INVT_BACKINSTOCK_VIEW = 'inventory.back_in_stock.view';
+
+    public const INVT_BACKINSTOCK_DESTROY = 'inventory.back_in_stock.destroy';
+
     /*
     |--------------------------------------------------------------------------
     | Order permissions

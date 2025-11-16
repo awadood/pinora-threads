@@ -41,6 +41,11 @@ use App\Http\Controllers\Engagement\LookbookController;
 use App\Http\Controllers\Engagement\LookbookItemController;
 use App\Http\Controllers\Engagement\LookbookItemProductController;
 use App\Http\Controllers\Engagement\TestimonialController;
+use App\Http\Controllers\Inventory\StockBackInSubscriptionController;
+use App\Http\Controllers\Inventory\StockBatchController;
+use App\Http\Controllers\Inventory\StockController;
+use App\Http\Controllers\Inventory\StockLevelController;
+use App\Http\Controllers\Inventory\StockMovementController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -114,6 +119,17 @@ Route::get('lookbooks/{slug}', [LookbookController::class, 'showBySlug']);
 Route::get('lookbooks/{slug}/items', [LookbookController::class, 'items']);
 Route::get('lookbook-items/{item}', [LookbookItemController::class, 'show']);
 Route::get('lookbook-items/{item}/products', [LookbookItemProductController::class, 'index']);
+
+// Inventory
+Route::get('stocks', [StockController::class, 'index']);
+Route::get('stocks/{stock}', [StockController::class, 'show']);
+Route::get('stock-levels', [StockLevelController::class, 'index']);
+Route::get('stock-levels/{stock_level}', [StockLevelController::class, 'show']);
+Route::get('stock-batches', [StockBatchController::class, 'index']);
+Route::get('stock-batches/{stock_batch}', [StockBatchController::class, 'show']);
+Route::get('stock-movements', [StockMovementController::class, 'index']);
+Route::get('stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
+Route::post('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'store']); // create requires auth or email
 
 /*
 |--------------------------------------------------------------------------
@@ -371,7 +387,31 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Stocks
+    Route::post('stocks', [StockController::class, 'store'])->middleware('permission:'.P::INVT_STOCK_CREATE);
+    Route::put('stocks/{stock}', [StockController::class, 'update'])->middleware('permission:'.P::INVT_STOCK_UPDATE);
+    Route::delete('stocks/{stock}', [StockController::class, 'destroy'])->middleware('permission:'.P::INVT_STOCK_DESTROY);
+
+    // Stock levels
+    Route::post('stock-levels', [StockLevelController::class, 'store'])->middleware('permission:'.P::INVT_STOCKLVL_CREATE);
+    Route::put('stock-levels/{stock_level}', [StockLevelController::class, 'update'])->middleware('permission:'.P::INVT_STOCKLVL_UPDATE);
+    Route::delete('stock-levels/{stock_level}', [StockLevelController::class, 'destroy'])->middleware('permission:'.P::INVT_STOCKLVL_DESTROY);
+
+    // Stock batches
+    Route::post('stock-batches', [StockBatchController::class, 'store'])->middleware('permission:'.P::INVT_STOCKBATCH_CREATE);
+    Route::put('stock-batches/{stock_batch}', [StockBatchController::class, 'update'])->middleware('permission:'.P::INVT_STOCKBATCH_UPDATE);
+    Route::delete('stock-batches/{stock_batch}', [StockBatchController::class, 'destroy'])->middleware('permission:'.P::INVT_STOCKBATCH_DESTROY);
+
+    // Stock movements (create only, immutable)
+    Route::post('stock-movements', [StockMovementController::class, 'store'])->middleware('permission:'.P::INVT_STOCKMOVE_CREATE);
+
+    // Back in stock subscriptions (admin listing + delete)
+    Route::get('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'index'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
+    Route::get('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'show'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
+    Route::delete('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'destroy'])->middleware('permission:'.P::INVT_BACKINSTOCK_DESTROY);
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -52,6 +52,16 @@ use App\Repositories\Engagement\LookbookItemRepository;
 use App\Repositories\Engagement\LookbookRepository;
 use App\Repositories\Engagement\TestimonialRepository;
 use App\Repositories\IBaseRepository;
+use App\Repositories\Inventory\Contracts\IStockBackInSubscriptionRepository;
+use App\Repositories\Inventory\Contracts\IStockBatchRepository;
+use App\Repositories\Inventory\Contracts\IStockLevelRepository;
+use App\Repositories\Inventory\Contracts\IStockMovementRepository;
+use App\Repositories\Inventory\Contracts\IStockRepository;
+use App\Repositories\Inventory\StockBackInSubscriptionRepository;
+use App\Repositories\Inventory\StockBatchRepository;
+use App\Repositories\Inventory\StockLevelRepository;
+use App\Repositories\Inventory\StockMovementRepository;
+use App\Repositories\Inventory\StockRepository;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -93,6 +103,11 @@ class AppServiceProvider extends ServiceProvider
         ILookbookItemProductRepository::class => LookbookItemProductRepository::class,
 
         // Inventory
+        IStockRepository::class => StockRepository::class,
+        IStockLevelRepository::class => StockLevelRepository::class,
+        IStockBatchRepository::class => StockBatchRepository::class,
+        IStockMovementRepository::class => StockMovementRepository::class,
+        IStockBackInSubscriptionRepository::class => StockBackInSubscriptionRepository::class,
 
         // Order
 
