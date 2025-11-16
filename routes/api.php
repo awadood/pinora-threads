@@ -31,6 +31,16 @@ use App\Http\Controllers\Core\ShipmentMethodController;
 use App\Http\Controllers\Core\ShipmentStatusController;
 use App\Http\Controllers\Core\StateController;
 use App\Http\Controllers\Core\StockMovementTypeController;
+use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\Customer\CustomerProfileController;
+use App\Http\Controllers\Customer\FavoriteController;
+use App\Http\Controllers\Customer\RecentlyViewedController;
+use App\Http\Controllers\Customer\WishlistController;
+use App\Http\Controllers\Customer\WishlistItemController;
+use App\Http\Controllers\Engagement\LookbookController;
+use App\Http\Controllers\Engagement\LookbookItemController;
+use App\Http\Controllers\Engagement\LookbookItemProductController;
+use App\Http\Controllers\Engagement\TestimonialController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -93,6 +103,17 @@ Route::get('products/{slug}/related', [RelatedProductController::class, 'indexBy
 Route::get('product-variants/{id}', [ProductVariantController::class, 'show']); // rarely needed on storefront
 Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
 Route::get('product-variants/{id}/prices', [ProductVariantPriceController::class, 'indexByVariant']);
+
+// Customer
+Route::get('wishlists/shared/{share_token}', [WishlistController::class, 'showByShareToken']);
+
+// Engagement
+Route::get('testimonials', [TestimonialController::class, 'index']);
+Route::get('lookbooks', [LookbookController::class, 'index']);
+Route::get('lookbooks/{slug}', [LookbookController::class, 'showBySlug']);
+Route::get('lookbooks/{slug}/items', [LookbookController::class, 'items']);
+Route::get('lookbook-items/{item}', [LookbookItemController::class, 'show']);
+Route::get('lookbook-items/{item}/products', [LookbookItemProductController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -194,17 +215,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Sanctum protected APIs - Content
-|--------------------------------------------------------------------------
-|
-| These routes are for admin with permissions.
-|
-*/
-
-Route::middleware('auth:sanctum')->group(function () {});
-
-/*
-|--------------------------------------------------------------------------
 | Sanctum protected APIs - Core
 |--------------------------------------------------------------------------
 |
@@ -284,7 +294,73 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Customer profile (1–1 with user)
+    Route::get('customer/profile', [CustomerProfileController::class, 'show']);
+    Route::put('customer/profile', [CustomerProfileController::class, 'upsert']);
+
+    // Addresses for current user
+    Route::get('addresses', [AddressController::class, 'index']);
+    Route::post('addresses', [AddressController::class, 'store']);
+    Route::put('addresses/{address}', [AddressController::class, 'update']);
+    Route::delete('addresses/{address}', [AddressController::class, 'destroy']);
+
+    // Favorites for current user
+    Route::get('favorites', [FavoriteController::class, 'index']);
+    Route::post('favorites', [FavoriteController::class, 'store']);      // body: product_id, product_variant_id?
+    Route::delete('favorites/{favorite}', [FavoriteController::class, 'destroy']);
+
+    // Wishlists for current user
+    Route::get('wishlists', [WishlistController::class, 'index']);
+    Route::post('wishlists', [WishlistController::class, 'store']);
+    Route::get('wishlists/{wishlist}', [WishlistController::class, 'show']);  // includes items
+    Route::put('wishlists/{wishlist}', [WishlistController::class, 'update']);
+    Route::delete('wishlists/{wishlist}', [WishlistController::class, 'destroy']);
+
+    // Wishlist items for a given wishlist
+    Route::post('wishlists/{wishlist}/items', [WishlistItemController::class, 'store']);
+    Route::delete('wishlists/{wishlist}/items/{item}', [WishlistItemController::class, 'destroy']);
+
+    // Recently viewed (per user)
+    Route::get('recently-viewed', [RecentlyViewedController::class, 'index']);
+    Route::post('recently-viewed', [RecentlyViewedController::class, 'store']);    // track a view
+    Route::delete('recently-viewed/{entry}', [RecentlyViewedController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Engagement
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Testimonials
+    Route::post('testimonials', [TestimonialController::class, 'store'])->middleware('permission:'.P::ENG_TEST_CREATE);
+    Route::put('testimonials/{testimonial}', [TestimonialController::class, 'update'])->middleware('permission:'.P::ENG_TEST_UPDATE);
+    Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->middleware('permission:'.P::ENG_TEST_DESTROY);
+
+    // Lookbooks
+    Route::post('lookbooks', [LookbookController::class, 'store'])->middleware('permission:'.P::ENG_LBK_CREATE);
+    Route::put('lookbooks/{lookbook}', [LookbookController::class, 'update'])->middleware('permission:'.P::ENG_LBK_UPDATE);
+    Route::delete('lookbooks/{lookbook}', [LookbookController::class, 'destroy'])->middleware('permission:'.P::ENG_LBK_DESTROY);
+
+    // Lookbook items
+    Route::get('lookbooks/{lookbook}/items', [LookbookItemController::class, 'indexByLookbook'])->middleware('permission:'.P::ENG_LBKITEM_VIEW);
+    Route::post('lookbooks/{lookbook}/items', [LookbookItemController::class, 'store'])->middleware('permission:'.P::ENG_LBKITEM_CREATE);
+    Route::put('lookbook-items/{item}', [LookbookItemController::class, 'update'])->middleware('permission:'.P::ENG_LBKITEM_UPDATE);
+    Route::delete('lookbook-items/{item}', [LookbookItemController::class, 'destroy'])->middleware('permission:'.P::ENG_LBKITEM_DESTROY);
+
+    // Lookbook item products
+    Route::post('lookbook-items/{item}/products', [LookbookItemProductController::class, 'store'])->middleware('permission:'.P::ENG_LBKITEMPROD_CREATE);
+    Route::put('lookbook-item-products/{attachment}', [LookbookItemProductController::class, 'update'])->middleware('permission:'.P::ENG_LBKITEMPROD_UPDATE);
+    Route::delete('lookbook-item-products/{attachment}', [LookbookItemProductController::class, 'destroy'])->middleware('permission:'.P::ENG_LBKITEMPROD_DESTROY);
+
+});
 
 /*
 |--------------------------------------------------------------------------

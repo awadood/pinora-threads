@@ -103,7 +103,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Core permissions
+    | Catalog permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -198,4 +198,92 @@ final class Permissions
     public const CAT_COLPROD_CREATE = 'catalog.collection.product.create';
 
     public const CAT_COLPROD_DESTROY = 'catalog.collection.product.destroy';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Customer permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    // Authenticated customers will see their pages. If needed for admin, we will add permissions here.
+
+    /*
+    |--------------------------------------------------------------------------
+    | Engagement permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    // Engagement - Testimonials
+    public const ENG_TEST_CREATE = 'engagement.testimonial.create';
+
+    public const ENG_TEST_UPDATE = 'engagement.testimonial.update';
+
+    public const ENG_TEST_DESTROY = 'engagement.testimonial.destroy';
+
+    // Engagement - Lookbooks
+    public const ENG_LBK_CREATE = 'engagement.lookbook.create';
+
+    public const ENG_LBK_UPDATE = 'engagement.lookbook.update';
+
+    public const ENG_LBK_DESTROY = 'engagement.lookbook.destroy';
+
+    // Engagement - Lookbook Items
+    public const ENG_LBKITEM_VIEW = 'engagement.lookbook-item.view';
+
+    public const ENG_LBKITEM_CREATE = 'engagement.lookbook-item.create';
+
+    public const ENG_LBKITEM_UPDATE = 'engagement.lookbook-item.update';
+
+    public const ENG_LBKITEM_DESTROY = 'engagement.lookbook-item.destroy';
+
+    // Engagement - Lookbook Item Products
+    public const ENG_LBKITEMPROD_CREATE = 'engagement.lookbook-item-product.create';
+
+    public const ENG_LBKITEMPROD_UPDATE = 'engagement.lookbook-item-product.update';
+
+    public const ENG_LBKITEMPROD_DESTROY = 'engagement.lookbook-item-product.destroy';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Inventory permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Order permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Promotion permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shipping permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tax permissions
+    |--------------------------------------------------------------------------
+    |
+    */
 }

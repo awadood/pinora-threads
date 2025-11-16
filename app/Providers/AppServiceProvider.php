@@ -31,6 +31,26 @@ use App\Repositories\Catalog\ProductVariantMediaRepository;
 use App\Repositories\Catalog\ProductVariantPriceRepository;
 use App\Repositories\Catalog\ProductVariantRepository;
 use App\Repositories\Catalog\RelatedProductRepository;
+use App\Repositories\Customer\AddressRepository;
+use App\Repositories\Customer\Contracts\IAddressRepository;
+use App\Repositories\Customer\Contracts\ICustomerProfileRepository;
+use App\Repositories\Customer\Contracts\IFavoriteRepository;
+use App\Repositories\Customer\Contracts\IRecentlyViewedRepository;
+use App\Repositories\Customer\Contracts\IWishlistItemRepository;
+use App\Repositories\Customer\Contracts\IWishlistRepository;
+use App\Repositories\Customer\CustomerProfileRepository;
+use App\Repositories\Customer\FavoriteRepository;
+use App\Repositories\Customer\RecentlyViewedRepository;
+use App\Repositories\Customer\WishlistItemRepository;
+use App\Repositories\Customer\WishlistRepository;
+use App\Repositories\Engagement\Contracts\ILookbookItemProductRepository;
+use App\Repositories\Engagement\Contracts\ILookbookItemRepository;
+use App\Repositories\Engagement\Contracts\ILookbookRepository;
+use App\Repositories\Engagement\Contracts\ITestimonialRepository;
+use App\Repositories\Engagement\LookbookItemProductRepository;
+use App\Repositories\Engagement\LookbookItemRepository;
+use App\Repositories\Engagement\LookbookRepository;
+use App\Repositories\Engagement\TestimonialRepository;
 use App\Repositories\IBaseRepository;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
@@ -58,11 +78,19 @@ class AppServiceProvider extends ServiceProvider
         ICategoryProductRepository::class => CategoryProductRepository::class,
         ICollectionProductRepository::class => CollectionProductRepository::class,
 
-        // Content
-
-        // Core
-
         // Customer
+        IAddressRepository::class => AddressRepository::class,
+        ICustomerProfileRepository::class => CustomerProfileRepository::class,
+        IFavoriteRepository::class => FavoriteRepository::class,
+        IRecentlyViewedRepository::class => RecentlyViewedRepository::class,
+        IWishlistItemRepository::class => WishlistItemRepository::class,
+        IWishlistRepository::class => WishlistRepository::class,
+
+        // Engagement
+        ITestimonialRepository::class => TestimonialRepository::class,
+        ILookbookRepository::class => LookbookRepository::class,
+        ILookbookItemRepository::class => LookbookItemRepository::class,
+        ILookbookItemProductRepository::class => LookbookItemProductRepository::class,
 
         // Inventory
 
