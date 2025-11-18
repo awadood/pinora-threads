@@ -27,7 +27,7 @@ class CustomerProfileController extends Controller
     {
         $profile = $this->service->getOrCreateForUser($request->user());
 
-        return new CustomerProfileResource($profile);
+        return CustomerProfileResource::make($profile);
     }
 
     public function update(Request $request): CustomerProfileResource
@@ -41,6 +41,6 @@ class CustomerProfileController extends Controller
 
         $profile = $this->service->updateForUser($request->user(), $validated);
 
-        return new CustomerProfileResource($profile);
+        return CustomerProfileResource::make($profile);
     }
 }

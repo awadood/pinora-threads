@@ -22,12 +22,8 @@ class ProductMediaController extends Controller
 {
     use QueryFilterable;
 
-    protected IProductMediaRepository $mediaRepo;
-
-    public function __construct(IProductMediaRepository $mediaRepo)
+    public function __construct(protected IProductMediaRepository $mediaRepo)
     {
-        $this->mediaRepo = $mediaRepo;
-
         $this->allowedFilters = ['product_id', 'type'];
         $this->likeFilters = [];
         $this->allowedSorts = ['position', 'id'];
@@ -52,14 +48,14 @@ class ProductMediaController extends Controller
 
         $media = $this->mediaRepo->create($data);
 
-        return (new ProductMediaResource($media))->response()->setStatusCode(201);
+        return (ProductMediaResource::make($media))->response()->setStatusCode(201);
     }
 
     public function update(ProductMediaRequest $request, ProductMedia $media)
     {
         $media->fill($request->validated())->save();
 
-        return new ProductMediaResource($media);
+        return ProductMediaResource::make($media);
     }
 
     public function destroy(ProductMedia $media)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Order;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -11,7 +12,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class OrderResource extends JsonResource
 {
-    public function toArray($request): array
+    /**
+     * @return array<string,mixed>
+     */
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
@@ -21,8 +25,8 @@ class OrderResource extends JsonResource
             'order_status_code' => $this->order_status_code,
             'billing_address_id' => $this->billing_address_id,
             'shipping_address_id' => $this->shipping_address_id,
-            'shipping_address' => $this->shipping_address,
             'billing_address' => $this->billing_address,
+            'shipping_address' => $this->shipping_address,
             'tax_inclusive' => $this->tax_inclusive,
             'items_subtotal' => $this->items_subtotal,
             'total_discount' => $this->total_discount,
@@ -35,7 +39,6 @@ class OrderResource extends JsonResource
             'taxes' => $this->taxes,
             'payment_method' => $this->payment_method,
             'payment_txn_id' => $this->payment_txn_id,
-            'idempotency_key' => $this->idempotency_key,
             'shipping_method' => $this->shipping_method,
             'tracking_number' => $this->tracking_number,
             'carrier' => $this->carrier,
@@ -46,6 +49,7 @@ class OrderResource extends JsonResource
             'refunded_at' => $this->refunded_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'items' => OrderItemResource::collection($this->whenLoaded('items')),
         ];
     }
 }

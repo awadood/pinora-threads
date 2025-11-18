@@ -22,12 +22,8 @@ class AttributeOptionController extends Controller
 {
     use QueryFilterable;
 
-    protected IAttributeOptionRepository $options;
-
-    public function __construct(IAttributeOptionRepository $options)
+    public function __construct(protected IAttributeOptionRepository $options)
     {
-        $this->options = $options;
-
         $this->allowedFilters = ['attribute_id', 'value'];
         $this->likeFilters = ['value'];
         $this->allowedSorts = ['attribute_id', 'sort', 'value'];
@@ -45,14 +41,14 @@ class AttributeOptionController extends Controller
     {
         $option = $this->options->create($request->validated());
 
-        return (new AttributeOptionResource($option))->response()->setStatusCode(201);
+        return (AttributeOptionResource::make($option))->response()->setStatusCode(201);
     }
 
     public function update(AttributeOptionRequest $request, AttributeOption $attribute_option)
     {
         $attribute_option->fill($request->validated())->save();
 
-        return new AttributeOptionResource($attribute_option);
+        return AttributeOptionResource::make($attribute_option);
     }
 
     public function destroy(AttributeOption $attribute_option)

@@ -46,14 +46,14 @@ class StockLevelController extends Controller
         $entity = $this->stockLevels->find($stock_level);
         abort_if(! $entity, 404);
 
-        return new StockLevelResource($entity);
+        return StockLevelResource::make($entity);
     }
 
     public function store(StockLevelRequest $request)
     {
         $entity = $this->stockLevels->create($request->validated());
 
-        return (new StockLevelResource($entity))
+        return (StockLevelResource::make($entity))
             ->response()
             ->setStatusCode(201);
     }
@@ -65,7 +65,7 @@ class StockLevelController extends Controller
 
         $entity->fill($request->validated())->save();
 
-        return new StockLevelResource($entity);
+        return StockLevelResource::make($entity);
     }
 
     public function destroy(int $stock_level): JsonResponse

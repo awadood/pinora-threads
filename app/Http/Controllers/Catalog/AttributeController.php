@@ -21,12 +21,8 @@ class AttributeController extends Controller
 {
     use QueryFilterable;
 
-    protected IAttributeRepository $attributes;
-
-    public function __construct(IAttributeRepository $attributes)
+    public function __construct(protected IAttributeRepository $attributes)
     {
-        $this->attributes = $attributes;
-
         $this->allowedFilters = ['code', 'label', 'type', 'active'];
         $this->likeFilters = ['code', 'label'];
         $this->allowedSorts = ['code', 'label'];
@@ -46,21 +42,21 @@ class AttributeController extends Controller
     {
         $attribute = $this->attributes->query()->where('code', $code)->firstOrFail();
 
-        return new AttributeResource($attribute);
+        return AttributeResource::make($attribute);
     }
 
     public function store(AttributeRequest $request)
     {
         $attribute = $this->attributes->create($request->validated());
 
-        return (new AttributeResource($attribute))->response()->setStatusCode(201);
+        return (AttributeResource::make($attribute))->response()->setStatusCode(201);
     }
 
     public function update(AttributeRequest $request, Attribute $attribute)
     {
         $attribute->fill($request->validated())->save();
 
-        return new AttributeResource($attribute);
+        return AttributeResource::make($attribute);
     }
 
     public function destroy(Attribute $attribute)

@@ -48,7 +48,7 @@ class StockBackInSubscriptionController extends Controller
         $entity = $this->subscriptions->find($stock_back_in_subscription);
         abort_if(! $entity, 404);
 
-        return new StockBackInSubscriptionResource($entity);
+        return StockBackInSubscriptionResource::make($entity);
     }
 
     public function store(StockBackInSubscriptionRequest $request)
@@ -61,7 +61,7 @@ class StockBackInSubscriptionController extends Controller
             email: $request->validated()['email'] ?? $user?->email,
         );
 
-        return (new StockBackInSubscriptionResource($subscription))
+        return (StockBackInSubscriptionResource::make($subscription))
             ->response()
             ->setStatusCode(201);
     }

@@ -17,12 +17,7 @@ use Illuminate\Routing\Controller;
  */
 class ProductVariantPriceController extends Controller
 {
-    protected IProductVariantPriceRepository $prices;
-
-    public function __construct(IProductVariantPriceRepository $prices)
-    {
-        $this->prices = $prices;
-    }
+    public function __construct(protected IProductVariantPriceRepository $prices){}
 
     public function indexByVariant(ProductVariant $id)
     {
@@ -38,7 +33,7 @@ class ProductVariantPriceController extends Controller
 
         $price = $this->prices->create($data);
 
-        return (new ProductVariantPriceResource($price))->response()->setStatusCode(201);
+        return (ProductVariantPriceResource::make($price))->response()->setStatusCode(201);
     }
 
     public function update(ProductVariantPriceRequest $request, ProductVariant $variant, string $currency_code)
@@ -50,7 +45,7 @@ class ProductVariantPriceController extends Controller
 
         $price->fill($request->validated())->save();
 
-        return new ProductVariantPriceResource($price);
+        return ProductVariantPriceResource::make($price);
     }
 
     public function destroy(ProductVariant $variant, string $currency_code)

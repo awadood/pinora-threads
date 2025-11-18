@@ -18,11 +18,7 @@ use Illuminate\Routing\Controller;
  */
 class AddressController extends Controller
 {
-    public function __construct(
-        protected AddressService $service
-    ) {
-        $this->middleware('auth:sanctum');
-    }
+    public function __construct(protected AddressService $service) {}
 
     public function index(Request $request)
     {
@@ -49,7 +45,7 @@ class AddressController extends Controller
 
         $address = $this->service->createForUser($request->user(), $validated);
 
-        return new AddressResource($address);
+        return AddressResource::make($address);
     }
 
     public function update(Request $request, Address $address): AddressResource
@@ -70,7 +66,7 @@ class AddressController extends Controller
 
         $address = $this->service->updateForUser($request->user(), $address, $validated);
 
-        return new AddressResource($address);
+        return AddressResource::make($address);
     }
 
     public function destroy(Request $request, Address $address): JsonResponse
@@ -84,13 +80,13 @@ class AddressController extends Controller
     {
         $this->service->setDefaultShipping($request->user(), $address);
 
-        return new AddressResource($address->fresh());
+        return AddressResource::make($address->fresh());
     }
 
     public function setDefaultBilling(Request $request, Address $address): AddressResource
     {
         $this->service->setDefaultBilling($request->user(), $address);
 
-        return new AddressResource($address->fresh());
+        return AddressResource::make($address->fresh());
     }
 }

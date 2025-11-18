@@ -23,15 +23,8 @@ class CategoryController extends Controller
 {
     use QueryFilterable;
 
-    protected ICategoryRepository $categories;
-
-    protected IProductRepository $products;
-
-    public function __construct(ICategoryRepository $categories, IProductRepository $products)
+    public function __construct(protected ICategoryRepository $categories,protected IProductRepository $products)
     {
-        $this->categories = $categories;
-        $this->products = $products;
-
         $this->allowedFilters = ['name', 'slug', 'parent_id', 'active'];
         $this->likeFilters = ['name', 'slug'];
         $this->allowedSorts = ['sort', 'name'];
@@ -51,7 +44,7 @@ class CategoryController extends Controller
     {
         $category = $this->categories->query()->where('slug', $slug)->firstOrFail();
 
-        return new CategoryResource($category);
+        return CategoryResource::make($category);
     }
 
     public function indexByCategory(string $slug, Request $request)
@@ -72,14 +65,14 @@ class CategoryController extends Controller
     {
         $category = $this->categories->create($request->validated());
 
-        return (new CategoryResource($category))->response()->setStatusCode(201);
+        return (CategoryResource::make($category))->response()->setStatusCode(201);
     }
 
     public function update(CategoryRequest $request, Category $category)
     {
         $category->fill($request->validated())->save();
 
-        return new CategoryResource($category);
+        return CategoryResource::make($category);
     }
 
     public function destroy(Category $category)

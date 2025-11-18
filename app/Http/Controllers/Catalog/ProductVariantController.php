@@ -22,12 +22,8 @@ class ProductVariantController extends Controller
 {
     use QueryFilterable;
 
-    protected IProductVariantRepository $variants;
-
-    public function __construct(IProductVariantRepository $variants)
+    public function __construct(protected IProductVariantRepository $variants)
     {
-        $this->variants = $variants;
-
         $this->allowedFilters = ['product_id', 'sku', 'title', 'active', 'default'];
         $this->likeFilters = ['sku', 'title'];
         $this->allowedSorts = ['id'];
@@ -47,7 +43,7 @@ class ProductVariantController extends Controller
 
     public function show(ProductVariant $id)
     {
-        return new ProductVariantResource($id);
+        return ProductVariantResource::make($id);
     }
 
     public function store(ProductVariantRequest $request, Product $product)
@@ -57,14 +53,14 @@ class ProductVariantController extends Controller
 
         $variant = $this->variants->create($data);
 
-        return (new ProductVariantResource($variant))->response()->setStatusCode(201);
+        return (ProductVariantResource::make($variant))->response()->setStatusCode(201);
     }
 
     public function update(ProductVariantRequest $request, ProductVariant $variant)
     {
         $variant->fill($request->validated())->save();
 
-        return new ProductVariantResource($variant);
+        return ProductVariantResource::make($variant);
     }
 
     public function destroy(ProductVariant $variant)

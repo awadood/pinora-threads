@@ -19,9 +19,7 @@ use Illuminate\Http\JsonResponse;
  */
 class LookbookItemProductController extends Controller
 {
-    public function __construct(
-        protected ILookbookItemProductRepository $attachments
-    ) {}
+    public function __construct(protected ILookbookItemProductRepository $attachments) {}
 
     /**
      * Public endpoint — list attached products for a lookbook item.
@@ -40,7 +38,7 @@ class LookbookItemProductController extends Controller
 
         $row = $this->attachments->create($data);
 
-        return (new LookbookItemProductResource($row))
+        return (LookbookItemProductResource::make($row))
             ->response()
             ->setStatusCode(201);
     }
@@ -50,7 +48,7 @@ class LookbookItemProductController extends Controller
         $attachment->fill($request->validated());
         $attachment->save();
 
-        return new LookbookItemProductResource($attachment);
+        return LookbookItemProductResource::make($attachment);
     }
 
     public function destroy(LookbookItemProduct $attachment): JsonResponse

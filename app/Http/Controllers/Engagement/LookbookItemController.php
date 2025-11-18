@@ -19,9 +19,7 @@ use Illuminate\Http\JsonResponse;
  */
 class LookbookItemController extends Controller
 {
-    public function __construct(
-        protected ILookbookItemRepository $items
-    ) {}
+    public function __construct(protected ILookbookItemRepository $items) {}
 
     /**
      * Admin-only: list items for a given lookbook by model binding.
@@ -35,7 +33,7 @@ class LookbookItemController extends Controller
 
     public function show(LookbookItem $item)
     {
-        return new LookbookItemResource($item);
+        return LookbookItemResource::make($item);
     }
 
     public function store(LookbookItemRequest $request, Lookbook $lookbook)
@@ -45,7 +43,7 @@ class LookbookItemController extends Controller
 
         $item = $this->items->create($data);
 
-        return (new LookbookItemResource($item))
+        return (LookbookItemResource::make($item))
             ->response()
             ->setStatusCode(201);
     }
@@ -55,7 +53,7 @@ class LookbookItemController extends Controller
         $item->fill($request->validated());
         $item->save();
 
-        return new LookbookItemResource($item);
+        return LookbookItemResource::make($item);
     }
 
     public function destroy(LookbookItem $item): JsonResponse

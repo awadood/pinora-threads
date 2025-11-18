@@ -283,6 +283,12 @@ final class Permissions
     |
     */
 
+    public const ORD_INDEX = 'order.index';   // List/search all orders (admin)
+
+    public const ORD_VIEW = 'order.view';    // View a specific order (admin)
+
+    public const ORD_UPDATE = 'order.update';  // Update order status / meta (admin)
+
     /*
     |--------------------------------------------------------------------------
     | Payment permissions

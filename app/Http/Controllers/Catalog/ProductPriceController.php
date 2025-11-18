@@ -17,12 +17,7 @@ use Illuminate\Routing\Controller;
  */
 class ProductPriceController extends Controller
 {
-    protected IProductPriceRepository $prices;
-
-    public function __construct(IProductPriceRepository $prices)
-    {
-        $this->prices = $prices;
-    }
+    public function __construct(protected IProductPriceRepository $prices){ }
 
     public function store(ProductPriceRequest $request, Product $product)
     {
@@ -31,7 +26,7 @@ class ProductPriceController extends Controller
 
         $price = $this->prices->create($data);
 
-        return (new ProductPriceResource($price))->response()->setStatusCode(201);
+        return (ProductPriceResource::make($price))->response()->setStatusCode(201);
     }
 
     public function update(ProductPriceRequest $request, Product $product, string $currency_code)
@@ -43,7 +38,7 @@ class ProductPriceController extends Controller
 
         $price->fill($request->validated())->save();
 
-        return new ProductPriceResource($price);
+        return ProductPriceResource::make($price);
     }
 
     public function destroy(Product $product, string $currency_code)

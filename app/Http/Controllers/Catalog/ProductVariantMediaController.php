@@ -22,12 +22,8 @@ class ProductVariantMediaController extends Controller
 {
     use QueryFilterable;
 
-    protected IProductVariantMediaRepository $mediaRepo;
-
-    public function __construct(IProductVariantMediaRepository $mediaRepo)
+    public function __construct(protected IProductVariantMediaRepository $mediaRepo)
     {
-        $this->mediaRepo = $mediaRepo;
-
         $this->allowedFilters = ['product_variant_id', 'type'];
         $this->likeFilters = [];
         $this->allowedSorts = ['position', 'id'];

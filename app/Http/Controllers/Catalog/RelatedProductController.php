@@ -55,7 +55,7 @@ class RelatedProductController extends Controller
 
         $product = $this->products->find($pivot->related_product_id);
 
-        return (new ProductResource($product))->response()->setStatusCode(201);
+        return (ProductResource::make($product))->response()->setStatusCode(201);
     }
 
     public function destroy(int $product, int $related_product)

@@ -19,11 +19,7 @@ use Illuminate\Routing\Controller;
  */
 class WishlistItemController extends Controller
 {
-    public function __construct(
-        protected WishlistItemService $service
-    ) {
-        $this->middleware('auth:sanctum');
-    }
+    public function __construct(protected WishlistItemService $service) {}
 
     public function index(Request $request, Wishlist $wishlist)
     {
@@ -50,7 +46,7 @@ class WishlistItemController extends Controller
             $validated['product_variant_id'] ?? null
         );
 
-        return new WishlistItemResource($item);
+        return WishlistItemResource::make($item);
     }
 
     public function destroy(Request $request, WishlistItem $item): JsonResponse

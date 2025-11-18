@@ -48,7 +48,7 @@ class StockMovementController extends Controller
         $entity = $this->stockMovements->find($stock_movement);
         abort_if(! $entity, 404);
 
-        return new StockMovementResource($entity);
+        return StockMovementResource::make($entity);
     }
 
     /**
@@ -71,9 +71,7 @@ class StockMovementController extends Controller
             ]
         );
 
-        return (new StockMovementResource($movement))
-            ->response()
-            ->setStatusCode(201);
+        return (StockMovementResource::make($movement))->response()->setStatusCode(201);
     }
 
     /**

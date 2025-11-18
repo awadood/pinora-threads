@@ -21,12 +21,8 @@ class ProductController extends Controller
 {
     use QueryFilterable;
 
-    protected IProductRepository $products;
-
-    public function __construct(IProductRepository $products)
+    public function __construct(protected IProductRepository $products)
     {
-        $this->products = $products;
-
         $this->allowedFilters = ['sku', 'name', 'slug', 'type', 'active', 'tax_class_id'];
         $this->likeFilters = ['sku', 'name', 'slug'];
         $this->allowedSorts = ['name', 'sku', 'id'];
@@ -46,21 +42,21 @@ class ProductController extends Controller
     {
         $product = $this->products->query()->where('slug', $slug)->firstOrFail();
 
-        return new ProductResource($product);
+        return ProductResource::make($product);
     }
 
     public function store(ProductRequest $request)
     {
         $product = $this->products->create($request->validated());
 
-        return (new ProductResource($product))->response()->setStatusCode(201);
+        return (ProductResource::make($product))->response()->setStatusCode(201);
     }
 
     public function update(ProductRequest $request, Product $product)
     {
         $product->fill($request->validated())->save();
 
-        return new ProductResource($product);
+        return ProductResource::make($product);
     }
 
     public function destroy(Product $product)

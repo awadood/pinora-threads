@@ -18,9 +18,7 @@ use Illuminate\Http\Request;
  */
 class StockBatchController extends Controller
 {
-    public function __construct(
-        private readonly IStockBatchRepository $stockBatches,
-    ) {}
+    public function __construct(private readonly IStockBatchRepository $stockBatches) {}
 
     public function index(Request $request)
     {
@@ -46,14 +44,14 @@ class StockBatchController extends Controller
         $entity = $this->stockBatches->find($stock_batch);
         abort_if(! $entity, 404);
 
-        return new StockBatchResource($entity);
+        return StockBatchResource::make($entity);
     }
 
     public function store(StockBatchRequest $request)
     {
         $entity = $this->stockBatches->create($request->validated());
 
-        return (new StockBatchResource($entity))
+        return (StockBatchResource::make($entity))
             ->response()
             ->setStatusCode(201);
     }
@@ -65,7 +63,7 @@ class StockBatchController extends Controller
 
         $entity->fill($request->validated())->save();
 
-        return new StockBatchResource($entity);
+        return StockBatchResource::make($entity);
     }
 
     public function destroy(int $stock_batch): JsonResponse

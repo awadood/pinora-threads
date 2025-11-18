@@ -41,7 +41,7 @@ class LookbookController extends Controller
     {
         $lookbook = $this->service->findBySlugOrFail($slug);
 
-        return new LookbookResource($lookbook);
+        return LookbookResource::make($lookbook);
     }
 
     /**
@@ -61,7 +61,7 @@ class LookbookController extends Controller
     {
         $lookbook = $this->service->create($request->validated());
 
-        return (new LookbookResource($lookbook))
+        return (LookbookResource::make($lookbook))
             ->response()
             ->setStatusCode(201);
     }
@@ -73,7 +73,7 @@ class LookbookController extends Controller
     {
         $updated = $this->service->update($lookbook, $request->validated());
 
-        return new LookbookResource($updated);
+        return LookbookResource::make($updated);
     }
 
     /**

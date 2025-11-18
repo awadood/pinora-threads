@@ -17,11 +17,7 @@ use Illuminate\Routing\Controller;
  */
 class RecentlyViewedController extends Controller
 {
-    public function __construct(
-        protected RecentlyViewedService $service
-    ) {
-        $this->middleware('auth:sanctum')->only(['index']);
-    }
+    public function __construct(protected RecentlyViewedService $service) {}
 
     public function index(Request $request)
     {

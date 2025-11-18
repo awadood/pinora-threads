@@ -23,15 +23,8 @@ class CollectionController extends Controller
 {
     use QueryFilterable;
 
-    protected ICollectionRepository $collections;
-
-    protected IProductRepository $products;
-
-    public function __construct(ICollectionRepository $collections, IProductRepository $products)
+    public function __construct(protected ICollectionRepository $collections, protected IProductRepository $products)
     {
-        $this->collections = $collections;
-        $this->products = $products;
-
         $this->allowedFilters = ['name', 'slug', 'active'];
         $this->likeFilters = ['name', 'slug'];
         $this->allowedSorts = ['sort', 'name'];
@@ -51,7 +44,7 @@ class CollectionController extends Controller
     {
         $collection = $this->collections->query()->where('slug', $slug)->firstOrFail();
 
-        return new CollectionResource($collection);
+        return CollectionResource::make($collection);
     }
 
     public function indexByCollection(string $slug, Request $request)
@@ -72,14 +65,14 @@ class CollectionController extends Controller
     {
         $collection = $this->collections->create($request->validated());
 
-        return (new CollectionResource($collection))->response()->setStatusCode(201);
+        return (CollectionResource::make($collection))->response()->setStatusCode(201);
     }
 
     public function update(CollectionRequest $request, Collection $collection)
     {
         $collection->fill($request->validated())->save();
 
-        return new CollectionResource($collection);
+        return CollectionResource::make($collection);
     }
 
     public function destroy(Collection $collection)

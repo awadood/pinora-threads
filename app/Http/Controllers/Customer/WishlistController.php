@@ -18,11 +18,7 @@ use Illuminate\Routing\Controller;
  */
 class WishlistController extends Controller
 {
-    public function __construct(
-        protected WishlistService $service
-    ) {
-        $this->middleware('auth:sanctum')->except(['showShared']);
-    }
+    public function __construct(protected WishlistService $service) {}
 
     public function index(Request $request)
     {
@@ -40,7 +36,7 @@ class WishlistController extends Controller
 
         $wishlist = $this->service->createForUser($request->user(), $validated);
 
-        return new WishlistResource($wishlist);
+        return WishlistResource::make($wishlist);
     }
 
     public function show(Request $request, Wishlist $wishlist): WishlistResource
@@ -49,7 +45,7 @@ class WishlistController extends Controller
             abort(403);
         }
 
-        return new WishlistResource($wishlist);
+        return WishlistResource::make($wishlist);
     }
 
     public function update(Request $request, Wishlist $wishlist): WishlistResource
@@ -61,7 +57,7 @@ class WishlistController extends Controller
 
         $wishlist = $this->service->updateForUser($request->user(), $wishlist, $validated);
 
-        return new WishlistResource($wishlist);
+        return WishlistResource::make($wishlist);
     }
 
     public function destroy(Request $request, Wishlist $wishlist): JsonResponse
@@ -81,6 +77,6 @@ class WishlistController extends Controller
             abort(404);
         }
 
-        return new WishlistResource($wishlist);
+        return WishlistResource::make($wishlist);
     }
 }

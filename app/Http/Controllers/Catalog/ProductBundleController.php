@@ -17,25 +17,20 @@ use Illuminate\Routing\Controller;
  */
 class ProductBundleController extends Controller
 {
-    protected IProductBundleRepository $bundles;
-
-    public function __construct(IProductBundleRepository $bundles)
-    {
-        $this->bundles = $bundles;
-    }
+    public function __construct(protected IProductBundleRepository $bundles) {}
 
     public function store(ProductBundleRequest $request)
     {
         $bundle = $this->bundles->create($request->validated());
 
-        return (new ProductBundleResource($bundle))->response()->setStatusCode(201);
+        return (ProductBundleResource::make($bundle))->response()->setStatusCode(201);
     }
 
     public function update(ProductBundleRequest $request, ProductBundle $bundle)
     {
         $bundle->fill($request->validated())->save();
 
-        return new ProductBundleResource($bundle);
+        return ProductBundleResource::make($bundle);
     }
 
     public function destroy(ProductBundle $bundle)

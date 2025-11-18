@@ -46,6 +46,8 @@ use App\Http\Controllers\Inventory\StockBatchController;
 use App\Http\Controllers\Inventory\StockController;
 use App\Http\Controllers\Inventory\StockLevelController;
 use App\Http\Controllers\Inventory\StockMovementController;
+use App\Http\Controllers\Order\CartController;
+use App\Http\Controllers\Order\OrderController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -130,6 +132,14 @@ Route::get('stock-batches/{stock_batch}', [StockBatchController::class, 'show'])
 Route::get('stock-movements', [StockMovementController::class, 'index']);
 Route::get('stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
 Route::post('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'store']); // create requires auth or email
+
+// Order
+Route::get('cart', [CartController::class, 'show']);
+Route::post('cart/items', [CartController::class, 'addItem']);
+Route::put('cart/items/{item}', [CartController::class, 'updateItem']);
+Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
+Route::delete('cart/clear', [CartController::class, 'clear']);
+Route::post('cart/checkout', [OrderController::class, 'checkout']);
 
 /*
 |--------------------------------------------------------------------------
@@ -422,7 +432,17 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    // customer's own orders
+    Route::get('orders', [OrderController::class, 'indexCustomer']);
+    Route::get('orders/{order}', [OrderController::class, 'showCustomer']);
+
+    // admin order management
+    Route::get('admin/orders', [OrderController::class, 'indexAdmin'])->middleware('permission:'.P::ORD_INDEX);
+    Route::get('admin/orders/{order}', [OrderController::class, 'showAdmin'])->middleware('permission:'.P::ORD_VIEW);
+    Route::patch('admin/orders/{order}/status', [OrderController::class, 'updateStatus'])->middleware('permission:'.P::ORD_UPDATE);
+});
 
 /*
 |--------------------------------------------------------------------------
