@@ -51,7 +51,7 @@ class StockBatchController extends Controller
     {
         $entity = $this->stockBatches->create($request->validated());
 
-        return (StockBatchResource::make($entity))
+        return StockBatchResource::make($entity)
             ->response()
             ->setStatusCode(201);
     }

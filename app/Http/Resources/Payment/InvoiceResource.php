@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Payment;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -11,14 +12,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class InvoiceResource extends JsonResource
 {
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'order_id' => $this->order_id,
-            'number' => $this->number,
+            'id' => (int) $this->id,
+            'order_id' => (int) $this->order_id,
+            'number' => (int) $this->number,
             'currency_code' => $this->currency_code,
-            'amount_due' => $this->amount_due,
+            'amount_due' => (float) $this->amount_due,
             'invoice_status_code' => $this->invoice_status_code,
             'issued_at' => $this->issued_at,
             'due_at' => $this->due_at,

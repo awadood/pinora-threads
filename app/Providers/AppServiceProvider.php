@@ -62,14 +62,18 @@ use App\Repositories\Inventory\StockBatchRepository;
 use App\Repositories\Inventory\StockLevelRepository;
 use App\Repositories\Inventory\StockMovementRepository;
 use App\Repositories\Inventory\StockRepository;
-use App\Repositories\Order\CartItemRepository;
 use App\Repositories\Order\CartRepository;
-use App\Repositories\Order\Contracts\ICartItemRepository;
 use App\Repositories\Order\Contracts\ICartRepository;
-use App\Repositories\Order\Contracts\IOrderItemRepository;
 use App\Repositories\Order\Contracts\IOrderRepository;
-use App\Repositories\Order\OrderItemRepository;
 use App\Repositories\Order\OrderRepository;
+use App\Repositories\Payment\Contracts\IInvoiceRepository;
+use App\Repositories\Payment\Contracts\IPaymentAttemptRepository;
+use App\Repositories\Payment\Contracts\IPaymentRepository;
+use App\Repositories\Payment\Contracts\IRefundRepository;
+use App\Repositories\Payment\InvoiceRepository;
+use App\Repositories\Payment\PaymentAttemptRepository;
+use App\Repositories\Payment\PaymentRepository;
+use App\Repositories\Payment\RefundRepository;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -119,11 +123,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Order
         ICartRepository::class => CartRepository::class,
-        ICartItemRepository::class => CartItemRepository::class,
         IOrderRepository::class => OrderRepository::class,
-        IOrderItemRepository::class => OrderItemRepository::class,
 
         // Payment
+        IInvoiceRepository::class => InvoiceRepository::class,
+        IPaymentRepository::class => PaymentRepository::class,
+        IPaymentAttemptRepository::class => PaymentAttemptRepository::class,
+        IRefundRepository::class => RefundRepository::class,
 
         // Promotion
 

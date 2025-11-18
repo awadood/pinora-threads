@@ -38,7 +38,7 @@ class LookbookItemProductController extends Controller
 
         $row = $this->attachments->create($data);
 
-        return (LookbookItemProductResource::make($row))
+        return LookbookItemProductResource::make($row)
             ->response()
             ->setStatusCode(201);
     }

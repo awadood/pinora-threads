@@ -48,6 +48,10 @@ use App\Http\Controllers\Inventory\StockLevelController;
 use App\Http\Controllers\Inventory\StockMovementController;
 use App\Http\Controllers\Order\CartController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Payment\InvoiceController;
+use App\Http\Controllers\Payment\PaymentAttemptController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\Payment\RefundController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -140,6 +144,14 @@ Route::put('cart/items/{item}', [CartController::class, 'updateItem']);
 Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
 Route::delete('cart/clear', [CartController::class, 'clear']);
 Route::post('cart/checkout', [OrderController::class, 'checkout']);
+
+// Payments
+Route::get('invoices', [InvoiceController::class, 'indexCustomer']);
+Route::get('invoices/{invoice}', [InvoiceController::class, 'showCustomer']);
+Route::get('orders/{order}/payment-attempts', [PaymentAttemptController::class, 'indexForOrder']);
+Route::post('orders/{order}/payment-attempts', [PaymentAttemptController::class, 'storeForOrder']);
+// Refunds (customer self-service — optional; can be no-op now or restricted)
+// Route::post('orders/{order}/refunds', [RefundController::class, 'storeCustomer']);
 
 /*
 |--------------------------------------------------------------------------
@@ -453,7 +465,31 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Invoices (admin)
+    Route::get('admin/invoices', [InvoiceController::class, 'index'])->middleware('permission:'.P::PAY_INV_LIST);
+    Route::get('admin/invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('permission:'.P::PAY_INV_VIEW);
+    Route::patch('admin/invoices/{invoice}', [InvoiceController::class, 'update'])->middleware('permission:'.P::PAY_INV_UPDATE);
+
+    // Payments (admin)
+    Route::get('admin/payments', [PaymentController::class, 'index'])->middleware('permission:'.P::PAY_PAY_LIST);
+    Route::get('admin/payments/{payment}', [PaymentController::class, 'show'])->middleware('permission:'.P::PAY_PAY_VIEW);
+    Route::post('admin/payments/cod-collection', [PaymentController::class, 'codCollection'])->middleware('permission:'.P::PAY_PAY_COD_COLLECT);
+
+    // Payment attempts (admin)
+    Route::get('admin/payment-attempts', [PaymentAttemptController::class, 'index'])->middleware('permission:'.P::PAY_ATT_LIST);
+    Route::get('admin/payment-attempts/{attempt}', [PaymentAttemptController::class, 'show'])->middleware('permission:'.P::PAY_ATT_VIEW);
+
+    // Refunds (admin)
+    Route::get('admin/refunds', [RefundController::class, 'index'])->middleware('permission:'.P::PAY_REFUND_LIST);
+    Route::get('admin/refunds/{refund}', [RefundController::class, 'show'])->middleware('permission:'.P::PAY_REFUND_VIEW);
+    Route::post('admin/orders/{order}/refunds', [RefundController::class, 'store'])->middleware('permission:'.P::PAY_REFUND_CREATE);
+    Route::patch('admin/refunds/{refund}', [RefundController::class, 'update'])->middleware('permission:'.P::PAY_REFUND_UPDATE);
+});
+// TODO
+// Payment webhooks (public, secured by provider secret)
+// Route::post('payment/webhook/{provider}', [PaymentWebhookController::class, 'handle']);
 
 /*
 |--------------------------------------------------------------------------

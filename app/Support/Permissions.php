@@ -12,7 +12,7 @@ final class Permissions
 {
     /*
     |--------------------------------------------------------------------------
-    | Core permissions
+    | Core domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -103,7 +103,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Catalog permissions
+    | Catalog domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -201,7 +201,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Customer permissions
+    | Customer domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -210,7 +210,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Engagement permissions
+    | Engagement domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -247,7 +247,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Inventory permissions
+    | Inventory domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -278,7 +278,7 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Order permissions
+    | Order domain permissions
     |--------------------------------------------------------------------------
     |
     */
@@ -291,28 +291,56 @@ final class Permissions
 
     /*
     |--------------------------------------------------------------------------
-    | Payment permissions
+    | Payment domain permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
+    // Invoices
+    public const PAY_INV_LIST = 'payment.invoice.list';
+
+    public const PAY_INV_VIEW = 'payment.invoice.view';
+
+    public const PAY_INV_UPDATE = 'payment.invoice.update';
+
+    // Payments
+    public const PAY_PAY_LIST = 'payment.payment.list';
+
+    public const PAY_PAY_VIEW = 'payment.payment.view';
+
+    public const PAY_PAY_COD_COLLECT = 'payment.payment.cod.collect';
+
+    // Payment Attempts
+    public const PAY_ATT_LIST = 'payment.attempt.list';
+
+    public const PAY_ATT_VIEW = 'payment.attempt.view';
+
+    // Refunds
+    public const PAY_REFUND_LIST = 'payment.refund.list';
+
+    public const PAY_REFUND_VIEW = 'payment.refund.view';
+
+    public const PAY_REFUND_CREATE = 'payment.refund.create';
+
+    public const PAY_REFUND_UPDATE = 'payment.refund.update';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Promotion domain permissions
     |--------------------------------------------------------------------------
     |
     */
 
     /*
     |--------------------------------------------------------------------------
-    | Promotion permissions
+    | Shipping domain permissions
     |--------------------------------------------------------------------------
     |
     */
 
     /*
     |--------------------------------------------------------------------------
-    | Shipping permissions
-    |--------------------------------------------------------------------------
-    |
-    */
-
-    /*
-    |--------------------------------------------------------------------------
-    | Tax permissions
+    | Tax domain permissions
     |--------------------------------------------------------------------------
     |
     */

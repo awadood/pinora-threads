@@ -15,7 +15,7 @@ use Illuminate\Routing\Controller;
  */
 class CategoryProductController extends Controller
 {
-    public function __construct(protected ICategoryProductRepository $pivots){}
+    public function __construct(protected ICategoryProductRepository $pivots) {}
 
     public function store(CategoryProductRequest $request)
     {

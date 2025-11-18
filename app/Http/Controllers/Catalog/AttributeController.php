@@ -49,7 +49,7 @@ class AttributeController extends Controller
     {
         $attribute = $this->attributes->create($request->validated());
 
-        return (AttributeResource::make($attribute))->response()->setStatusCode(201);
+        return AttributeResource::make($attribute)->response()->setStatusCode(201);
     }
 
     public function update(AttributeRequest $request, Attribute $attribute)

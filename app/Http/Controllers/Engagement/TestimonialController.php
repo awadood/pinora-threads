@@ -44,7 +44,7 @@ class TestimonialController extends Controller
             $request->user()?->getKey()
         );
 
-        return (TestimonialResource::make($testimonial))
+        return TestimonialResource::make($testimonial)
             ->response()
             ->setStatusCode(201);
     }

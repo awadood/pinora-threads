@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Payment;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -11,14 +12,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class RefundResource extends JsonResource
 {
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'order_id' => $this->order_id,
-            'payment_id' => $this->payment_id,
+            'id' => (int) $this->id,
+            'order_id' => (int) $this->order_id,
+            'payment_id' => (int) $this->payment_id,
             'currency_code' => $this->currency_code,
-            'amount' => $this->amount,
+            'amount' => (float) $this->amount,
             'refund_status_code' => $this->refund_status_code,
             'gateway_refund_id' => $this->gateway_refund_id,
             'reason' => $this->reason,

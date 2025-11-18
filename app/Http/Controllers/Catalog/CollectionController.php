@@ -65,7 +65,7 @@ class CollectionController extends Controller
     {
         $collection = $this->collections->create($request->validated());
 
-        return (CollectionResource::make($collection))->response()->setStatusCode(201);
+        return CollectionResource::make($collection)->response()->setStatusCode(201);
     }
 
     public function update(CollectionRequest $request, Collection $collection)

@@ -48,7 +48,7 @@ class ProductMediaController extends Controller
 
         $media = $this->mediaRepo->create($data);
 
-        return (ProductMediaResource::make($media))->response()->setStatusCode(201);
+        return ProductMediaResource::make($media)->response()->setStatusCode(201);
     }
 
     public function update(ProductMediaRequest $request, ProductMedia $media)

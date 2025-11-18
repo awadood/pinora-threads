@@ -49,7 +49,7 @@ class ProductController extends Controller
     {
         $product = $this->products->create($request->validated());
 
-        return (ProductResource::make($product))->response()->setStatusCode(201);
+        return ProductResource::make($product)->response()->setStatusCode(201);
     }
 
     public function update(ProductRequest $request, Product $product)

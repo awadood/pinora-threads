@@ -23,7 +23,7 @@ class CategoryController extends Controller
 {
     use QueryFilterable;
 
-    public function __construct(protected ICategoryRepository $categories,protected IProductRepository $products)
+    public function __construct(protected ICategoryRepository $categories, protected IProductRepository $products)
     {
         $this->allowedFilters = ['name', 'slug', 'parent_id', 'active'];
         $this->likeFilters = ['name', 'slug'];
@@ -65,7 +65,7 @@ class CategoryController extends Controller
     {
         $category = $this->categories->create($request->validated());
 
-        return (CategoryResource::make($category))->response()->setStatusCode(201);
+        return CategoryResource::make($category)->response()->setStatusCode(201);
     }
 
     public function update(CategoryRequest $request, Category $category)

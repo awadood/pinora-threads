@@ -39,7 +39,7 @@ class StockController extends Controller
     {
         $entity = $this->stocks->create($request->validated());
 
-        return (StockResource::make($entity))
+        return StockResource::make($entity)
             ->response()
             ->setStatusCode(201);
     }

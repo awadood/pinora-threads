@@ -15,7 +15,7 @@ use Illuminate\Routing\Controller;
  */
 class CollectionProductController extends Controller
 {
-    public function __construct(protected ICollectionProductRepository $pivots){}
+    public function __construct(protected ICollectionProductRepository $pivots) {}
 
     public function store(CollectionProductRequest $request)
     {

@@ -23,7 +23,7 @@ class ProductBundleController extends Controller
     {
         $bundle = $this->bundles->create($request->validated());
 
-        return (ProductBundleResource::make($bundle))->response()->setStatusCode(201);
+        return ProductBundleResource::make($bundle)->response()->setStatusCode(201);
     }
 
     public function update(ProductBundleRequest $request, ProductBundle $bundle)

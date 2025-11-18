@@ -43,7 +43,7 @@ class LookbookItemController extends Controller
 
         $item = $this->items->create($data);
 
-        return (LookbookItemResource::make($item))
+        return LookbookItemResource::make($item)
             ->response()
             ->setStatusCode(201);
     }

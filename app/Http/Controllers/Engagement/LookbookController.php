@@ -61,7 +61,7 @@ class LookbookController extends Controller
     {
         $lookbook = $this->service->create($request->validated());
 
-        return (LookbookResource::make($lookbook))
+        return LookbookResource::make($lookbook)
             ->response()
             ->setStatusCode(201);
     }

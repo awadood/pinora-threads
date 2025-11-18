@@ -41,7 +41,7 @@ class AttributeOptionController extends Controller
     {
         $option = $this->options->create($request->validated());
 
-        return (AttributeOptionResource::make($option))->response()->setStatusCode(201);
+        return AttributeOptionResource::make($option)->response()->setStatusCode(201);
     }
 
     public function update(AttributeOptionRequest $request, AttributeOption $attribute_option)

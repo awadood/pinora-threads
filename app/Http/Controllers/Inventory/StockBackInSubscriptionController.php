@@ -61,7 +61,7 @@ class StockBackInSubscriptionController extends Controller
             email: $request->validated()['email'] ?? $user?->email,
         );
 
-        return (StockBackInSubscriptionResource::make($subscription))
+        return StockBackInSubscriptionResource::make($subscription)
             ->response()
             ->setStatusCode(201);
     }

@@ -53,7 +53,7 @@ class ProductVariantController extends Controller
 
         $variant = $this->variants->create($data);
 
-        return (ProductVariantResource::make($variant))->response()->setStatusCode(201);
+        return ProductVariantResource::make($variant)->response()->setStatusCode(201);
     }
 
     public function update(ProductVariantRequest $request, ProductVariant $variant)

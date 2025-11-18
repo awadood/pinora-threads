@@ -219,4 +219,36 @@ class OrderService
 
         return $number;
     }
+
+    protected function initiatePayment(Order $order): void
+    {
+        // TODO (Payment domain):
+        // - Create a payment intent with the selected gateway (Stripe, etc.)
+        // - Attach gateway transaction ID to $order->payment_txn_id
+        // - Possibly redirect or return client_secret to frontend.
+    }
+
+    protected function prepareShipment(Order $order): void
+    {
+        // TODO (Shipping domain):
+        // - Use shipping address and items to compute shipment details
+        // - Add carrier / tracking info once available
+        // - Update $order->shipment JSON snapshot
+    }
+    // App\Services\Order\OrderService
+
+    protected function initiatePaymentFlow(Order $order): void
+    {
+        // TODO: Payment domain
+        // - e.g. PaymentService::createIntent($order)
+        // - Set $order->payment_method and $order->payment_txn_id
+        // - Handle idempotency via $order->idempotency_key
+    }
+
+    protected function prepareShipmentDetails(Order $order): void
+    {
+        // TODO: Shipping domain
+        // - e.g. ShippingService::estimate($order->shipping_address, $order->items)
+        // - Populate $order->shipment JSON with carrier, service code, cost, ETA
+    }
 }

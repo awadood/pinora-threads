@@ -71,7 +71,7 @@ class StockMovementController extends Controller
             ]
         );
 
-        return (StockMovementResource::make($movement))->response()->setStatusCode(201);
+        return StockMovementResource::make($movement)->response()->setStatusCode(201);
     }
 
     /**
