@@ -52,6 +52,7 @@ use App\Http\Controllers\Payment\InvoiceController;
 use App\Http\Controllers\Payment\PaymentAttemptController;
 use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Payment\RefundController;
+use App\Http\Controllers\Shipping\ShipmentController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -511,7 +512,18 @@ Route::middleware('auth:sanctum')->group(function () {});
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Customer-facing: view shipment for own order
+    Route::get('orders/{order}/shipment', [ShipmentController::class, 'showForCustomer']);
+
+    // Admin Shipping APIs
+    Route::get('admin/shipments', [ShipmentController::class, 'index'])->middleware('permission:'.P::SHIP_VIEW);
+    Route::get('admin/shipments/{shipment}', [ShipmentController::class, 'show'])->middleware('permission:'.P::SHIP_VIEW);
+    Route::post('admin/orders/{order}/shipments', [ShipmentController::class, 'store'])->middleware('permission:'.P::SHIP_CREATE);
+    Route::patch('admin/shipments/{shipment}', [ShipmentController::class, 'update'])->middleware('permission:'.P::SHIP_UPDATE);
+    Route::patch('admin/shipments/{shipment}/status', [ShipmentController::class, 'updateStatus'])->middleware('permission:'.P::SHIP_UPDATE_STATUS);
+});
 
 /*
 |--------------------------------------------------------------------------

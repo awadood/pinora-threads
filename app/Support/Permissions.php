@@ -338,6 +338,14 @@ final class Permissions
     |
     */
 
+    public const SHIP_VIEW = 'shipping.shipment.view';
+
+    public const SHIP_CREATE = 'shipping.shipment.create';
+
+    public const SHIP_UPDATE = 'shipping.shipment.update';
+
+    public const SHIP_UPDATE_STATUS = 'shipping.shipment.update_status';
+
     /*
     |--------------------------------------------------------------------------
     | Tax domain permissions

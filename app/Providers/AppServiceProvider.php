@@ -74,6 +74,8 @@ use App\Repositories\Payment\InvoiceRepository;
 use App\Repositories\Payment\PaymentAttemptRepository;
 use App\Repositories\Payment\PaymentRepository;
 use App\Repositories\Payment\RefundRepository;
+use App\Repositories\Shipping\Contracts\IShipmentRepository;
+use App\Repositories\Shipping\ShipmentRepository;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -134,6 +136,7 @@ class AppServiceProvider extends ServiceProvider
         // Promotion
 
         // Shipping
+        IShipmentRepository::class => ShipmentRepository::class,
 
         // Tax
     ];
