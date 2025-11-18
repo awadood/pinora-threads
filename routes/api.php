@@ -52,6 +52,9 @@ use App\Http\Controllers\Payment\InvoiceController;
 use App\Http\Controllers\Payment\PaymentAttemptController;
 use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Payment\RefundController;
+use App\Http\Controllers\Promotion\PromotionController;
+use App\Http\Controllers\Promotion\PromotionCouponController;
+use App\Http\Controllers\Promotion\PromotionRedemptionController;
 use App\Http\Controllers\Shipping\ShipmentController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
@@ -146,13 +149,17 @@ Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
 Route::delete('cart/clear', [CartController::class, 'clear']);
 Route::post('cart/checkout', [OrderController::class, 'checkout']);
 
-// Payments
+// Payment
 Route::get('invoices', [InvoiceController::class, 'indexCustomer']);
 Route::get('invoices/{invoice}', [InvoiceController::class, 'showCustomer']);
 Route::get('orders/{order}/payment-attempts', [PaymentAttemptController::class, 'indexForOrder']);
 Route::post('orders/{order}/payment-attempts', [PaymentAttemptController::class, 'storeForOrder']);
 // Refunds (customer self-service — optional; can be no-op now or restricted)
 // Route::post('orders/{order}/refunds', [RefundController::class, 'storeCustomer']);
+
+// Promotion
+Route::get('promotions', [PromotionController::class, 'indexPublic']);
+Route::get('promotions/{promotion}', [PromotionController::class, 'showPublic']);
 
 /*
 |--------------------------------------------------------------------------
@@ -501,7 +508,22 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('admin/promotions', [PromotionController::class, 'index'])->middleware('permission:'.P::PROMO_VIEW);
+    Route::get('admin/promotions/{promotion}', [PromotionController::class, 'show'])->middleware('permission:'.P::PROMO_VIEW);
+    Route::post('promotions', [PromotionController::class, 'store'])->middleware('permission:'.P::PROMO_CREATE);
+    Route::put('promotions/{promotion}', [PromotionController::class, 'update'])->middleware('permission:'.P::PROMO_UPDATE);
+    Route::delete('promotions/{promotion}', [PromotionController::class, 'destroy'])->middleware('permission:'.P::PROMO_DESTROY);
+
+    // Promotion coupons
+    Route::post('promotions/{promotion}/coupons', [PromotionCouponController::class, 'store'])->middleware('permission:'.P::PROMO_COUPON_CREATE);
+    Route::put('promotion-coupons/{coupon}', [PromotionCouponController::class, 'update'])->middleware('permission:'.P::PROMO_COUPON_UPDATE);
+    Route::delete('promotion-coupons/{coupon}', [PromotionCouponController::class, 'destroy'])->middleware('permission:'.P::PROMO_COUPON_DESTROY);
+
+    // Promotion redemptions listing (admin analytics)
+    Route::get('promotions/{promotion}/redemptions', [PromotionRedemptionController::class, 'indexByPromotion'])->middleware('permission:'.P::PROMO_REDEMPTION_VIEW);
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -19,7 +19,7 @@ class StockBatchResource extends JsonResource
             'variant_id' => $this->variant_id,
             'received_at' => optional($this->received_at)->toDateString(),
             'currency_code' => $this->currency_code,
-            'unit_cost' => $this->unit_cost,
+            'unit_cost' => (float) $this->unit_cost,
             'qty_received' => $this->qty_received,
             'qty_remaining' => $this->qty_remaining,
             'created_at' => $this->created_at,

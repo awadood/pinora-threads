@@ -17,7 +17,7 @@ class TaxRateResource extends JsonResource
         return [
             'id' => $this->id,
             'code' => $this->code,
-            'amount' => $this->amount,
+            'amount' => (float) $this->amount,
             'percentage' => $this->percentage,
             'refundable' => $this->refundable,
             'country_code' => $this->country_code,

@@ -331,6 +331,22 @@ final class Permissions
     |
     */
 
+    public const PROMO_VIEW = 'promotion.view';
+
+    public const PROMO_CREATE = 'promotion.create';
+
+    public const PROMO_UPDATE = 'promotion.update';
+
+    public const PROMO_DESTROY = 'promotion.destroy';
+
+    public const PROMO_COUPON_CREATE = 'promotion.coupon.create';
+
+    public const PROMO_COUPON_UPDATE = 'promotion.coupon.update';
+
+    public const PROMO_COUPON_DESTROY = 'promotion.coupon.destroy';
+
+    public const PROMO_REDEMPTION_VIEW = 'promotion.redemption.view';
+
     /*
     |--------------------------------------------------------------------------
     | Shipping domain permissions

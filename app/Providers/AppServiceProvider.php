@@ -74,6 +74,12 @@ use App\Repositories\Payment\InvoiceRepository;
 use App\Repositories\Payment\PaymentAttemptRepository;
 use App\Repositories\Payment\PaymentRepository;
 use App\Repositories\Payment\RefundRepository;
+use App\Repositories\Promotion\Contracts\IPromotionCouponRepository;
+use App\Repositories\Promotion\Contracts\IPromotionRedemptionRepository;
+use App\Repositories\Promotion\Contracts\IPromotionRepository;
+use App\Repositories\Promotion\PromotionCouponRepository;
+use App\Repositories\Promotion\PromotionRedemptionRepository;
+use App\Repositories\Promotion\PromotionRepository;
 use App\Repositories\Shipping\Contracts\IShipmentRepository;
 use App\Repositories\Shipping\ShipmentRepository;
 use App\Support\Roles;
@@ -134,6 +140,9 @@ class AppServiceProvider extends ServiceProvider
         IRefundRepository::class => RefundRepository::class,
 
         // Promotion
+        IPromotionRepository::class => PromotionRepository::class,
+        IPromotionCouponRepository::class => PromotionCouponRepository::class,
+        IPromotionRedemptionRepository::class => PromotionRedemptionRepository::class,
 
         // Shipping
         IShipmentRepository::class => ShipmentRepository::class,
