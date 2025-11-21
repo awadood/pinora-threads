@@ -56,6 +56,10 @@ use App\Http\Controllers\Promotion\PromotionController;
 use App\Http\Controllers\Promotion\PromotionCouponController;
 use App\Http\Controllers\Promotion\PromotionRedemptionController;
 use App\Http\Controllers\Shipping\ShipmentController;
+use App\Http\Controllers\Tax\TaxCalculationController;
+use App\Http\Controllers\Tax\TaxClassController;
+use App\Http\Controllers\Tax\TaxRateController;
+use App\Http\Controllers\Tax\TaxRuleController;
 use App\Support\Permissions as P;
 use Illuminate\Support\Facades\Route;
 
@@ -556,4 +560,32 @@ Route::middleware('auth:sanctum')->group(function () {
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {});
+Route::middleware('auth:sanctum')->group(function () {
+    // Tax Classes
+    Route::get('tax-classes', [TaxClassController::class, 'index']);
+    Route::get('tax-classes/{tax_class}', [TaxClassController::class, 'show']);
+    Route::post('tax-classes', [TaxClassController::class, 'store'])->middleware('permission:'.P::TAX_CLASS_CREATE);
+    Route::put('tax-classes/{tax_class}', [TaxClassController::class, 'update'])->middleware('permission:'.P::TAX_CLASS_UPDATE);
+    Route::delete('tax-classes/{tax_class}', [TaxClassController::class, 'destroy'])->middleware('permission:'.P::TAX_CLASS_DESTROY);
+
+    // Tax Rules
+    Route::get('tax-rules', [TaxRuleController::class, 'index']);
+    Route::get('tax-rules/{tax_rule}', [TaxRuleController::class, 'show']);
+    Route::post('tax-rules', [TaxRuleController::class, 'store'])->middleware('permission:'.P::TAX_RULE_CREATE);
+    Route::put('tax-rules/{tax_rule}', [TaxRuleController::class, 'update'])->middleware('permission:'.P::TAX_RULE_UPDATE);
+    Route::delete('tax-rules/{tax_rule}', [TaxRuleController::class, 'destroy'])->middleware('permission:'.P::TAX_RULE_DESTROY);
+
+    // Tax Rates
+    Route::get('tax-rates', [TaxRateController::class, 'index']);
+    Route::get('tax-rates/{tax_rate}', [TaxRateController::class, 'show']);
+    Route::post('tax-rates', [TaxRateController::class, 'store'])->middleware('permission:'.P::TAX_RATE_CREATE);
+    Route::put('tax-rates/{tax_rate}', [TaxRateController::class, 'update'])->middleware('permission:'.P::TAX_RATE_UPDATE);
+    Route::delete('tax-rates/{tax_rate}', [TaxRateController::class, 'destroy'])->middleware('permission:'.P::TAX_RATE_DESTROY);
+
+    // Tax Calculations (matrix)
+    Route::get('tax-calculations', [TaxCalculationController::class, 'index']);
+    Route::get('tax-calculations/{tax_calculation}', [TaxCalculationController::class, 'show']);
+    Route::post('tax-calculations', [TaxCalculationController::class, 'store'])->middleware('permission:'.P::TAX_CALC_CREATE);
+    Route::put('tax-calculations/{tax_calculation}', [TaxCalculationController::class, 'update'])->middleware('permission:'.P::TAX_CALC_UPDATE);
+    Route::delete('tax-calculations/{tax_calculation}', [TaxCalculationController::class, 'destroy'])->middleware('permission:'.P::TAX_CALC_DESTROY);
+});

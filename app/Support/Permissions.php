@@ -368,4 +368,28 @@ final class Permissions
     |--------------------------------------------------------------------------
     |
     */
+
+    public const TAX_CLASS_CREATE = 'tax.class.create';
+
+    public const TAX_CLASS_UPDATE = 'tax.class.update';
+
+    public const TAX_CLASS_DESTROY = 'tax.class.destroy';
+
+    public const TAX_RULE_CREATE = 'tax.rule.create';
+
+    public const TAX_RULE_UPDATE = 'tax.rule.update';
+
+    public const TAX_RULE_DESTROY = 'tax.rule.destroy';
+
+    public const TAX_RATE_CREATE = 'tax.rate.create';
+
+    public const TAX_RATE_UPDATE = 'tax.rate.update';
+
+    public const TAX_RATE_DESTROY = 'tax.rate.destroy';
+
+    public const TAX_CALC_CREATE = 'tax.calculation.create';
+
+    public const TAX_CALC_UPDATE = 'tax.calculation.update';
+
+    public const TAX_CALC_DESTROY = 'tax.calculation.destroy';
 }

@@ -82,6 +82,14 @@ use App\Repositories\Promotion\PromotionRedemptionRepository;
 use App\Repositories\Promotion\PromotionRepository;
 use App\Repositories\Shipping\Contracts\IShipmentRepository;
 use App\Repositories\Shipping\ShipmentRepository;
+use App\Repositories\Tax\Contracts\ITaxCalculationRepository;
+use App\Repositories\Tax\Contracts\ITaxClassRepository;
+use App\Repositories\Tax\Contracts\ITaxRateRepository;
+use App\Repositories\Tax\Contracts\ITaxRuleRepository;
+use App\Repositories\Tax\TaxCalculationRepository;
+use App\Repositories\Tax\TaxClassRepository;
+use App\Repositories\Tax\TaxRateRepository;
+use App\Repositories\Tax\TaxRuleRepository;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -148,6 +156,10 @@ class AppServiceProvider extends ServiceProvider
         IShipmentRepository::class => ShipmentRepository::class,
 
         // Tax
+        ITaxClassRepository::class => TaxClassRepository::class,
+        ITaxRuleRepository::class => TaxRuleRepository::class,
+        ITaxRateRepository::class => TaxRateRepository::class,
+        ITaxCalculationRepository::class => TaxCalculationRepository::class,
     ];
 
     /**
