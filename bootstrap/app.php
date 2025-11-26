@@ -37,12 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             $make = function (int $status, string $message, array $errors, array $headers, Throwable $t): JsonResponse {
                 return response()->json([
-                    'error' => [
-                        'status' => $status,
-                        'message' => $message,
-                        'errors' => $errors ?? null,
-                        'trace' => config('app.env') !== 'production' ? $t->getTrace() : null,
-                    ],
+                    'status' => $status,
+                    'message' => $message,
+                    'errors' => $errors ?? null,
+                    'trace' => config('app.env') !== 'production' ? $t->getTrace() : null,
                 ], $status, $headers);
             };
 

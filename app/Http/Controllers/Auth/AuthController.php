@@ -18,7 +18,7 @@ class AuthController extends Controller
         }
         $request->session()->regenerate();
 
-        return response()->json(['user' => $request->user()]);
+        return response()->json();
     }
 
     // PAT (mobile/integrations)
@@ -32,7 +32,7 @@ class AuthController extends Controller
         $user = $request->user();
         $token = $user->createToken('access_token')->plainTextToken;
 
-        return response()->json(['user' => $request->user(), 'token' => $token]);
+        return response()->json(['token' => $token]);
     }
 
     public function logoutCookie(Request $request)
