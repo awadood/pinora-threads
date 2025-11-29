@@ -32,7 +32,7 @@ class DemoSeeder extends Seeder
     {
         $userData = User::factory()->make([
             'name' => 'Administrator',
-            'email' => 'admin@pinnorafashion.com',
+            'email' => 'admin@pinorathreads.com',
         ])->getAttributes();
         User::firstOrCreate(['email' => $userData['email']], $userData);
 

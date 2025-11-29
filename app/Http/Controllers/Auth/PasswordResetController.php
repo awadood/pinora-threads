@@ -14,11 +14,12 @@ class PasswordResetController extends Controller
     public function sendLink(Request $request)
     {
         $request->validate(['email' => 'required|email:rfc,dns']);
+        sleep(2);
 
         // Always return 200 to avoid user enumeration
         Password::sendResetLink(['email' => $request->email]);
 
-        return response()->json(['message' => __('auth.sent')]);
+        return response()->json(['message' => __('auth.reset_link')]);
     }
 
     public function reset(Request $request)

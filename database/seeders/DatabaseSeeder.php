@@ -17,10 +17,8 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
-            // PermissionSeeder::class,
-            // CoreTablesSeeder::class,
-            // TaxSeeder::class,
             DemoSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

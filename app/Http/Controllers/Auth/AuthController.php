@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -11,9 +12,9 @@ class AuthController extends Controller
     // SPA cookie session
     public function loginCookie(Request $request)
     {
-        $request->validate(['email' => 'required|email', 'password' => 'required']);
+        $request->validate(['email' => 'required|email', 'password' => 'required', 'remember' => 'sometimes|boolean']);
 
-        if (! auth()->attempt($request->only('email', 'password'))) {
+        if (! auth()->attempt($request->only('email', 'password'), $request->input('remember', false))) {
             throw ValidationException::withMessages(['email' => ['Invalid credentials.']]);
         }
         $request->session()->regenerate();
@@ -24,9 +25,9 @@ class AuthController extends Controller
     // PAT (mobile/integrations)
     public function loginToken(Request $request)
     {
-        $request->validate(['email' => 'required|email', 'password' => 'required']);
+        $request->validate(['email' => 'required|email', 'password' => 'required', 'remember' => 'sometimes|boolean']);
 
-        if (! auth()->attempt($request->only('email', 'password'))) {
+        if (! auth()->attempt($request->only('email', 'password'), $request->input('remember', false))) {
             throw ValidationException::withMessages(['email' => ['Invalid credentials.']]);
         }
         $user = $request->user();

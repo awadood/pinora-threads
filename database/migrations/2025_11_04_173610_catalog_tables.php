@@ -35,6 +35,9 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_og_image')->nullable();
             $table->string('slug')->unique();
             $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->unsignedSmallInteger('sort')->default(0);
@@ -46,6 +49,9 @@ return new class extends Migration
         Schema::create('collections', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_og_image')->nullable();
             $table->string('slug')->unique();
             $table->unsignedSmallInteger('sort')->default(0);
             $table->string('notes')->nullable();
@@ -58,6 +64,9 @@ return new class extends Migration
             $table->id();
             $table->string('sku')->unique();
             $table->string('name');
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_og_image')->nullable();
             $table->string('slug')->unique();
             $table->enum('type', ['simple', 'variable', 'bundle']);
             $table->text('description')->nullable();

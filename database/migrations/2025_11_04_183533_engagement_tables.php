@@ -81,6 +81,9 @@ return new class extends Migration
         Schema::create('lookbooks', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_og_image')->nullable();
             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->string('cover_image')->nullable();              // hero banner (S3 URL)
