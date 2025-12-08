@@ -47,7 +47,7 @@ class TaxRuleController extends Controller
 
         $taxRule = $this->taxRuleRepository->create($validated);
 
-        return (TaxRuleResource::make($taxRule))->response()->setStatusCode(201);
+        return TaxRuleResource::make($taxRule)->response()->setStatusCode(201);
     }
 
     public function show(TaxRule $taxRule)

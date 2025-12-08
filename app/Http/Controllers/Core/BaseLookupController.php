@@ -42,7 +42,10 @@ abstract class BaseLookupController extends Controller
     /**
      * One rule set; you can switch by method or by $model if needed.
      */
-    abstract protected function rules(Request $request, ?Model $model = null): array;
+    protected function rules(Request $request, ?Model $model = null): array
+    {
+        return [];
+    }
 
     protected function baseQuery(): Builder
     {
@@ -173,24 +176,24 @@ abstract class BaseLookupController extends Controller
 
         $resource = $this->resourceClass;
 
-        return (new $resource($created))->response()->setStatusCode(201);
+        return $resource::make($created)->response()->setStatusCode(201);
     }
 
     protected function performShow(Model $model)
     {
         $resource = $this->resourceClass;
 
-        return new $resource($model);
+        return $resource::make($model);
     }
 
     protected function performUpdate(Request $request, Model $model)
     {
         $validated = $request->validate($this->rules($request, $model));
-        $model->fill($validated)->save();
+        $model->update($validated);
 
         $resource = $this->resourceClass;
 
-        return new $resource($model);
+        return $resource::make($model);
     }
 
     protected function performDestroy(Model $model): JsonResponse

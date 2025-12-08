@@ -45,7 +45,7 @@ class TaxClassController extends Controller
         $validated = $request->validate($this->rules($request));
         $taxClass = $this->taxClassRepository->create($validated);
 
-        return (TaxClassResource::make($taxClass))->response()->setStatusCode(201);
+        return TaxClassResource::make($taxClass)->response()->setStatusCode(201);
     }
 
     public function show(TaxClass $taxClass)

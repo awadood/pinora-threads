@@ -29,7 +29,6 @@ class StockMovementTypeController extends BaseLookupController
     protected function rules(Request $request, ?Model $model = null): array
     {
         $rules = [
-            'code' => ['required', 'string', 'max:255', Rule::unique('stock_movement_types', 'code')->ignore($model?->getKey())],
             'name' => ['required', 'string', 'max:255'],
             'sort_order' => ['integer', 'min:0', 'max:65535'],
             'active' => ['boolean'],

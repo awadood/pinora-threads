@@ -36,7 +36,7 @@ class PermissionSeeder extends Seeder
         // 3. CREATE ROLES
         $this->command->info('Seeding Roles...');
         $rootUser = Role::firstOrCreate(['name' => Roles::SUPER_ADMIN]);
-        $user = User::where('email', 'admin@pinnorafashion.com')->first();
+        $user = User::where('email', 'admin@pinorathreads.com')->first();
         $user->assignRole($rootUser);
 
         $adminRole = Role::firstOrCreate(['name' => Roles::ADMIN]);

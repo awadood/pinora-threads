@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -174,7 +175,6 @@ Route::get('promotions/{promotion}', [PromotionController::class, 'showPublic'])
 |
 */
 
-// sanctum protected APIs
 Route::middleware(['auth:sanctum'])->group(function () {
 
     // Auth
@@ -184,6 +184,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Who am I
     Route::get('/user', [UserController::class, 'user']);
+
+    // Activity logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show']);
 });
 
 /*

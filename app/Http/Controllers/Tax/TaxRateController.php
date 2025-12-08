@@ -51,7 +51,7 @@ class TaxRateController extends Controller
 
         $taxRate = $this->taxRateRepository->create($validated);
 
-        return (TaxRateResource::make($taxRate))->response()->setStatusCode(201);
+        return TaxRateResource::make($taxRate)->response()->setStatusCode(201);
     }
 
     public function show(TaxRate $taxRate)

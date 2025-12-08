@@ -91,6 +91,7 @@ use App\Repositories\Tax\TaxClassRepository;
 use App\Repositories\Tax\TaxRateRepository;
 use App\Repositories\Tax\TaxRuleRepository;
 use App\Support\Roles;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -178,5 +179,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole(Roles::SUPER_ADMIN) ? true : null;
         });
+
+        JsonResource::withoutWrapping();
     }
 }

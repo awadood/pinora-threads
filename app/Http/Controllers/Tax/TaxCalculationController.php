@@ -55,7 +55,7 @@ class TaxCalculationController extends Controller
 
         $taxCalculation = $this->taxCalculationRepository->create($validated);
 
-        return (TaxCalculationResource::make($taxCalculation))->response()->setStatusCode(201);
+        return TaxCalculationResource::make($taxCalculation)->response()->setStatusCode(201);
     }
 
     public function show(TaxCalculation $taxCalculation)
