@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Auth;
 
-use App\Repositories\BaseRepository;
 use App\Repositories\Auth\Contracts\IRoleRepository;
+use App\Repositories\BaseRepository;
 use Illuminate\Support\Arr;
 use Spatie\Permission\Models\Role;
 

@@ -186,8 +186,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [AuthController::class, 'user']); // Who am I
 
     // Activity logs
-    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
-    Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show']);
+    Route::get('/activity-logs', [ActivityLogController::class, 'index']);      // list + filters
+    Route::get('/activity-logs/filters', [ActivityLogController::class, 'filters']); // dropdowns
+    Route::get('/activity-logs/subject', [ActivityLogController::class, 'subject']); // subject timeline
+    Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);   // single detail
 
     // Admin Users
     Route::get('admin/users', [UserController::class, 'index'])->middleware('permission:'.P::USER_VIEW);

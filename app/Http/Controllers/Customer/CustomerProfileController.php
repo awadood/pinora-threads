@@ -17,11 +17,7 @@ use Illuminate\Routing\Controller;
  */
 class CustomerProfileController extends Controller
 {
-    public function __construct(
-        protected CustomerProfileService $service
-    ) {
-        $this->middleware('auth:sanctum');
-    }
+    public function __construct(protected CustomerProfileService $service) {}
 
     public function show(Request $request): CustomerProfileResource
     {

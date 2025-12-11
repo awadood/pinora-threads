@@ -17,11 +17,7 @@ use Illuminate\Routing\Controller;
  */
 class FavoriteController extends Controller
 {
-    public function __construct(
-        protected FavoriteService $service
-    ) {
-        $this->middleware('auth:sanctum');
-    }
+    public function __construct(protected FavoriteService $service) {}
 
     public function index(Request $request)
     {
