@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CustomerGroup;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -30,43 +31,23 @@ class DemoSeeder extends Seeder
 
     protected function seedUsersAndGroups(): void
     {
-        $userData = User::factory()->make([
+        User::factory()->create([
             'name' => 'Administrator',
             'email' => 'admin@pinorathreads.com',
-        ])->getAttributes();
-        User::firstOrCreate(['email' => $userData['email']], $userData);
+        ]);
 
-        $usUserId = DB::table('users')->insertGetId([
+        $usUserId = User::factory()->create([
             'name' => 'US Customer',
-            'phone' => preg_replace('/[^0-9]/', '', fake()->unique()->phoneNumber()),
             'email' => 'us.customer@example.com',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        ])->id;
 
-        $pkUserId = DB::table('users')->insertGetId([
+        $pkUserId = User::factory()->create([
             'name' => 'PK Customer',
-            'phone' => preg_replace('/[^0-9]/', '', fake()->unique()->phoneNumber()),
             'email' => 'pk.customer@example.com',
-            'password' => Hash::make('password'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        ])->id;
 
-        $generalId = DB::table('customer_groups')->insertGetId([
-            'name' => 'General',
-            'code' => 'general',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $vipId = DB::table('customer_groups')->insertGetId([
-            'name' => 'VIP',
-            'code' => 'vip',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $generalId = CustomerGroup::factory()->create(['name' => 'General', 'code' => 'general'])->id;
+        $vipId = CustomerGroup::factory()->create(['name' => 'VIP', 'code' => 'vip'])->id;
 
         // Use updateOrInsert (no unique index required on the pivot)
         DB::table('customer_group_user')->updateOrInsert(

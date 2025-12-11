@@ -18,4 +18,9 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'reset_link' => 'If your email exists, a reset link has been sent.',
 
+    'destroyed' => 'User deleted or deactivated successfully.',
+    'role' => [
+        'destroyed' => 'Role deleted or deactivated successfully.',
+    ],
+
 ];

@@ -17,6 +17,29 @@ final class Permissions
     |
     */
 
+    public const USER_VIEW = 'admin.user.view';
+
+    public const USER_CREATE = 'admin.user.create';
+
+    public const USER_UPDATE = 'admin.user.update';
+
+    public const USER_DESTROY = 'admin.user.destroy';
+
+    public const ROLE_VIEW = 'admin.role.view';
+
+    public const ROLE_CREATE = 'admin.role.create';
+
+    public const ROLE_UPDATE = 'admin.role.update';
+
+    public const ROLE_DESTROY = 'admin.role.destroy';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Core domain permissions
+    |--------------------------------------------------------------------------
+    |
+    */
+
     // Countries
     public const CTRY_CREATE = 'core.country.create';
 

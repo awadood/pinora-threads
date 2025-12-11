@@ -4,7 +4,9 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\PermissionController;
 use App\Http\Controllers\Auth\RegistrationController;
+use App\Http\Controllers\Auth\RoleController;
 use App\Http\Controllers\Auth\UserController;
 use App\Http\Controllers\Catalog\AttributeController;
 use App\Http\Controllers\Catalog\AttributeOptionController;
@@ -168,7 +170,7 @@ Route::get('promotions/{promotion}', [PromotionController::class, 'showPublic'])
 
 /*
 |--------------------------------------------------------------------------
-| Sanctum protected APIs - Auth
+| Sanctum protected APIs - Auth & Access Control & Monitoring
 |--------------------------------------------------------------------------
 |
 | The following routes are about login and passoword flows
@@ -181,13 +183,34 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('logout', [AuthController::class, 'logoutToken']);
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
     Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1']);
-
-    // Who am I
-    Route::get('/user', [UserController::class, 'user']);
+    Route::get('/user', [AuthController::class, 'user']); // Who am I
 
     // Activity logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     Route::get('/activity-logs/{activity}', [ActivityLogController::class, 'show']);
+
+    // Admin Users
+    Route::get('admin/users', [UserController::class, 'index'])->middleware('permission:'.P::USER_VIEW);
+    Route::post('admin/users', [UserController::class, 'store'])->middleware('permission:'.P::USER_CREATE);
+    Route::get('admin/users/{user}', [UserController::class, 'show'])->middleware('permission:'.P::USER_VIEW);
+    Route::put('admin/users/{user}', [UserController::class, 'update'])->middleware('permission:'.P::USER_UPDATE);
+    Route::delete('admin/users/{user}', [UserController::class, 'destroy'])->middleware('permission:'.P::USER_DESTROY);
+
+    // Manage user roles & permissions
+    Route::put('admin/users/{user}/roles', [UserController::class, 'syncRoles'])->middleware('permission:'.P::USER_UPDATE);
+    Route::put('admin/users/{user}/permissions', [UserController::class, 'syncPermissions'])->middleware('permission:'.P::USER_UPDATE);
+    Route::patch('admin/users/{user}/status', [UserController::class, 'toggleStatus'])->middleware('permission:'.P::USER_UPDATE);
+
+    // Roles
+    Route::get('roles', [RoleController::class, 'index'])->middleware('permission:'.P::ROLE_VIEW);
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:'.P::ROLE_CREATE);
+    Route::get('roles/{role}', [RoleController::class, 'show'])->middleware('permission:'.P::ROLE_VIEW);
+    Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:'.P::ROLE_UPDATE);
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:'.P::ROLE_DESTROY);
+    Route::put('roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->middleware('permission:'.P::ROLE_UPDATE);
+
+    // Permissions (readonly)
+    Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:'.P::ROLE_CREATE);
 });
 
 /*

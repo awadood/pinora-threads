@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Repositories\Auth\Contracts\IRoleRepository;
+use App\Repositories\Auth\Contracts\IUserRepository;
+use App\Repositories\Auth\RoleRepository;
+use App\Repositories\Auth\UserRepository;
 use App\Repositories\BaseRepository;
 use App\Repositories\Catalog\AttributeOptionRepository;
 use App\Repositories\Catalog\AttributeRepository;
@@ -100,6 +104,8 @@ class AppServiceProvider extends ServiceProvider
     public $bindings = [
 
         IBaseRepository::class => BaseRepository::class,
+        IRoleRepository::class => RoleRepository::class,
+        IUserRepository::class => UserRepository::class,
 
         // Catalog
         IAttributeRepository::class => AttributeRepository::class,
