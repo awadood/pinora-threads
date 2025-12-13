@@ -146,7 +146,7 @@ Route::get('stock-batches', [StockBatchController::class, 'index']);
 Route::get('stock-batches/{stock_batch}', [StockBatchController::class, 'show']);
 Route::get('stock-movements', [StockMovementController::class, 'index']);
 Route::get('stock-movements/{stock_movement}', [StockMovementController::class, 'show']);
-Route::post('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'store']); // create requires auth or email
+Route::post('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'store']);
 
 // Order
 Route::get('cart', [CartController::class, 'show']);

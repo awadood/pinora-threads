@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class AttributeOption extends AbstractModel
+class AttributeOption extends AbstractLoggableModel
 {
     protected $fillable = [
         'attribute_id',

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class ProductVariantMedia extends AbstractModel
+class ProductVariantMedia extends AbstractLoggableModel
 {
     protected $fillable = [
         'product_variant_id',

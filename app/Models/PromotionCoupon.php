@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class PromotionCoupon extends AbstractModel
+class PromotionCoupon extends AbstractLoggableModel
 {
     protected $fillable = [
         'promotion_id',

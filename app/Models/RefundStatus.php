@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class RefundStatus extends AbstractModel
+class RefundStatus extends AbstractLoggableModel
 {
     const REQUESTED = 'requested';
 

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class InvoiceStatus extends AbstractModel
+class InvoiceStatus extends AbstractLoggableModel
 {
     const ISSUED = 'issued';
 

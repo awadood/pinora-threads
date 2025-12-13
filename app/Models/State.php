@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class State extends AbstractModel
+class State extends AbstractLoggableModel
 {
     protected $fillable = [
         'code',

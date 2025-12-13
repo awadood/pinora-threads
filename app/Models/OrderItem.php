@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class OrderItem extends AbstractModel
+class OrderItem extends AbstractLoggableModel
 {
     protected $fillable = [
         'order_id',

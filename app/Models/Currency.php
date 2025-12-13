@@ -7,7 +7,7 @@ namespace App\Models;
  *
  * @author Abdul Wadood
  */
-class Currency extends AbstractModel
+class Currency extends AbstractLoggableModel
 {
     protected $fillable = [
         'code',

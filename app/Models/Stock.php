@@ -7,7 +7,7 @@ namespace App\Models;
  *
  * @author Abdul Wadood
  */
-class Stock extends AbstractModel
+class Stock extends AbstractLoggableModel
 {
     protected $fillable = [
         'title',

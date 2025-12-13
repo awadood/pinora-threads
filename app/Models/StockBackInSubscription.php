@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class StockBackInSubscription extends AbstractModel
+class StockBackInSubscription extends AbstractLoggableModel
 {
     protected $fillable = [
         'variant_id',

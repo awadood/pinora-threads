@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class StockMovementType extends AbstractModel
+class StockMovementType extends AbstractLoggableModel
 {
     const PURCHASE = 'purchase';
 

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class StockBatch extends AbstractModel
+class StockBatch extends AbstractLoggableModel
 {
     protected $fillable = [
         'stock_id',

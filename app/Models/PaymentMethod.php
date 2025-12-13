@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class PaymentMethod extends AbstractModel
+class PaymentMethod extends AbstractLoggableModel
 {
     const STRIPE = 'stripe';
 

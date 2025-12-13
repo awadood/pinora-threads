@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class Wishlist extends AbstractLoggableModel
+class Wishlist extends AbstractModel
 {
     protected $fillable = [
         'user_id',

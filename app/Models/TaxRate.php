@@ -7,7 +7,7 @@ namespace App\Models;
  *
  * @author Abdul Wadood
  */
-class TaxRate extends AbstractModel
+class TaxRate extends AbstractLoggableModel
 {
     protected $fillable = [
         'code',

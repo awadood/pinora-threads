@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class StockLevel extends AbstractModel
+class StockLevel extends AbstractLoggableModel
 {
     protected $fillable = [
         'stock_id',

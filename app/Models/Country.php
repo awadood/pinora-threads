@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class Country extends AbstractModel
+class Country extends AbstractLoggableModel
 {
     protected $fillable = [
         'code',

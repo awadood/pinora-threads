@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class ShipmentMethod extends AbstractModel
+class ShipmentMethod extends AbstractLoggableModel
 {
     const PICKUP = 'pickup';
 

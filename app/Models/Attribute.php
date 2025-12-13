@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class Attribute extends AbstractModel
+class Attribute extends AbstractLoggableModel
 {
     protected $fillable = [
         'code',

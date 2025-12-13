@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class CategoryProduct extends AbstractModel
+class CategoryProduct extends AbstractLoggableModel
 {
     protected $fillable = [
         'category_id',

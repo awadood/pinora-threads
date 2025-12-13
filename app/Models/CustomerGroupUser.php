@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class CustomerGroupUser extends AbstractModel
+class CustomerGroupUser extends AbstractLoggableModel
 {
     protected $fillable = [
         'customer_group_id',

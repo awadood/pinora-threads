@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @author Abdul Wadood
  */
-class ShipmentStatus extends AbstractModel
+class ShipmentStatus extends AbstractLoggableModel
 {
     const PENDING = 'pending';
 
