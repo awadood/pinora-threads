@@ -57,6 +57,6 @@ class StockMovementType extends AbstractLoggableModel
 
     public function stockMovements(): HasMany
     {
-        return $this->hasMany(StockMovement::class, 'type_code', 'code');
+        return $this->hasMany(StockMovement::class);
     }
 }

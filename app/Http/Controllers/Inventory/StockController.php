@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockRequest;
 use App\Http\Resources\Inventory\StockResource;
+use App\Repositories\Inventory\Contracts\IStockLevelRepository;
 use App\Repositories\Inventory\Contracts\IStockRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,11 +19,16 @@ use Illuminate\Http\Request;
  */
 class StockController extends Controller
 {
-    public function __construct(private readonly IStockRepository $stocks) {}
+    public function __construct(private IStockRepository $stocks, private IStockLevelRepository $stockLevels) {}
 
     public function index(Request $request)
     {
         $items = $this->stocks->all();
+
+        $items->each(function ($stock) {
+            $stock->total_variants = $this->stockLevels->getVariantCount($stock->id);
+            $stock->total_quantity = $this->stockLevels->getTotalQuantity($stock->id);
+        });
 
         return StockResource::collection($items);
     }
