@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockBackInSubscriptionRequest;
 use App\Http\Resources\Inventory\StockBackInSubscriptionResource;
+use App\Models\StockBackInSubscription;
 use App\Repositories\Inventory\Contracts\IStockBackInSubscriptionRepository;
 use App\Services\Inventory\BackInStockNotificationService;
 use Illuminate\Http\JsonResponse;
@@ -36,19 +37,14 @@ class StockBackInSubscriptionController extends Controller
             $criteria[] = ['col' => 'user_id', 'op' => '=', 'value' => (int) $request->query('user_id')];
         }
 
-        $items = empty($criteria)
-            ? $this->subscriptions->all()
-            : $this->subscriptions->search($criteria);
+        $items = $this->subscriptions->search($criteria);
 
         return StockBackInSubscriptionResource::collection($items);
     }
 
-    public function show(int $stock_back_in_subscription)
+    public function show(StockBackInSubscription $stockBackInSubscription)
     {
-        $entity = $this->subscriptions->find($stock_back_in_subscription);
-        abort_if(! $entity, 404);
-
-        return StockBackInSubscriptionResource::make($entity);
+        return StockBackInSubscriptionResource::make($stockBackInSubscription);
     }
 
     public function store(StockBackInSubscriptionRequest $request)
@@ -61,18 +57,34 @@ class StockBackInSubscriptionController extends Controller
             email: $request->validated()['email'] ?? $user?->email,
         );
 
-        return StockBackInSubscriptionResource::make($subscription)
-            ->response()
-            ->setStatusCode(201);
+        return StockBackInSubscriptionResource::make($subscription)->response()->setStatusCode(201);
     }
 
-    public function destroy(int $stock_back_in_subscription): JsonResponse
+    public function destroy(StockBackInSubscription $stockBackInSubscription): JsonResponse
     {
-        $entity = $this->subscriptions->find($stock_back_in_subscription);
-        abort_if(! $entity, 404);
-
-        $this->subscriptions->disableIfNotDestroy($entity);
+        $this->subscriptions->disableIfNotDestroy($stockBackInSubscription);
 
         return response()->json([], 204);
+    }
+
+    public function notify(StockBackInSubscription $stockBackInSubscription)
+    {
+        // If already notified, you may choose to return 200 or 4XX
+        if ($stockBackInSubscription->notified_at) {
+            return response()->json(['message' => 'Subscription already notified.']);
+        }
+
+        $this->notificationService->notify($stockBackInSubscription);
+
+        return StockBackInSubscriptionResource::make($stockBackInSubscription);
+    }
+
+    public function notifyAll(Request $request)
+    {
+        $data = $request->validate(['variant_id' => ['required', 'integer', 'exists:product_variants,id']]);
+
+        $count = $this->notificationService->notifyAll($data['variant_id']);
+
+        return response()->json(['message' => 'Notifications sent.', 'count' => $count]);
     }
 }

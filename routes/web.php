@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 | web guarded endpoints
 |--------------------------------------------------------------------------
 |
-| As the application will be deployed on the same domain like https://pinnorafashion.com/api,
+| As the application will be deployed on the same domain like https://pinorathreads.com/admin/api,
 | therefore, all the routes will be prefixed with /api
 |
 */

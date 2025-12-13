@@ -44,7 +44,8 @@ interface IBaseRepository
      *
      * @param  array<int,array{col:string,op:string,value:mixed}>  $criteria
      * @param  array<int,string>  $columns
+     * @param  array<int,string>  $with
      * @return Collection<int, Model>
      */
-    public function search(array $criteria, array $columns = ['*']): Collection;
+    public function search(array $criteria, array $with = [], array $columns = ['*']): Collection;
 }

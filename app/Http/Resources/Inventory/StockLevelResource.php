@@ -24,6 +24,8 @@ class StockLevelResource extends JsonResource
             'restock_eta' => optional($this->restock_eta)->toDateTimeString(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'stock' => StockResource::make($this->whenLoaded('stock')),
         ];
     }
 }

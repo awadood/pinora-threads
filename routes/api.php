@@ -461,6 +461,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('stock-levels', [StockLevelController::class, 'store'])->middleware('permission:'.P::INVT_STOCKLVL_CREATE);
     Route::put('stock-levels/{stock_level}', [StockLevelController::class, 'update'])->middleware('permission:'.P::INVT_STOCKLVL_UPDATE);
     Route::delete('stock-levels/{stock_level}', [StockLevelController::class, 'destroy'])->middleware('permission:'.P::INVT_STOCKLVL_DESTROY);
+    Route::post('stock-levels/{stock_level}/adjust', [StockLevelController::class, 'adjust']);
 
     // Stock batches
     Route::post('stock-batches', [StockBatchController::class, 'store'])->middleware('permission:'.P::INVT_STOCKBATCH_CREATE);
@@ -474,6 +475,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'index'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
     Route::get('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'show'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
     Route::delete('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'destroy'])->middleware('permission:'.P::INVT_BACKINSTOCK_DESTROY);
+    Route::post('stock-back-in-subscriptions/{stock_back_in_subscription}/notify', [StockBackInSubscriptionController::class, 'notify']); // Notify all eligible subscriptions for a variant (for "Notify All In-Stock" action)
+    Route::post('stock-back-in-subscriptions/notify-all', [StockBackInSubscriptionController::class, 'notifyAll']);
 });
 
 /*

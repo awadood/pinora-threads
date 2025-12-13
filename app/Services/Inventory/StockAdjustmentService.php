@@ -71,7 +71,7 @@ class StockAdjustmentService
             ]);
 
             if ($wasOutOfStock && $level->quantity > 0) {
-                $this->notificationService->handleVariantBackInStock($variantId);
+                $this->notificationService->notifyAll($variantId);
             }
 
             return $movement;

@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockRequest;
 use App\Http\Resources\Inventory\StockResource;
-use App\Repositories\Inventory\Contracts\IStockLevelRepository;
+use App\Models\Stock;
 use App\Repositories\Inventory\Contracts\IStockRepository;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * StockController
@@ -19,26 +18,18 @@ use Illuminate\Http\Request;
  */
 class StockController extends Controller
 {
-    public function __construct(private IStockRepository $stocks, private IStockLevelRepository $stockLevels) {}
+    public function __construct(private IStockRepository $stocks) {}
 
-    public function index(Request $request)
+    public function index()
     {
         $items = $this->stocks->all();
-
-        $items->each(function ($stock) {
-            $stock->total_variants = $this->stockLevels->getVariantCount($stock->id);
-            $stock->total_quantity = $this->stockLevels->getTotalQuantity($stock->id);
-        });
 
         return StockResource::collection($items);
     }
 
-    public function show(int $stock)
+    public function show(Stock $stock)
     {
-        $entity = $this->stocks->find($stock);
-        abort_if(! $entity, 404);
-
-        return StockResource::make($entity);
+        return StockResource::make($stock);
     }
 
     public function store(StockRequest $request)
@@ -50,22 +41,16 @@ class StockController extends Controller
             ->setStatusCode(201);
     }
 
-    public function update(StockRequest $request, int $stock)
+    public function update(StockRequest $request, Stock $stock)
     {
-        $entity = $this->stocks->find($stock);
-        abort_if(! $entity, 404);
+        $stock->update($request->validated());
 
-        $entity->fill($request->validated())->save();
-
-        return StockResource::make($entity);
+        return StockResource::make($stock);
     }
 
-    public function destroy(int $stock): JsonResponse
+    public function destroy(Stock $stock): JsonResponse
     {
-        $entity = $this->stocks->find($stock);
-        abort_if(! $entity, 404);
-
-        $this->stocks->disableIfNotDestroy($entity);
+        $this->stocks->disableIfNotDestroy($stock);
 
         return response()->json([], 204);
     }

@@ -16,23 +16,21 @@ use Illuminate\Support\Carbon;
  */
 class BackInStockNotificationService
 {
-    public function __construct(
-        private readonly IStockBackInSubscriptionRepository $subscriptions,
-    ) {}
+    public function __construct(private IStockBackInSubscriptionRepository $repository) {}
 
     /**
      * Subscribe a user or email to back-in-stock notifications for a variant.
      */
     public function subscribe(int $variantId, ?int $userId, ?string $email): StockBackInSubscription
     {
-        $existing = $this->subscriptions->findExisting($variantId, $userId, $email);
+        $existing = $this->repository->findExisting($variantId, $userId, $email);
 
         if ($existing instanceof StockBackInSubscription) {
             return $existing;
         }
 
         /** @var StockBackInSubscription $subscription */
-        $subscription = $this->subscriptions->create([
+        $subscription = $this->repository->create([
             'variant_id' => $variantId,
             'user_id' => $userId,
             'email' => $email,
@@ -47,19 +45,26 @@ class BackInStockNotificationService
      *
      * @return int number of subscriptions updated
      */
-    public function handleVariantBackInStock(int $variantId): int
+    public function notifyAll(int $variantId): int
     {
-        $subs = $this->subscriptions->findPendingForVariant($variantId);
+        $subscriptions = $this->repository->findPendingForVariant($variantId);
 
         $now = Carbon::now();
-
         $updated = 0;
-        foreach ($subs as $sub) {
-            $sub->notified_at = $now;
-            $sub->save();
+        foreach ($subscriptions as $subscription) {
+            $subscription->update(['notified_at' => $now]);
             $updated++;
         }
 
         return $updated;
+    }
+
+    public function notify(StockBackInSubscription $stockBackInSubscription)
+    {
+        if (! $stockBackInSubscription->notified_at) {
+            $stockBackInSubscription->update(['notified_at' => Carbon::now()]);
+        }
+
+        return $stockBackInSubscription;
     }
 }

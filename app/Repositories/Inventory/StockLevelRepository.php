@@ -29,14 +29,4 @@ class StockLevelRepository extends BaseRepository implements IStockLevelReposito
             ->where('variant_id', $variantId)
             ->first();
     }
-
-    public function getVariantCount(int $stockId): int
-    {
-        return $this->query()->where('stock_id', $stockId)->count();
-    }
-
-    public function getTotalQuantity(int $stockId): int
-    {
-        return $this->query()->where('stock_id', $stockId)->sum('quantity');
-    }
 }

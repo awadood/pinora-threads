@@ -85,9 +85,9 @@ abstract class BaseRepository implements IBaseRepository
         }
     }
 
-    public function search(array $criteria, array $columns = ['*']): Collection
+    public function search(array $criteria, array $with = [], array $columns = ['*']): Collection
     {
-        $builder = $this->query();
+        $builder = $this->query()->with($with);
 
         $builder->where(function (Builder $q) use ($criteria) {
             foreach ($criteria as $c) {
