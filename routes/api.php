@@ -16,10 +16,10 @@ use App\Http\Controllers\Catalog\CollectionController;
 use App\Http\Controllers\Catalog\CollectionProductController;
 use App\Http\Controllers\Catalog\ProductBundleController;
 use App\Http\Controllers\Catalog\ProductController;
-use App\Http\Controllers\Catalog\ProductMediaController;
+// use App\Http\Controllers\Catalog\ProductMediaController;
 use App\Http\Controllers\Catalog\ProductPriceController;
 use App\Http\Controllers\Catalog\ProductVariantController;
-use App\Http\Controllers\Catalog\ProductVariantMediaController;
+// use App\Http\Controllers\Catalog\ProductVariantMediaController;
 use App\Http\Controllers\Catalog\ProductVariantPriceController;
 use App\Http\Controllers\Catalog\RelatedProductController;
 use App\Http\Controllers\Core\CountryController;
@@ -120,10 +120,10 @@ Route::get('collections/{slug}/products', [ProductController::class, 'indexByCol
 Route::get('products', [ProductController::class, 'index']); // Product listing. Typical filters: ?filter[type.eq]=simple&filter[active.eq]=1&filter[price.gte]=1000 etc.
 Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
 Route::get('products/{slug}/variants', [ProductVariantController::class, 'indexByProductSlug']); // variant matrix on PDP
-Route::get('products/{slug}/media', [ProductMediaController::class, 'indexByProductSlug']); // gallery
+// Route::get('products/{slug}/media', [ProductMediaController::class, 'indexByProductSlug']); // gallery
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
 Route::get('product-variants/{id}', [ProductVariantController::class, 'show']); // rarely needed on storefront
-Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
+// Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
 Route::get('product-variants/{id}/prices', [ProductVariantPriceController::class, 'indexByVariant']);
 
 // Customer
@@ -250,9 +250,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:'.P::CAT_PROD_DESTROY);
 
     // Product Media
-    Route::post('products/{product}/media', [ProductMediaController::class, 'store'])->middleware('permission:'.P::CAT_PMEDIA_CREATE);
-    Route::put('product-media/{media}', [ProductMediaController::class, 'update'])->middleware('permission:'.P::CAT_PMEDIA_UPDATE);
-    Route::delete('product-media/{media}', [ProductMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PMEDIA_DESTROY);
+    // Route::post('products/{product}/media', [ProductMediaController::class, 'store'])->middleware('permission:'.P::CAT_PMEDIA_CREATE);
+    // Route::put('product-media/{media}', [ProductMediaController::class, 'update'])->middleware('permission:'.P::CAT_PMEDIA_UPDATE);
+    // Route::delete('product-media/{media}', [ProductMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PMEDIA_DESTROY);
 
     // Product level prices
     Route::post('products/{product}/prices', [ProductPriceController::class, 'store'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
@@ -265,9 +265,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('product-variants/{variant}', [ProductVariantController::class, 'destroy'])->middleware('permission:'.P::CAT_PVAR_DESTROY);
 
     // Product variant media
-    Route::post('product-variants/{variant}/media', [ProductVariantMediaController::class, 'store'])->middleware('permission:'.P::CAT_PVMEDIA_CREATE);
-    Route::put('product-variant-media/{media}', [ProductVariantMediaController::class, 'update'])->middleware('permission:'.P::CAT_PVMEDIA_UPDATE);
-    Route::delete('product-variant-media/{media}', [ProductVariantMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PVMEDIA_DESTROY);
+    // Route::post('product-variants/{variant}/media', [ProductVariantMediaController::class, 'store'])->middleware('permission:'.P::CAT_PVMEDIA_CREATE);
+    // Route::put('product-variant-media/{media}', [ProductVariantMediaController::class, 'update'])->middleware('permission:'.P::CAT_PVMEDIA_UPDATE);
+    // Route::delete('product-variant-media/{media}', [ProductVariantMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PVMEDIA_DESTROY);
 
     // Product variant prices
     Route::post('product-variants/{variant}/prices', [ProductVariantPriceController::class, 'store'])->middleware('permission:'.P::CAT_PVPRICE_CREATE);

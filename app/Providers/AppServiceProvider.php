@@ -20,18 +20,14 @@ use App\Repositories\Catalog\Contracts\ICategoryRepository;
 use App\Repositories\Catalog\Contracts\ICollectionProductRepository;
 use App\Repositories\Catalog\Contracts\ICollectionRepository;
 use App\Repositories\Catalog\Contracts\IProductBundleRepository;
-use App\Repositories\Catalog\Contracts\IProductMediaRepository;
 use App\Repositories\Catalog\Contracts\IProductPriceRepository;
 use App\Repositories\Catalog\Contracts\IProductRepository;
-use App\Repositories\Catalog\Contracts\IProductVariantMediaRepository;
 use App\Repositories\Catalog\Contracts\IProductVariantPriceRepository;
 use App\Repositories\Catalog\Contracts\IProductVariantRepository;
 use App\Repositories\Catalog\Contracts\IRelatedProductRepository;
 use App\Repositories\Catalog\ProductBundleRepository;
-use App\Repositories\Catalog\ProductMediaRepository;
 use App\Repositories\Catalog\ProductPriceRepository;
 use App\Repositories\Catalog\ProductRepository;
-use App\Repositories\Catalog\ProductVariantMediaRepository;
 use App\Repositories\Catalog\ProductVariantPriceRepository;
 use App\Repositories\Catalog\ProductVariantRepository;
 use App\Repositories\Catalog\RelatedProductRepository;
@@ -114,8 +110,6 @@ class AppServiceProvider extends ServiceProvider
         ICollectionRepository::class => CollectionRepository::class,
         IProductRepository::class => ProductRepository::class,
         IProductVariantRepository::class => ProductVariantRepository::class,
-        IProductMediaRepository::class => ProductMediaRepository::class,
-        IProductVariantMediaRepository::class => ProductVariantMediaRepository::class,
         IProductPriceRepository::class => ProductPriceRepository::class,
         IProductVariantPriceRepository::class => ProductVariantPriceRepository::class,
         IProductBundleRepository::class => ProductBundleRepository::class,

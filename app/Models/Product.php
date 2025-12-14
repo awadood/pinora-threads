@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Represents a purchasable product with variants and catalog metadata.
@@ -13,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Product extends AbstractLoggableModel
 {
+    use HasMedia;
+
     protected $fillable = [
         'sku',
         'name',
@@ -54,11 +59,6 @@ class Product extends AbstractLoggableModel
         return $this->hasMany(ProductPrice::class);
     }
 
-    public function media(): HasMany
-    {
-        return $this->hasMany(ProductMedia::class);
-    }
-
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product');
@@ -77,5 +77,25 @@ class Product extends AbstractLoggableModel
     public function relatedByProducts(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'related_products', 'related_product_id', 'product_id');
+    }
+
+    public function thumbnailMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('thumbnail');
+    }
+
+    public function heroMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('hero');
+    }
+
+    public function ogImageMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('og_image');
+    }
+
+    public function galleryMedia(): MorphMany
+    {
+        return $this->mediaForRole('gallery');
     }
 }

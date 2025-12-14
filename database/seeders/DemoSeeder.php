@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\CustomerGroup;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -218,16 +220,6 @@ class DemoSeeder extends Seeder
             'sort' => 1,
         ]);
 
-        // Product-level media
-        DB::table('product_media')->insert([
-            'product_id' => $productId,
-            'type' => 'image',
-            'url' => 'https://cdn.example.com/p/velvet/hero.jpg',
-            'position' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
         // Variants (default: Red / S), second: Blue / M
         $v1Id = DB::table('product_variants')->insertGetId([
             'product_id' => $productId,
@@ -269,14 +261,57 @@ class DemoSeeder extends Seeder
             ['product_variant_id' => $v2Id, 'currency_code' => 'PKR', 'amount' => 42000.00, 'compare_at' => null],
         ]);
 
-        // Variant media (override)
-        DB::table('product_variant_media')->insert([
-            'product_variant_id' => $v1Id,
+        // Create canonical asset
+        $now = Carbon::now();
+        $productAssetId = DB::table('media_assets')->insertGetId([
             'type' => 'image',
-            'url' => 'https://cdn.example.com/p/velvet/red_1.jpg',
-            'position' => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'disk' => 's3',
+            'key' => 'p/velvet/hero.jpg', // canonical object key
+            'cdn_url' => 'https://cdn.example.com/p/velvet/hero.jpg',
+            'mime_type' => 'image/jpeg',
+            'alt_text' => 'Velvet product hero image',
+            'title' => 'Velvet Hero',
+            'caption' => null,
+            'checksum' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        DB::table('media_attachments')->insert([
+            'media_asset_id' => $productAssetId,
+            'owner_type' => Product::class,
+            'owner_id' => $productId,
+            'role' => 'thumbnail',
+            'position' => 0,
+            'is_primary' => true,
+            'alt_text' => 'Velvet product thumbnail',
+            'caption' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        $variantAssetId = DB::table('media_assets')->insertGetId([
+            'type' => 'image',
+            'disk' => 's3',
+            'key' => 'p/velvet/red_1.jpg',
+            'cdn_url' => 'https://cdn.example.com/p/velvet/red_1.jpg',
+            'mime_type' => 'image/jpeg',
+            'alt_text' => 'Velvet variant in red',
+            'title' => 'Velvet Red',
+            'caption' => null,
+            'checksum' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        DB::table('media_attachments')->insert([
+            'media_asset_id' => $variantAssetId,
+            'owner_type' => ProductVariant::class,
+            'owner_id' => $v1Id,
+            'role' => 'thumbnail',
+            'position' => 0,
+            'is_primary' => true,
+            'alt_text' => 'Velvet red variant thumbnail',
+            'caption' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         // Remember for later steps

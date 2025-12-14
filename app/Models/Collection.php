@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Curates themed product groupings for merchandising campaigns.
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Collection extends AbstractLoggableModel
 {
+    use HasMedia;
+
     protected $fillable = [
         'name',
         'slug',
@@ -38,5 +42,15 @@ class Collection extends AbstractLoggableModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'collection_product')->withPivot(['sort'])->withTimestamps();
+    }
+
+    public function heroMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('hero');
+    }
+
+    public function ogImageMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('og_image');
     }
 }

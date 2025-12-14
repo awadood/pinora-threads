@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Organizes products into a navigable taxonomy for browsing and SEO.
@@ -13,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Category extends AbstractLoggableModel
 {
+    use HasMedia;
+
     protected $fillable = [
         'name',
         'slug',
@@ -50,5 +54,20 @@ class Category extends AbstractLoggableModel
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class);
+    }
+
+    public function thumbnailMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('thumbnail');
+    }
+
+    public function heroMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('hero');
+    }
+
+    public function ogImageMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('og_image');
     }
 }
