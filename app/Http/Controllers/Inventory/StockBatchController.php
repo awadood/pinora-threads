@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockBatchRequest;
 use App\Http\Resources\Inventory\StockBatchResource;
+use App\Models\StockBatch;
 use App\Repositories\Inventory\Contracts\IStockBatchRepository;
+use App\Services\Inventory\StockBatchService;
+use App\Support\QueryFilterable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,25 +21,32 @@ use Illuminate\Http\Request;
  */
 class StockBatchController extends Controller
 {
-    public function __construct(private readonly IStockBatchRepository $stockBatches) {}
+    use QueryFilterable;
+
+    public function __construct(
+        private readonly IStockBatchRepository $stockBatches,
+        private readonly StockBatchService $stockBatchService,
+    ) {
+        $this->allowedFilters = ['stock_id', 'variant_id', 'received_at', 'qty_remaining'];
+        $this->likeFilters = [];
+        $this->allowedSorts = ['variant_id', 'received_at', 'qty_remaining'];
+    }
 
     public function index(Request $request)
     {
-        $criteria = [];
+        $query = $this->applySorting(
+            $this->applyFilters($this->stockBatches->query(), $request),
+            $request
+        );
 
-        if ($request->filled('stock_id')) {
-            $criteria[] = ['col' => 'stock_id', 'op' => '=', 'value' => (int) $request->query('stock_id')];
-        }
-
-        if ($request->filled('variant_id')) {
-            $criteria[] = ['col' => 'variant_id', 'op' => '=', 'value' => (int) $request->query('variant_id')];
-        }
-
-        $items = empty($criteria)
-            ? $this->stockBatches->all()
-            : $this->stockBatches->search($criteria);
-
-        return StockBatchResource::collection($items);
+        return StockBatchResource::collection(
+            $query->with([
+                'stock',
+                'variant.attributes.option.attribute',
+                'variant.thumbnailMedia.asset.renditions',
+                'variant.product.thumbnailMedia.asset.renditions',
+            ])->get()
+        );
     }
 
     public function show(int $stock_batch)
@@ -49,29 +59,24 @@ class StockBatchController extends Controller
 
     public function store(StockBatchRequest $request)
     {
-        $entity = $this->stockBatches->create($request->validated());
+        $data = $request->validated();
+        $performedBy = $request->user()->id;
 
-        return StockBatchResource::make($entity)
-            ->response()
-            ->setStatusCode(201);
+        $entity = $this->stockBatchService->receive($data, $performedBy);
+
+        return StockBatchResource::make($entity)->response()->setStatusCode(201);
     }
 
-    public function update(StockBatchRequest $request, int $stock_batch)
+    public function update(StockBatchRequest $request, StockBatch $stockBatch)
     {
-        $entity = $this->stockBatches->find($stock_batch);
-        abort_if(! $entity, 404);
+        $stockBatch->update($request->validated());
 
-        $entity->fill($request->validated())->save();
-
-        return StockBatchResource::make($entity);
+        return StockBatchResource::make($stockBatch);
     }
 
-    public function destroy(int $stock_batch): JsonResponse
+    public function destroy(StockBatch $stockBatch): JsonResponse
     {
-        $entity = $this->stockBatches->find($stock_batch);
-        abort_if(! $entity, 404);
-
-        $this->stockBatches->disableIfNotDestroy($entity);
+        $this->stockBatches->disableIfNotDestroy($stockBatch);
 
         return response()->json([], 204);
     }
