@@ -5,11 +5,11 @@ namespace App\Http\Resources\Catalog;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * ProductVariantPriceResource
+ * VariantPriceResource
  *
  * @author Abdul Wadood
  */
-class ProductVariantPriceResource extends JsonResource
+class VariantPriceResource extends JsonResource
 {
     public function toArray($request): array
     {

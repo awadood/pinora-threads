@@ -15,10 +15,5 @@ use App\Repositories\Catalog\Contracts\IAttributeRepository;
  */
 class AttributeRepository extends BaseRepository implements IAttributeRepository
 {
-    /**
-     * The model class handled by this repository.
-     *
-     * @var class-string<Attribute>
-     */
     protected string $modelClass = Attribute::class;
 }

@@ -15,10 +15,5 @@ use App\Repositories\Catalog\Contracts\IProductRepository;
  */
 class ProductRepository extends BaseRepository implements IProductRepository
 {
-    /**
-     * The model class handled by this repository.
-     *
-     * @var class-string<Product>
-     */
     protected string $modelClass = Product::class;
 }

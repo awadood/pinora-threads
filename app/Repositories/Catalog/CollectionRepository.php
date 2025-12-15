@@ -15,10 +15,5 @@ use App\Repositories\Catalog\Contracts\ICollectionRepository;
  */
 class CollectionRepository extends BaseRepository implements ICollectionRepository
 {
-    /**
-     * The model class handled by this repository.
-     *
-     * @var class-string<Collection>
-     */
     protected string $modelClass = Collection::class;
 }

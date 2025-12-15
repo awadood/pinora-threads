@@ -5,11 +5,11 @@ namespace App\Http\Resources\Catalog;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * ProductVariantMediaResource
+ * VariantMediaResource
  *
  * @author Abdul Wadood
  */
-class ProductVariantMediaResource extends JsonResource
+class VariantMediaResource extends JsonResource
 {
     public function toArray($request): array
     {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Catalog;
 
 use App\Http\Requests\Catalog\ProductVariantRequest;
-use App\Http\Resources\Catalog\ProductVariantResource;
+use App\Http\Resources\Catalog\VariantResource;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Repositories\Catalog\Contracts\IProductVariantRepository;
@@ -12,13 +12,13 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
- * ProductVariantController
+ * VariantController
  *
  * Manage product variants and expose variant matrices.
  *
  * @author Abdul Wadood
  */
-class ProductVariantController extends Controller
+class VariantController extends Controller
 {
     use QueryFilterable;
 
@@ -27,6 +27,16 @@ class ProductVariantController extends Controller
         $this->allowedFilters = ['product_id', 'sku', 'title', 'active', 'default'];
         $this->likeFilters = ['sku', 'title'];
         $this->allowedSorts = ['id'];
+    }
+
+    public function index(Request $request)
+    {
+        $items = $this->variants->lookup(
+            $request->query('filter', []),
+            ['product', 'attributes.option.attribute']
+        );
+
+        return VariantResource::collection($items);
     }
 
     public function indexByProductSlug(string $slug, Request $request)
@@ -38,12 +48,12 @@ class ProductVariantController extends Controller
 
         $query = $this->applySorting($this->applyFilters($query, $request), $request);
 
-        return ProductVariantResource::collection($query->get());
+        return VariantResource::collection($query->get());
     }
 
     public function show(ProductVariant $id)
     {
-        return ProductVariantResource::make($id);
+        return VariantResource::make($id);
     }
 
     public function store(ProductVariantRequest $request, Product $product)
@@ -53,14 +63,14 @@ class ProductVariantController extends Controller
 
         $variant = $this->variants->create($data);
 
-        return ProductVariantResource::make($variant)->response()->setStatusCode(201);
+        return VariantResource::make($variant)->response()->setStatusCode(201);
     }
 
     public function update(ProductVariantRequest $request, ProductVariant $variant)
     {
         $variant->fill($request->validated())->save();
 
-        return ProductVariantResource::make($variant);
+        return VariantResource::make($variant);
     }
 
     public function destroy(ProductVariant $variant)

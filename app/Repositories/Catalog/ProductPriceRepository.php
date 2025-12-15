@@ -15,10 +15,5 @@ use App\Repositories\Catalog\Contracts\IProductPriceRepository;
  */
 class ProductPriceRepository extends BaseRepository implements IProductPriceRepository
 {
-    /**
-     * The model class handled by this repository.
-     *
-     * @var class-string<ProductPrice>
-     */
     protected string $modelClass = ProductPrice::class;
 }

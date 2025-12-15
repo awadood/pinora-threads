@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Catalog;
 
 use App\Http\Requests\Catalog\ProductVariantPriceRequest;
-use App\Http\Resources\Catalog\ProductVariantPriceResource;
+use App\Http\Resources\Catalog\VariantPriceResource;
 use App\Models\ProductVariant;
 use App\Repositories\Catalog\Contracts\IProductVariantPriceRepository;
 use Illuminate\Routing\Controller;
 
 /**
- * ProductVariantPriceController
+ * VariantPriceController
  *
  * Manage variant-level prices per currency.
  *
  * @author Abdul Wadood
  */
-class ProductVariantPriceController extends Controller
+class VariantPriceController extends Controller
 {
     public function __construct(protected IProductVariantPriceRepository $prices) {}
 
@@ -23,7 +23,7 @@ class ProductVariantPriceController extends Controller
     {
         $prices = $this->prices->query()->where('product_variant_id', $id->id)->get();
 
-        return ProductVariantPriceResource::collection($prices);
+        return VariantPriceResource::collection($prices);
     }
 
     public function store(ProductVariantPriceRequest $request, ProductVariant $variant)
@@ -33,7 +33,7 @@ class ProductVariantPriceController extends Controller
 
         $price = $this->prices->create($data);
 
-        return ProductVariantPriceResource::make($price)->response()->setStatusCode(201);
+        return VariantPriceResource::make($price)->response()->setStatusCode(201);
     }
 
     public function update(ProductVariantPriceRequest $request, ProductVariant $variant, string $currency_code)
@@ -45,7 +45,7 @@ class ProductVariantPriceController extends Controller
 
         $price->fill($request->validated())->save();
 
-        return ProductVariantPriceResource::make($price);
+        return VariantPriceResource::make($price);
     }
 
     public function destroy(ProductVariant $variant, string $currency_code)

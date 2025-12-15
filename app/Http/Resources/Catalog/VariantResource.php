@@ -5,11 +5,11 @@ namespace App\Http\Resources\Catalog;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * ProductVariantResource
+ * VariantResource
  *
  * @author Abdul Wadood
  */
-class ProductVariantResource extends JsonResource
+class VariantResource extends JsonResource
 {
     public function toArray($request): array
     {
@@ -23,6 +23,10 @@ class ProductVariantResource extends JsonResource
             'active' => $this->active,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'attributes' => VariantAttributeResource::collection($this->whenLoaded('attributes')),
+
+            'product' => ProductResource::make($this->whenLoaded('product')),
         ];
     }
 }

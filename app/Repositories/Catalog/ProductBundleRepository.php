@@ -15,10 +15,5 @@ use App\Repositories\Catalog\Contracts\IProductBundleRepository;
  */
 class ProductBundleRepository extends BaseRepository implements IProductBundleRepository
 {
-    /**
-     * The model class handled by this repository.
-     *
-     * @var class-string<ProductBundle>
-     */
     protected string $modelClass = ProductBundle::class;
 }
