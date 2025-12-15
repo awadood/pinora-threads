@@ -54,6 +54,7 @@ class StockBatchService
                 meta: [
                     'stock_batch_id' => (int) $batch->id,
                     'performed_by' => $performedBy,
+                    'reason' => __('inventory.new_batch'),
                 ],
             );
 
