@@ -27,7 +27,6 @@ class StockBatchRequest extends FormRequest
             'currency_code' => ['required', 'string', 'size:3', 'exists:currencies,code'],
             'unit_cost' => ['required', 'numeric', 'min:0'],
             'qty_received' => ['required', 'integer', 'min:1'],
-            'qty_remaining' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }
