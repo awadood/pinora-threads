@@ -193,16 +193,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/activity-logs/{id}', [ActivityLogController::class, 'show']);   // single detail
 
     // Admin Users
-    Route::get('admin/users', [UserController::class, 'index'])->middleware('permission:'.P::USER_VIEW);
-    Route::post('admin/users', [UserController::class, 'store'])->middleware('permission:'.P::USER_CREATE);
-    Route::get('admin/users/{user}', [UserController::class, 'show'])->middleware('permission:'.P::USER_VIEW);
-    Route::put('admin/users/{user}', [UserController::class, 'update'])->middleware('permission:'.P::USER_UPDATE);
-    Route::delete('admin/users/{user}', [UserController::class, 'destroy'])->middleware('permission:'.P::USER_DESTROY);
+    Route::get('admins', [UserController::class, 'index'])->middleware('permission:'.P::USER_VIEW);
+    Route::post('admins', [UserController::class, 'store'])->middleware('permission:'.P::USER_CREATE);
+    Route::get('admins/{user}', [UserController::class, 'show'])->middleware('permission:'.P::USER_VIEW);
+    Route::put('admins/{user}', [UserController::class, 'update'])->middleware('permission:'.P::USER_UPDATE);
+    Route::delete('admins/{user}', [UserController::class, 'destroy'])->middleware('permission:'.P::USER_DESTROY);
 
     // Manage user roles & permissions
-    Route::put('admin/users/{user}/roles', [UserController::class, 'syncRoles'])->middleware('permission:'.P::USER_UPDATE);
-    Route::put('admin/users/{user}/permissions', [UserController::class, 'syncPermissions'])->middleware('permission:'.P::USER_UPDATE);
-    Route::patch('admin/users/{user}/status', [UserController::class, 'toggleStatus'])->middleware('permission:'.P::USER_UPDATE);
+    Route::put('admins/{user}/roles', [UserController::class, 'syncRoles'])->middleware('permission:'.P::USER_UPDATE);
+    Route::put('admins/{user}/permissions', [UserController::class, 'syncPermissions'])->middleware('permission:'.P::USER_UPDATE);
+    Route::patch('admins/{user}/status', [UserController::class, 'toggleStatus'])->middleware('permission:'.P::USER_UPDATE);
 
     // Roles
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:'.P::ROLE_VIEW);

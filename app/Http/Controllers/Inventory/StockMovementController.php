@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Inventory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StockMovementRequest;
 use App\Http\Resources\Inventory\StockMovementResource;
+use App\Models\StockMovement;
 use App\Repositories\Inventory\Contracts\IStockMovementRepository;
 use App\Services\Inventory\StockAdjustmentService;
+use App\Support\QueryFilterable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,41 +21,45 @@ use Illuminate\Http\Request;
  */
 class StockMovementController extends Controller
 {
+    use QueryFilterable;
+
     public function __construct(
         private readonly IStockMovementRepository $stockMovements,
         private readonly StockAdjustmentService $stockAdjustmentService,
-    ) {}
+    ) {
+        $this->allowedFilters = [
+            'stock_id',
+            'variant_id',
+            'stock_movement_type_code',
+            'stock_batch_id',
+            'performed_by',
+            'created_at',
+        ];
+        $this->allowedSorts = ['stock_batch_id', 'stock_movement_type_code', 'created_at'];
+    }
 
     public function index(Request $request)
     {
-        $criteria = [];
+        $query = $this->applySorting(
+            $this->applyFilters($this->stockMovements->query(), $request),
+            $request
+        );
 
-        if ($request->filled('stock_id')) {
-            $criteria[] = ['col' => 'stock_id', 'op' => '=', 'value' => (int) $request->query('stock_id')];
-        }
+        $perPage = $request->integer('per_page', 25);
 
-        if ($request->filled('variant_id')) {
-            $criteria[] = ['col' => 'variant_id', 'op' => '=', 'value' => (int) $request->query('variant_id')];
-        }
-
-        $items = empty($criteria)
-            ? $this->stockMovements->all()
-            : $this->stockMovements->search($criteria);
-
-        return StockMovementResource::collection($items);
+        return StockMovementResource::collection(
+            $query->with([
+                'stock',
+                'variant.attributes.option.attribute',
+            ])->paginate($perPage)
+        );
     }
 
-    public function show(int $stock_movement)
+    public function show(StockMovement $stockMovement)
     {
-        $entity = $this->stockMovements->find($stock_movement);
-        abort_if(! $entity, 404);
-
-        return StockMovementResource::make($entity);
+        return StockMovementResource::make($stockMovement);
     }
 
-    /**
-     * Creates a new stock movement and adjusts the stock level atomically.
-     */
     public function store(StockMovementRequest $request)
     {
         $data = $request->validated();
@@ -77,7 +83,7 @@ class StockMovementController extends Controller
     /**
      * Movements are immutable. If you need to revert, create a compensating movement.
      */
-    public function destroy(int $stock_movement): JsonResponse
+    public function destroy(): JsonResponse
     {
         return response()->json([
             'message' => 'Stock movements are immutable. Create a compensating movement instead.',

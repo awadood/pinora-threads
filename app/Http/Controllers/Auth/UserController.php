@@ -7,6 +7,7 @@ use App\Http\Requests\UserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Repositories\Auth\Contracts\IUserRepository;
+use App\Support\QueryFilterable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -15,13 +16,20 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function __construct(protected IUserRepository $repository) {}
+    use QueryFilterable;
+
+    public function __construct(protected IUserRepository $users) {}
 
     public function index(Request $request)
     {
-        $users = $this->repository->paginate($request->input('search'), $request->input('active'), $request->input('per_page', 15));
+        $query = $this->applySorting(
+            $this->applyFilters($this->users->query(), $request),
+            $request
+        );
 
-        return UserResource::collection($users);
+        return UserResource::collection(
+            $query->whereHas('roles')->paginate($request->integer('per_page', 25))
+        );
     }
 
     public function store(UserRequest $request)
@@ -32,10 +40,10 @@ class UserController extends Controller
         $data['email_verified_at'] = Carbon::now();
         $data['phone_verified_at'] = Carbon::now();
 
-        $user = $this->repository->create($data);
+        $user = $this->users->create($data);
 
         if (! empty($data['roles'])) {
-            $user = $this->repository->syncRoles($user, $data['roles']);
+            $user = $this->users->syncRoles($user, $data['roles']);
         }
 
         return UserResource::make($user);
@@ -55,7 +63,7 @@ class UserController extends Controller
         $user->update(Arr::except($data, 'roles'));
 
         if (Arr::exists($data, 'roles')) {
-            $user = $this->repository->syncRoles($user, $data['roles']);
+            $user = $this->users->syncRoles($user, $data['roles']);
         }
 
         return UserResource::make($user);
@@ -63,7 +71,7 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
-        $this->repository->disableIfNotDestroy($user);
+        $this->users->disableIfNotDestroy($user);
 
         return response()->json(['message' => __('auth.destroyed')]);
     }
@@ -75,7 +83,7 @@ class UserController extends Controller
             'roles.*' => ['string', 'exists:roles,name'],
         ]);
 
-        $user = $this->repository->syncRoles($user, $data['roles']);
+        $user = $this->users->syncRoles($user, $data['roles']);
 
         return UserResource::make($user);
     }
@@ -87,14 +95,14 @@ class UserController extends Controller
             'permissions.*' => ['string', 'exists:permissions,name'],
         ]);
 
-        $user = $this->repository->syncPermissions($user, $data['permissions']);
+        $user = $this->users->syncPermissions($user, $data['permissions']);
 
         return UserResource::make($user);
     }
 
     public function toggleStatus(Request $request, User $user)
     {
-        $user = $this->repository->setActive($user, (bool) $request->input('active'));
+        $user = $this->users->setActive($user, (bool) $request->input('active'));
 
         return UserResource::make($user);
     }

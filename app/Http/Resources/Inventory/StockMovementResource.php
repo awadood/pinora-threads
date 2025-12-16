@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Inventory;
 
+use App\Http\Resources\Catalog\VariantResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -25,6 +26,10 @@ class StockMovementResource extends JsonResource
             'reason' => $this->reason,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'stock' => StockResource::make($this->whenLoaded('stock')),
+
+            'variant' => VariantResource::make($this->whenLoaded('variant')),
         ];
     }
 }

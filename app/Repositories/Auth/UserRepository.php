@@ -24,27 +24,6 @@ class UserRepository extends BaseRepository implements IUserRepository
         'active' => true,
     ];
 
-    /**
-     * Paginated user listing with optional search and active filter.
-     */
-    public function paginate(?string $search = null, ?bool $active = null, int $perPage = 15): LengthAwarePaginator
-    {
-        $query = $this->query()->with('roles');
-
-        if ($search !== null && $search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($active !== null) {
-            $query->where('active', $active);
-        }
-
-        return $query->orderByDesc('id')->paginate($perPage);
-    }
-
     public function syncRoles(User $user, array $roles): User
     {
         $user->syncRoles($roles);
