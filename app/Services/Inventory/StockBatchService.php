@@ -3,7 +3,6 @@
 namespace App\Services\Inventory;
 
 use App\Models\StockBatch;
-use App\Models\StockMovement;
 use App\Models\StockMovementType;
 use App\Repositories\Inventory\Contracts\IStockBatchRepository;
 use Illuminate\Support\Facades\DB;

@@ -10,7 +10,7 @@ return [
     */
 
     'inventory' => [
-        'new_batch' => 'new batch arrived'
+        'new_batch' => 'new batch arrived',
     ],
 
 ];

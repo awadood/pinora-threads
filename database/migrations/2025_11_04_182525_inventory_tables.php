@@ -75,7 +75,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('variant_id')->constrained('product_variants')->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('email')->nullable(); //
+            $table->string('email')->nullable();
             $table->timestampTz('notified_at')->nullable();
             $table->timestampsTz();
 

@@ -39,13 +39,15 @@ class StockBatchController extends Controller
             $request
         );
 
+        $perPage = $request->integer('per_page', 25);
+
         return StockBatchResource::collection(
             $query->with([
                 'stock',
                 'variant.attributes.option.attribute',
                 'variant.thumbnailMedia.asset.renditions',
                 'variant.product.thumbnailMedia.asset.renditions',
-            ])->get()
+            ])->paginate($perPage)
         );
     }
 

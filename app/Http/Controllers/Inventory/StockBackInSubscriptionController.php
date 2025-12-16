@@ -8,6 +8,7 @@ use App\Http\Resources\Inventory\StockBackInSubscriptionResource;
 use App\Models\StockBackInSubscription;
 use App\Repositories\Inventory\Contracts\IStockBackInSubscriptionRepository;
 use App\Services\Inventory\BackInStockNotificationService;
+use App\Support\QueryFilterable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,6 +21,8 @@ use Illuminate\Http\Request;
  */
 class StockBackInSubscriptionController extends Controller
 {
+    use QueryFilterable;
+
     public function __construct(
         private readonly IStockBackInSubscriptionRepository $subscriptions,
         private readonly BackInStockNotificationService $notificationService,
@@ -27,19 +30,19 @@ class StockBackInSubscriptionController extends Controller
 
     public function index(Request $request)
     {
-        $criteria = [];
+        $query = $this->applySorting(
+            $this->applyFilters($this->subscriptions->query(), $request),
+            $request
+        );
 
-        if ($request->filled('variant_id')) {
-            $criteria[] = ['col' => 'variant_id', 'op' => '=', 'value' => (int) $request->query('variant_id')];
-        }
+        $perPage = $request->integer('per_page', 25);
 
-        if ($request->filled('user_id')) {
-            $criteria[] = ['col' => 'user_id', 'op' => '=', 'value' => (int) $request->query('user_id')];
-        }
-
-        $items = $this->subscriptions->search($criteria);
-
-        return StockBackInSubscriptionResource::collection($items);
+        return StockBackInSubscriptionResource::collection(
+            $query->with([
+                'stock',
+                'variant.attributes.option.attribute',
+            ])->paginate($perPage)
+        );
     }
 
     public function show(StockBackInSubscription $stockBackInSubscription)
