@@ -59,7 +59,7 @@ trait QueryFilterable
             }
 
             if (! in_array($op, $this->ops, true)) {
-                $op = 'eq';
+                continue;
             }
 
             if ($op === 'in') {

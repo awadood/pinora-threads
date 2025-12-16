@@ -40,10 +40,8 @@ class StockMovementController extends Controller
 
     public function index(Request $request)
     {
-        $query = $this->applySorting(
-            $this->applyFilters($this->stockMovements->query(), $request),
-            $request
-        );
+        $query = $this->applyFilters($this->stockMovements->query(), $request);
+        $query = $this->applySorting($query, $request);
 
         $perPage = $request->integer('per_page', 25);
 

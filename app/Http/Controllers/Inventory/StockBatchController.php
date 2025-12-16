@@ -34,10 +34,8 @@ class StockBatchController extends Controller
 
     public function index(Request $request)
     {
-        $query = $this->applySorting(
-            $this->applyFilters($this->stockBatches->query(), $request),
-            $request
-        );
+        $query = $this->applyFilters($this->stockBatches->query(), $request);
+        $query = $this->applySorting($query, $request);
 
         $perPage = $request->integer('per_page', 25);
 

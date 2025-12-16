@@ -4,7 +4,6 @@ namespace App\Repositories\Auth\Contracts;
 
 use App\Models\User;
 use App\Repositories\IBaseRepository;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * IUserRepository

@@ -10,6 +10,7 @@ use App\Models\StockLevel;
 use App\Models\StockMovementType;
 use App\Repositories\Inventory\Contracts\IStockLevelRepository;
 use App\Services\Inventory\StockAdjustmentService;
+use App\Support\QueryFilterable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,26 +23,33 @@ use Illuminate\Http\Request;
  */
 class StockLevelController extends Controller
 {
+    use QueryFilterable;
+
     public function __construct(
-        private IStockLevelRepository $repository,
+        private IStockLevelRepository $stockLevels,
         private StockAdjustmentService $adjustmentService
-    ) {}
+    ) {
+        $this->allowedFilters = ['stock_id', 'variant_id', 'quantity', 'notify_below', 'allow_backorder', 'updated_at'];
+        $this->allowedSorts = ['quantity', 'updated_at', 'variant_id', 'stock_id', 'notify_below'];
+    }
 
     public function index(Request $request)
     {
-        $criteria = [];
+        $query = $this->stockLevels->query()->with([
+            'stock',
+            'variant.product',
+            'variant.attributes.option.attribute',
+            'variant.thumbnailMedia.asset.renditions',
+            'variant.product.thumbnailMedia.asset.renditions',
+        ]);
 
-        if ($request->filled('stock_id')) {
-            $criteria[] = ['col' => 'stock_id', 'op' => '=', 'value' => (int) $request->query('stock_id')];
-        }
+        $query = $this->stockLevels->applyStatusFilter($query, data_get($request->query('filter', []), 'status'));
+        $query = $this->applyFilters($query, $request);
+        $query = $this->applySorting($query, $request);
 
-        if ($request->filled('variant_id')) {
-            $criteria[] = ['col' => 'variant_id', 'op' => '=', 'value' => (int) $request->query('variant_id')];
-        }
+        $perPage = (int) $request->integer('per_page', 50);
 
-        $items = $this->repository->search($criteria, ['stock', 'variant']);
-
-        return StockLevelResource::collection($items);
+        return StockLevelResource::collection($query->paginate($perPage));
     }
 
     public function show(StockLevel $stockLevel)
@@ -51,7 +59,7 @@ class StockLevelController extends Controller
 
     public function store(StockLevelRequest $request)
     {
-        $entity = $this->repository->create($request->validated());
+        $entity = $this->stockLevels->create($request->validated());
 
         return StockLevelResource::make($entity)->response()->setStatusCode(201);
     }
@@ -65,7 +73,7 @@ class StockLevelController extends Controller
 
     public function destroy(StockLevel $stockLevel): JsonResponse
     {
-        $this->repository->disableIfNotDestroy($stockLevel);
+        $this->stockLevels->disableIfNotDestroy($stockLevel);
 
         return response()->json([], 204);
     }

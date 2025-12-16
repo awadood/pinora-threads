@@ -5,7 +5,6 @@ namespace App\Repositories\Auth;
 use App\Models\User;
 use App\Repositories\Auth\Contracts\IUserRepository;
 use App\Repositories\BaseRepository;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * UserRepository
