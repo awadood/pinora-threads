@@ -38,9 +38,9 @@ class CoreTablesSeeder extends Seeder
         ], ['code'], ['name']);
 
         DB::table('customer_groups')->upsert([
-            ['code' => 'STANDARD', 'name' => 'Standard'],
-            ['code' => 'B2B', 'name' => 'B2B'],
-            ['code' => 'VIP', 'name' => 'VIP'],
+            ['code' => 'standard', 'name' => 'Standard'],
+            ['code' => 'b2b', 'name' => 'B2B'],
+            ['code' => 'vip', 'name' => 'VIP'],
         ], ['code'], ['name']);
     }
 

@@ -38,10 +38,8 @@ class AttributeController extends Controller
         return AttributeResource::collection($query->get());
     }
 
-    public function showByCode(string $code)
+    public function show(Attribute $attribute)
     {
-        $attribute = $this->attributes->query()->where('code', $code)->firstOrFail();
-
         return AttributeResource::make($attribute);
     }
 
@@ -54,7 +52,7 @@ class AttributeController extends Controller
 
     public function update(AttributeRequest $request, Attribute $attribute)
     {
-        $attribute->fill($request->validated())->save();
+        $attribute->update($request->validated());
 
         return AttributeResource::make($attribute);
     }

@@ -109,8 +109,8 @@ Route::get('stock-movement-types/{stock_movement_type}', [StockMovementTypeContr
 
 // Catalog - Read only, used by frontend (PLP/PDP, filters, menus).
 Route::get('attributes', [AttributeController::class, 'index']); // maybe optional // ?filter[type.eq]=select&filter[active.eq]=1
-Route::get('attributes/{code}', [AttributeController::class, 'showByCode']); // by code instead of id, if you choose
-Route::get('attributes/{code}/options', [AttributeOptionController::class, 'indexByAttribute']); // color options, etc.
+Route::get('attributes/{attribute}', [AttributeController::class, 'show']); // by code instead of id, if you choose
+Route::get('attributes/{attribute}/options', [AttributeOptionController::class, 'indexByAttribute']); // color options, etc.
 Route::get('categories', [CategoryController::class, 'index']); // category tree / flat list
 Route::get('categories/{slug}', [CategoryController::class, 'showBySlug']); // details + children
 Route::get('categories/{slug}/products', [ProductController::class, 'indexByCategory']); // PLP by category
