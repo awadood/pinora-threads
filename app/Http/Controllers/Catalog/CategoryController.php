@@ -70,7 +70,7 @@ class CategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category)
     {
-        $category->fill($request->validated())->save();
+        $category->update($request->validated());
 
         return CategoryResource::make($category);
     }

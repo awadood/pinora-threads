@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Catalog;
 
-use App\Http\Requests\Catalog\CategoryProductRequest;
+use App\Models\Category;
+use App\Models\Product;
 use App\Repositories\Catalog\Contracts\ICategoryProductRepository;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
@@ -17,22 +19,73 @@ class CategoryProductController extends Controller
 {
     public function __construct(protected ICategoryProductRepository $pivots) {}
 
-    public function store(CategoryProductRequest $request)
+    public function attachProducts(Request $request, Category $category)
     {
-        $pivot = $this->pivots->create($request->validated());
+        $data = $request->validate($this->rulesProduct());
 
-        return response()->json($pivot, 201);
+        $changes = $this->pivots->attachProductsToCategory($category, $data['product_ids']);
+
+        return response()->json($changes);
     }
 
-    public function destroy(int $category, int $product)
+    public function syncProducts(Request $request, Category $category)
     {
-        $record = $this->pivots->query()
-            ->where('category_id', $category)
-            ->where('product_id', $product)
-            ->firstOrFail();
+        $data = $request->validate($this->rulesProduct(true));
 
-        $this->pivots->destroy($record->getKey());
+        $changes = $this->pivots->syncProductsToCategory($category, $data['product_ids']);
 
-        return response()->json([], 204);
+        return response()->json($changes);
+    }
+
+    public function detachProducts(Request $request, Category $category)
+    {
+        $data = $request->validate($this->rulesProduct());
+
+        $changes = $this->pivots->detachProductsFromCategory($category, $data['product_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function attachCategories(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rulesCateogry());
+
+        $changes = $this->pivots->attachCategoriesToProduct($product, $data['category_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function syncCategories(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rulesCateogry(true));
+
+        $changes = $this->pivots->syncCategoriesToProduct($product, $data['category_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function detachCategories(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rulesCateogry());
+
+        $changes = $this->pivots->detachCategoriesFromProduct($product, $data['category_ids']);
+
+        return response()->json($changes);
+    }
+
+    private function rulesCateogry(bool $allowEmptyArray = false)
+    {
+        return [
+            'category_ids' => [$allowEmptyArray ? 'present' : 'required', 'array', 'max:50'],
+            'category_ids.*' => ['integer', 'distinct', 'exists:categories,id'],
+        ];
+    }
+
+    private function rulesProduct(bool $allowEmptyArray = false)
+    {
+        return [
+            'product_ids' => [$allowEmptyArray ? 'present' : 'required', 'array', 'max:50'],
+            'product_ids.*' => ['integer', 'distinct', 'exists:products,id'],
+        ];
     }
 }

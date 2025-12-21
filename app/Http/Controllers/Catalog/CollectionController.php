@@ -70,7 +70,7 @@ class CollectionController extends Controller
 
     public function update(CollectionRequest $request, Collection $collection)
     {
-        $collection->fill($request->validated())->save();
+        $collection->update($request->validated());
 
         return CollectionResource::make($collection);
     }

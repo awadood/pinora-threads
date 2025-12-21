@@ -40,7 +40,10 @@ class ProductController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $product = $this->products->query()->where('slug', $slug)->firstOrFail();
+        $product = $this->products->query()
+            ->with(['variants', 'categories'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         return ProductResource::make($product);
     }
@@ -54,7 +57,7 @@ class ProductController extends Controller
 
     public function update(ProductRequest $request, Product $product)
     {
-        $product->fill($request->validated())->save();
+        $product->update($request->validated());
 
         return ProductResource::make($product);
     }

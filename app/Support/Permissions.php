@@ -213,14 +213,18 @@ final class Permissions
     public const CAT_RELATED_DESTROY = 'catalog.product.related.destroy';
 
     // Catalog: Category <-> Product pivot
-    public const CAT_CATPROD_CREATE = 'catalog.category.product.create';
+    public const CAT_CATPROD_ATTACH = 'catalog.category.product.attach';
 
-    public const CAT_CATPROD_DESTROY = 'catalog.category.product.destroy';
+    public const CAT_CATPROD_SYNC = 'catalog.category.product.sync';
+
+    public const CAT_CATPROD_DETACH = 'catalog.category.product.detach';
 
     // Catalog: Collection <-> Product pivot
-    public const CAT_COLPROD_CREATE = 'catalog.collection.product.create';
+    public const CAT_COLPROD_ATTACH = 'catalog.collection.product.attach';
 
-    public const CAT_COLPROD_DESTROY = 'catalog.collection.product.destroy';
+    public const CAT_COLPROD_SYNC = 'catalog.collection.product.sync';
+
+    public const CAT_COLPROD_DETACH = 'catalog.collection.product.detach';
 
     /*
     |--------------------------------------------------------------------------

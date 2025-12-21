@@ -285,12 +285,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('related-products/{product}/{related_product}', [RelatedProductController::class, 'destroy'])->middleware('permission:'.P::CAT_RELATED_DESTROY);
 
     // Category <-> Product pivot
-    Route::post('category-products', [CategoryProductController::class, 'store'])->middleware('permission:'.P::CAT_CATPROD_CREATE);
-    Route::delete('category-products/{category}/{product}', [CategoryProductController::class, 'destroy'])->middleware('permission:'.P::CAT_CATPROD_DESTROY);
+    Route::post('categories/{category}/products', [CategoryProductController::class, 'attachProducts'])->middleware('permission:'.P::CAT_CATPROD_ATTACH);
+    Route::put('categories/{category}/products', [CategoryProductController::class, 'syncProducts'])->middleware('permission:'.P::CAT_CATPROD_SYNC);
+    Route::delete('categories/{category}/products', [CategoryProductController::class, 'detachProducts'])->middleware('permission:'.P::CAT_CATPROD_DETACH);
+    Route::post('products/{product}/categories', [CategoryProductController::class, 'attachCategories'])->middleware('permission:'.P::CAT_CATPROD_ATTACH);
+    Route::put('products/{product}/categories', [CategoryProductController::class, 'syncCategories'])->middleware('permission:'.P::CAT_CATPROD_SYNC);
+    Route::delete('products/{product}/categories', [CategoryProductController::class, 'detachCategories'])->middleware('permission:'.P::CAT_CATPROD_DETACH);
 
     // Collection <-> Product pivot
-    Route::post('collection-products', [CollectionProductController::class, 'store'])->middleware('permission:'.P::CAT_COLPROD_CREATE);
-    Route::delete('collection-products/{collection}/{product}', [CollectionProductController::class, 'destroy'])->middleware('permission:'.P::CAT_COLPROD_DESTROY);
+    Route::post('collections/{collection}/products', [CollectionProductController::class, 'attachProducts'])->middleware('permission:'.P::CAT_COLPROD_ATTACH);
+    Route::put('collections/{collection}/products', [CollectionProductController::class, 'syncProducts'])->middleware('permission:'.P::CAT_COLPROD_SYNC);
+    Route::delete('collections/{collection}/products', [CollectionProductController::class, 'detachProducts'])->middleware('permission:'.P::CAT_COLPROD_DETACH);
+    Route::post('products/{product}/collections', [CollectionProductController::class, 'attachCollections'])->middleware('permission:'.P::CAT_COLPROD_ATTACH);
+    Route::put('products/{product}/collections', [CollectionProductController::class, 'syncCollections'])->middleware('permission:'.P::CAT_COLPROD_SYNC);
+    Route::delete('products/{product}/collections', [CollectionProductController::class, 'detachCollections'])->middleware('permission:'.P::CAT_COLPROD_DETACH);
 });
 
 /*

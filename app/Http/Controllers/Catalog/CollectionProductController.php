@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Catalog;
 
-use App\Http\Requests\Catalog\CollectionProductRequest;
+use App\Models\Collection;
+use App\Models\Product;
 use App\Repositories\Catalog\Contracts\ICollectionProductRepository;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
@@ -17,22 +19,75 @@ class CollectionProductController extends Controller
 {
     public function __construct(protected ICollectionProductRepository $pivots) {}
 
-    public function store(CollectionProductRequest $request)
+    public function attachProducts(Request $request, Collection $collection)
     {
-        $pivot = $this->pivots->create($request->validated());
+        $data = $request->validate($this->rules(false));
 
-        return response()->json($pivot, 201);
+        $changes = $this->pivots->attachProductsToCollection($collection, $data['product_ids']);
+
+        return response()->json($changes);
     }
 
-    public function destroy(int $collection, int $product)
+    public function syncProducts(Request $request, Collection $collection)
     {
-        $record = $this->pivots->query()
-            ->where('collection_id', $collection)
-            ->where('product_id', $product)
-            ->firstOrFail();
+        $data = $request->validate($this->rules(false, true));
 
-        $this->pivots->destroy($record->getKey());
+        $changes = $this->pivots->syncProductsToCollection($collection, $data['product_ids']);
 
-        return response()->json([], 204);
+        return response()->json($changes);
+    }
+
+    public function detachProducts(Request $request, Collection $collection)
+    {
+        $data = $request->validate($this->rules(false));
+
+        $changes = $this->pivots->detachProductsFromCollection($collection, $data['product_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function attachCollections(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rules(true));
+
+        $changes = $this->pivots->attachCollectionsToProduct($product, $data['collection_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function syncCollections(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rules(true, true));
+
+        $changes = $this->pivots->syncCollectionsToProduct($product, $data['collection_ids']);
+
+        return response()->json($changes);
+    }
+
+    public function detachCollections(Request $request, Product $product)
+    {
+        $data = $request->validate($this->rules(true));
+
+        $changes = $this->pivots->detachCollectionsFromProduct($product, $data['collection_ids']);
+
+        return response()->json($changes);
+    }
+
+    private function rules(bool $forCollections, bool $allowEmptyArray = false)
+    {
+        $rules = [
+            'items' => [$allowEmptyArray ? 'present' : 'required', 'array'],
+            'items.*' => ['required', 'array'],
+            'items.*.collection_id' => ['required', 'integer', 'exists:collections,id'],
+            'items.*.sort' => ['required', 'integer', 'min:0', 'max:65535'],
+        ];
+
+        if ($forCollections) {
+            $rules['items.*.collection_id'] = ['required', 'integer', 'exists:collections,id'];
+        } else {
+            $rules['items.*.product_id'] = ['required', 'integer', 'exists:products,id'];
+        }
+
+        return $rules;
     }
 }

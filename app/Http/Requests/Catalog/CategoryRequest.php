@@ -23,7 +23,15 @@ class CategoryRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:categories,slug,'.($this->category->id ?? 'NULL').',id'],
+            'slug' => [
+                'required',
+                'string',
+                'min:1',
+                'max:255',
+                'lowercase',
+                'regex:/^(?!-)(?!.*--)[a-z0-9-]+(?<!-)$/',
+                'unique:categories,slug,'.($this->category->id ?? 'NULL').',id',
+            ],
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
             'sort' => ['integer', 'min:0', 'max:65535'],
             'active' => ['boolean'],
