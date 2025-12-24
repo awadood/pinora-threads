@@ -78,7 +78,6 @@ class CollectionProductController extends Controller
         $rules = [
             'items' => [$allowEmptyArray ? 'present' : 'required', 'array'],
             'items.*' => ['required', 'array'],
-            'items.*.collection_id' => ['required', 'integer', 'exists:collections,id'],
             'items.*.sort' => ['required', 'integer', 'min:0', 'max:65535'],
         ];
 

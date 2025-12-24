@@ -16,23 +16,10 @@ abstract class BaseRepository implements IBaseRepository
 {
     private const FOREIGN_KEY_VIOLATION = 23503;
 
-    /**
-     * @var class-string<TModel>
-     */
     protected string $modelClass;
 
-    /**
-     * Columns you allow in search() to avoid accidental/unsafe queries.
-     *
-     * @var array<string, true>
-     */
     protected array $allowedSearchColumns = [];
 
-    /**
-     * Operators you allow in search().
-     *
-     * @var array<string, true>
-     */
     protected array $allowedOperators = [
         '=' => true, '!=' => true, '<' => true, '<=' => true, '>' => true, '>=' => true,
         'like' => true, 'ilike' => true, 'in' => true, 'not in' => true, 'between' => true,
@@ -40,7 +27,6 @@ abstract class BaseRepository implements IBaseRepository
 
     public function query(): Builder
     {
-        /** @var Builder */
         return ($this->modelClass)::query();
     }
 

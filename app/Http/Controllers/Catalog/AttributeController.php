@@ -31,7 +31,7 @@ class AttributeController extends Controller
     public function index(Request $request)
     {
         $query = $this->applySorting(
-            $this->applyFilters($this->attributes->query(), $request),
+            $this->applyFilters($this->attributes->query()->with('options'), $request),
             $request
         );
 

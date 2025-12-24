@@ -9,6 +9,7 @@ use App\Repositories\Catalog\Contracts\IProductRepository;
 use App\Support\QueryFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 
 /**
  * ProductController
@@ -50,14 +51,22 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        $product = $this->products->create($request->validated());
+        $data = $request->validated();
+        $data['active'] = false;
+
+        $product = $this->products->createWithDefaultVariant($request->validated());
 
         return ProductResource::make($product)->response()->setStatusCode(201);
     }
 
     public function update(ProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
+        $data = $request->validated();
+        if (Arr::exists($data, 'active')) {
+            Arr::forget($data, 'active');
+        }
+
+        $product->update($data);
 
         return ProductResource::make($product);
     }

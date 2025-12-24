@@ -122,8 +122,8 @@ Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
 Route::get('products/{slug}/variants', [VariantController::class, 'indexByProductSlug']); // variant matrix on PDP
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
 Route::get('product-variants/lookup', [VariantController::class, 'index']); // rarely needed on storefront
-Route::get('product-variants/{id}', [VariantController::class, 'show']); // rarely needed on storefront
-Route::get('product-variants/{id}/prices', [VariantPriceController::class, 'indexByVariant']);
+Route::get('product-variants/{variant}', [VariantController::class, 'show']); // rarely needed on storefront
+Route::get('product-variants/{variant}/prices', [VariantPriceController::class, 'indexByVariant']);
 // Route::get('products/{slug}/media', [ProductMediaController::class, 'indexByProductSlug']); // gallery
 // Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
 

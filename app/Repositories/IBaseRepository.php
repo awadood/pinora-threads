@@ -18,24 +18,17 @@ interface IBaseRepository
      */
     public function query(): Builder;
 
-    /**
-     * @param  array<int,string>  $columns
-     * @return Collection<int, Model>
-     */
     public function all(array $columns = ['*']): Collection;
 
     public function find(int|string $id): ?Model;
 
     public function create(array $attributes): Model;
 
-    /**
-     * @param  int|string|array<int,int|string>  $ids
-     */
     public function destroy(int|string|array $ids): int;
 
     /**
      * It attempts to delete. On FK violation, fallback to setting
-     * `active=false` if the model supports it.
+     * active to false if the model supports it.
      */
     public function disableIfNotDestroy(Model $entity): int;
 

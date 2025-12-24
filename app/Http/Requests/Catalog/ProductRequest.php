@@ -28,7 +28,6 @@ class ProductRequest extends FormRequest
             'type' => ['required', 'string', 'in:simple,variable,bundle'],
             'description' => ['nullable', 'string'],
             'tax_class_id' => ['required', 'integer', 'exists:tax_classes,id'],
-            'active' => ['boolean'],
         ];
     }
 }

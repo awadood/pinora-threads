@@ -51,9 +51,9 @@ class VariantController extends Controller
         return VariantResource::collection($query->get());
     }
 
-    public function show(ProductVariant $id)
+    public function show(ProductVariant $variant)
     {
-        return VariantResource::make($id);
+        return VariantResource::make($variant);
     }
 
     public function store(ProductVariantRequest $request, Product $product)
@@ -68,9 +68,11 @@ class VariantController extends Controller
 
     public function update(ProductVariantRequest $request, ProductVariant $variant)
     {
-        $variant->fill($request->validated())->save();
+        $data = $request->validated();
 
-        return VariantResource::make($variant);
+        $updatedVariant = $this->variants->update($variant, $data);
+
+        return VariantResource::make($updatedVariant);
     }
 
     public function destroy(ProductVariant $variant)

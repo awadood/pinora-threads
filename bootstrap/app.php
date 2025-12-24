@@ -55,10 +55,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 // database exceptions
                 $t instanceof QueryException => match ((string) $t->getCode()) {
-                    '23505' => $make(500, 'Database is currently unavailable.', [], [], $t),
+                    '7' => $make(500, 'Database is currently unavailable.', [], [], $t),
                     '22P02' => $make(500, 'Invalid text representation.', [], [], $t),
-                    '7' => $make(500, 'Unique constraint violation', [], [], $t),
-                    default => $make(500, 'Database error', [], [], $t),
+                    '23503' => $make(500, 'Foreign key violation', [], [], $t),
+                    '23505' => $make(500, 'Unique constraint violation', [], [], $t),
+                    '42703' => $make(500, 'Undefined column', [], [], $t),
+                    default => $make(500, 'Database error'.$t->getCode(), [], [], $t),
                 },
 
                 // business exceptions

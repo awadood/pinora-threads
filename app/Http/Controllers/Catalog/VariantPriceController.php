@@ -19,9 +19,9 @@ class VariantPriceController extends Controller
 {
     public function __construct(protected IProductVariantPriceRepository $prices) {}
 
-    public function indexByVariant(ProductVariant $id)
+    public function indexByVariant(ProductVariant $variant)
     {
-        $prices = $this->prices->query()->where('product_variant_id', $id->id)->get();
+        $prices = $this->prices->query()->where('product_variant_id', $variant->id)->get();
 
         return VariantPriceResource::collection($prices);
     }

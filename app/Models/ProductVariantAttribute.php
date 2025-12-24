@@ -18,6 +18,8 @@ class ProductVariantAttribute extends AbstractLoggableModel
         'value',
     ];
 
+    public $timestamps = false;
+
     /**
      * Get the attributes that should be cast.
      *
