@@ -15,7 +15,6 @@ class ProductVariantPriceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Authorization is handled via route middleware (Spatie permissions).
         return true;
     }
 

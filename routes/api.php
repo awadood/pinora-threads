@@ -257,6 +257,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Product level prices
     Route::post('products/{product}/prices', [ProductPriceController::class, 'store'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
+    Route::put('products/{product}/prices', [ProductPriceController::class, 'save'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
     Route::put('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'update'])->middleware('permission:'.P::CAT_PPRICE_UPDATE);
     Route::delete('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'destroy'])->middleware('permission:'.P::CAT_PPRICE_DESTROY);
 

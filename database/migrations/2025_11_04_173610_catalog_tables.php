@@ -74,12 +74,14 @@ return new class extends Migration
 
         // Product prices
         Schema::create('product_prices', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('currency_code', 3);
             $table->decimal('amount', 12, 2); // the price will always be saved like 10.00 or 9.99
             $table->decimal('compare_at', 12, 2)->nullable(); // Original price to show strikethrough and compute discount %
+            $table->timestampsTz();
 
-            $table->primary(['product_id', 'currency_code']);
+            $table->unique(['product_id', 'currency_code']);
 
             $table->foreign('currency_code')->references('code')->on('currencies');
         });
@@ -114,12 +116,14 @@ return new class extends Migration
 
         // Pricing per variant per currency (admin-set, no FX)
         Schema::create('product_variant_prices', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
             $table->string('currency_code', 3);
             $table->decimal('amount', 12, 2); // the price will always be saved like 10.00 or 9.99
             $table->decimal('compare_at', 12, 2)->nullable(); // Original price to show strikethrough and compute discount %
+            $table->timestampsTz();
 
-            $table->primary(['product_variant_id', 'currency_code']);
+            $table->unique(['product_variant_id', 'currency_code']);
 
             $table->foreign('currency_code')->references('code')->on('currencies');
         });

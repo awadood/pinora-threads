@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Catalog;
 
+use App\Http\Requests\Catalog\PriceRequest;
 use App\Http\Requests\Catalog\ProductPriceRequest;
 use App\Http\Resources\Catalog\ProductPriceResource;
 use App\Models\Product;
@@ -18,6 +19,15 @@ use Illuminate\Routing\Controller;
 class ProductPriceController extends Controller
 {
     public function __construct(protected IProductPriceRepository $prices) {}
+
+    public function save(PriceRequest $request, Product $product)
+    {
+        $data = $request->validated();
+
+        $result = $this->prices->savePrices($product, $data);
+
+        return response()->json($result, 201);
+    }
 
     public function store(ProductPriceRequest $request, Product $product)
     {
