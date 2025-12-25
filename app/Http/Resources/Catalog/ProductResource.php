@@ -27,7 +27,11 @@ class ProductResource extends JsonResource
 
             'variants' => VariantResource::collection($this->whenLoaded('variants')),
 
+            'bundles' => ProductBundleResource::collection($this->whenLoaded('bundles')),
+
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
+
+            'prices' => ProductPriceResource::collection($this->whenLoaded('prices')),
         ];
     }
 }

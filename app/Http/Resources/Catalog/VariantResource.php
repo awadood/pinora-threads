@@ -27,6 +27,8 @@ class VariantResource extends JsonResource
             'attributes' => VariantAttributeResource::collection($this->whenLoaded('attributes')),
 
             'product' => ProductResource::make($this->whenLoaded('product')),
+
+            'prices' => VariantPriceResource::collection($this->whenLoaded('prices')),
         ];
     }
 }

@@ -54,6 +54,11 @@ class Product extends AbstractLoggableModel
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function bundles(): HasMany
+    {
+        return $this->hasMany(ProductBundle::class);
+    }
+
     public function prices(): HasMany
     {
         return $this->hasMany(ProductPrice::class);

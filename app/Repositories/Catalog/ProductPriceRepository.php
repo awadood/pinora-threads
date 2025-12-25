@@ -32,10 +32,10 @@ class ProductPriceRepository extends BaseRepository implements IProductPriceRepo
                 $rows = [];
                 foreach ($productPrices as $p) {
                     $rows[] = [
-                        'product_id'     => $product->id,
-                        'currency_code'  => $p['currency_code'],
-                        'amount'         => $p['amount'],
-                        'compare_at'     => $p['compare_at'] ?? null,
+                        'product_id' => $product->id,
+                        'currency_code' => $p['currency_code'],
+                        'amount' => $p['amount'],
+                        'compare_at' => $p['compare_at'] ?? null,
                     ];
                 }
 
@@ -64,9 +64,9 @@ class ProductPriceRepository extends BaseRepository implements IProductPriceRepo
                     foreach ($prices as $p) {
                         $rows[] = [
                             'product_variant_id' => $variantId,
-                            'currency_code'      => $p['currency_code'],
-                            'amount'             => $p['amount'],
-                            'compare_at'         => $p['compare_at'] ?? null,
+                            'currency_code' => $p['currency_code'],
+                            'amount' => $p['amount'],
+                            'compare_at' => $p['compare_at'] ?? null,
                         ];
                     }
                 }

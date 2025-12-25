@@ -43,7 +43,7 @@ class ProductRepository extends BaseRepository implements IProductRepository
     public function activate(Product $product): Product
     {
         return DB::transaction(function () use ($product) {
-            $product->load(['variants.prices', 'mediaAttachments']);
+            $product->load(['variants.prices', 'media']);
 
             // Rule 1: default variant must exist and be active
             $defaultVariant = $product->variants->firstWhere('default', true);
@@ -73,7 +73,7 @@ class ProductRepository extends BaseRepository implements IProductRepository
             }
 
             // Rule 3: required media on product (thumbnail + at least one gallery)
-            $attachments = $product->mediaAttachments;
+            $attachments = $product->media;
 
             $hasThumb = $attachments->where('role', 'thumbnail')->where('is_primary', true)->count() === 1;
             $hasGallery = $attachments->where('role', 'gallery')->count() >= 1;

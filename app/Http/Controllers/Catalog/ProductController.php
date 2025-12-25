@@ -42,7 +42,7 @@ class ProductController extends Controller
     public function showBySlug(string $slug)
     {
         $product = $this->products->query()
-            ->with(['variants', 'categories'])
+            ->with(['variants.prices', 'categories', 'prices', 'bundles'])
             ->where('slug', $slug)
             ->firstOrFail();
 
