@@ -77,4 +77,18 @@ class ProductController extends Controller
 
         return response()->json([], 204);
     }
+
+    public function activate(Product $product)
+    {
+        $this->products->activate($product);
+
+        return response()->json([], 204);
+    }
+
+    public function deactivate(Product $product)
+    {
+        $this->products->deactivate($product);
+
+        return response()->json([], 204);
+    }
 }

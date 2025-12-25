@@ -249,6 +249,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('products', [ProductController::class, 'store'])->middleware('permission:'.P::CAT_PROD_CREATE);
     Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:'.P::CAT_PROD_UPDATE);
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:'.P::CAT_PROD_DESTROY);
+    Route::post('products/{product}/activate', [ProductController::class, 'activate'])->middleware('permission:'.P::CAT_PROD_UPDATE);
+    Route::post('products/{product}/deactivate', [ProductController::class, 'deactivate'])->middleware('permission:'.P::CAT_PROD_UPDATE);
 
     // Product Media
     // Route::post('products/{product}/media', [ProductMediaController::class, 'store'])->middleware('permission:'.P::CAT_PMEDIA_CREATE);
