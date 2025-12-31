@@ -62,6 +62,14 @@ use App\Repositories\Inventory\StockBatchRepository;
 use App\Repositories\Inventory\StockLevelRepository;
 use App\Repositories\Inventory\StockMovementRepository;
 use App\Repositories\Inventory\StockRepository;
+use App\Repositories\Media\Contracts\IMediaAssetRepository;
+use App\Repositories\Media\Contracts\IMediaAttachmentRepository;
+use App\Repositories\Media\Contracts\IMediaRenditionRepository;
+use App\Repositories\Media\Contracts\IMediaVideoRepository;
+use App\Repositories\Media\MediaAssetRepository;
+use App\Repositories\Media\MediaAttachmentRepository;
+use App\Repositories\Media\MediaRenditionRepository;
+use App\Repositories\Media\MediaVideoRepository;
 use App\Repositories\Order\CartRepository;
 use App\Repositories\Order\Contracts\ICartRepository;
 use App\Repositories\Order\Contracts\IOrderRepository;
@@ -137,6 +145,12 @@ class AppServiceProvider extends ServiceProvider
         IStockBatchRepository::class => StockBatchRepository::class,
         IStockMovementRepository::class => StockMovementRepository::class,
         IStockBackInSubscriptionRepository::class => StockBackInSubscriptionRepository::class,
+
+        // Media
+        IMediaAssetRepository::class => MediaAssetRepository::class,
+        IMediaAttachmentRepository::class => MediaAttachmentRepository::class,
+        IMediaRenditionRepository::class => MediaRenditionRepository::class,
+        IMediaVideoRepository::class => MediaVideoRepository::class,
 
         // Order
         ICartRepository::class => CartRepository::class,

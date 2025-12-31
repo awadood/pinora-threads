@@ -16,9 +16,7 @@ use App\Http\Controllers\Catalog\CollectionController;
 use App\Http\Controllers\Catalog\CollectionProductController;
 use App\Http\Controllers\Catalog\ProductBundleController;
 use App\Http\Controllers\Catalog\ProductController;
-// use App\Http\Controllers\Catalog\ProductMediaController;
 use App\Http\Controllers\Catalog\ProductPriceController;
-// use App\Http\Controllers\Catalog\ProductVariantMediaController;
 use App\Http\Controllers\Catalog\RelatedProductController;
 use App\Http\Controllers\Catalog\VariantController;
 use App\Http\Controllers\Catalog\VariantPriceController;
@@ -49,6 +47,10 @@ use App\Http\Controllers\Inventory\StockBatchController;
 use App\Http\Controllers\Inventory\StockController;
 use App\Http\Controllers\Inventory\StockLevelController;
 use App\Http\Controllers\Inventory\StockMovementController;
+use App\Http\Controllers\Media\MediaAssetController;
+use App\Http\Controllers\Media\MediaAttachmentController;
+use App\Http\Controllers\Media\MediaRenditionController;
+use App\Http\Controllers\Media\MediaVideoController;
 use App\Http\Controllers\Order\CartController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Payment\InvoiceController;
@@ -252,11 +254,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('products/{product}/activate', [ProductController::class, 'activate'])->middleware('permission:'.P::CAT_PROD_UPDATE);
     Route::post('products/{product}/deactivate', [ProductController::class, 'deactivate'])->middleware('permission:'.P::CAT_PROD_UPDATE);
 
-    // Product Media
-    // Route::post('products/{product}/media', [ProductMediaController::class, 'store'])->middleware('permission:'.P::CAT_PMEDIA_CREATE);
-    // Route::put('product-media/{media}', [ProductMediaController::class, 'update'])->middleware('permission:'.P::CAT_PMEDIA_UPDATE);
-    // Route::delete('product-media/{media}', [ProductMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PMEDIA_DESTROY);
-
     // Product level prices
     Route::post('products/{product}/prices', [ProductPriceController::class, 'store'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
     Route::put('products/{product}/prices', [ProductPriceController::class, 'save'])->middleware('permission:'.P::CAT_PPRICE_CREATE);
@@ -267,11 +264,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('products/{product}/variants', [VariantController::class, 'store'])->middleware('permission:'.P::CAT_PVAR_CREATE);
     Route::put('product-variants/{variant}', [VariantController::class, 'update'])->middleware('permission:'.P::CAT_PVAR_UPDATE);
     Route::delete('product-variants/{variant}', [VariantController::class, 'destroy'])->middleware('permission:'.P::CAT_PVAR_DESTROY);
-
-    // Product variant media
-    // Route::post('product-variants/{variant}/media', [ProductVariantMediaController::class, 'store'])->middleware('permission:'.P::CAT_PVMEDIA_CREATE);
-    // Route::put('product-variant-media/{media}', [ProductVariantMediaController::class, 'update'])->middleware('permission:'.P::CAT_PVMEDIA_UPDATE);
-    // Route::delete('product-variant-media/{media}', [ProductVariantMediaController::class, 'destroy'])->middleware('permission:'.P::CAT_PVMEDIA_DESTROY);
 
     // Product variant prices
     Route::post('product-variants/{variant}/prices', [VariantPriceController::class, 'store'])->middleware('permission:'.P::CAT_PVPRICE_CREATE);
@@ -489,6 +481,46 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'destroy'])->middleware('permission:'.P::INVT_BACKINSTOCK_DESTROY);
     Route::post('stock-back-in-subscriptions/{stock_back_in_subscription}/notify', [StockBackInSubscriptionController::class, 'notify']); // Notify all eligible subscriptions for a variant (for "Notify All In-Stock" action)
     Route::post('stock-back-in-subscriptions/notify-all', [StockBackInSubscriptionController::class, 'notifyAll']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sanctum protected APIs - Media Asset System
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    $permission = 'permission:'.P::MEDIA_MANAGE;
+
+    // Media Assets
+    Route::get('media-assets', [MediaAssetController::class, 'index'])->middleware($permission);
+    Route::post('media-assets', [MediaAssetController::class, 'store'])->middleware($permission);
+    Route::get('media-assets/{media_asset}', [MediaAssetController::class, 'show'])->middleware($permission);
+    Route::delete('media-assets/{media_asset}', [MediaAssetController::class, 'destroy'])->middleware($permission); // guarded: only if no attachments
+    Route::post('media-assets/presign', [MediaAssetController::class, 'presign'])->middleware($permission);
+
+    // Renditions
+    Route::get('media-assets/{media_asset}/renditions', [MediaRenditionController::class, 'index'])->middleware($permission);
+    Route::post('media-assets/{media_asset}/renditions', [MediaRenditionController::class, 'store'])->middleware($permission); // bulk upsert profiles
+
+    // Video metadata
+    Route::put('media-assets/{media_asset}/video', [MediaVideoController::class, 'update'])->middleware($permission); // only for type=video
+
+    // Primary + reorder + replace-single
+    Route::post('media-attachments/{media_attachment}/set-primary', [MediaAttachmentController::class, 'setPrimary'])->middleware($permission);
+    Route::put('media-attachments/reorder', [MediaAttachmentController::class, 'reorder'])->middleware($permission);
+    Route::put('media-attachments/replace-single', [MediaAttachmentController::class, 'replaceSingle'])->middleware($permission);
+
+    // Attachments
+    Route::post('media-attachments', [MediaAttachmentController::class, 'store'])->middleware($permission);
+    Route::put('media-attachments/{media_attachment}', [MediaAttachmentController::class, 'update'])->middleware($permission);
+    Route::delete('media-attachments/{media_attachment}', [MediaAttachmentController::class, 'destroy'])->middleware($permission);
+
+    // Owner media grouped by role for UI (generic)
+    Route::get('media-attachments/{owner_type}/{owner_id}', [MediaAttachmentController::class, 'show'])->middleware($permission);
 });
 
 /*

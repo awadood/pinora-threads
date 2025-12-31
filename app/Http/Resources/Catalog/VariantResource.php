@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Catalog;
 
+use App\Http\Resources\Media\MediaAttachmentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -29,6 +30,8 @@ class VariantResource extends JsonResource
             'product' => ProductResource::make($this->whenLoaded('product')),
 
             'prices' => VariantPriceResource::collection($this->whenLoaded('prices')),
+
+            'media' => MediaAttachmentResource::collection($this->whenLoaded('media')),
         ];
     }
 }

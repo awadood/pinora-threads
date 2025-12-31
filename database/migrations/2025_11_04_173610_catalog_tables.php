@@ -141,71 +141,62 @@ return new class extends Migration
 
         // Related products (manual)
         Schema::create('related_products', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->foreignId('related_product_id')->constrained('products')->cascadeOnDelete();
 
-            $table->primary(['product_id', 'related_product_id']);
+            $table->unique(['product_id', 'related_product_id']);
         });
 
         // Product Category (many-to-many)
         Schema::create('category_product', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
 
-            $table->primary(['category_id', 'product_id']);
+            $table->unique(['category_id', 'product_id']);
         });
 
         // Product Collection (many-to-many)
         Schema::create('collection_product', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('collection_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('sort')->default(0);
 
-            $table->primary(['collection_id', 'product_id']);
+            $table->unique(['collection_id', 'product_id']);
         });
 
         /**
          * --------------------------------------------------------------------------
-         * Media Asset System
+         * Media Asset System (v1)
          * --------------------------------------------------------------------------
          *
-         * Purpose
-         * - Provide one unified, reusable media model for the entire platform:
-         *   products, variants, categories, collections, and future content
-         *   (lookbooks, banners, testimonials).
+         * Goals
+         * - Canonical MediaAsset (image/video) stored once (S3 key).
+         * - Attach assets to entities via MediaAttachment records.
+         * - Deterministic usage via explicit role + is_primary + position.
+         * - Renditions table stores derived sizes/profiles for performance.
          *
-         * Design Principles
-         * - Store a single canonical asset once (image/video).
-         * - Attach assets to any entity via polymorphic attachments.
-         * - Assign explicit "roles" to attachments so storefront/admin use cases are
-         *   deterministic (no implicit guessing from position alone).
-         * - Support ordered galleries, primary selection, and SEO/Accessibility fields.
-         * - Support renditions (thumbnails/sizes) for performance.
+         * API Contract
+         * - Client uses short keys for owner_type:
+         *     product | variant | category | collection
+         * - DB stores owner_type as fully-qualified model class:
+         *     App\Models\Product, App\Models\ProductVariant, ...
          *
-         * System Role Constants (v1 — do not invent new roles in v1)
-         * - Product:
-         *   - thumbnail  : single primary (PLP cards, cart line item, admin tables)
-         *   - gallery    : ordered list (PDP gallery)
-         *   - hero       : optional, single primary (PDP header / merchandising)
-         *   - og_image   : single primary (Open Graph / social sharing)
+         * Roles (v1)
+         * - product:   thumbnail, gallery, hero, og_image
+         * - variant:   thumbnail, gallery
+         * - category:  thumbnail, hero, og_image
+         * - collection: hero, og_image
          *
-         * - Variant:
-         *   - thumbnail  : single primary (variant override for PLP/cart)
-         *   - gallery    : ordered list (variant-specific PDP gallery)
+         * Ordering + Primary
+         * - position is server-controlled for ordered roles (gallery).
+         * - Single-slot roles are unique per owner_type/owner_id/role.
+         * - Gallery enforces exactly one primary when any records exist.
          *
-         * - Category:
-         *   - thumbnail  : single primary (category tiles / navigation)
-         *   - hero       : single primary (category landing header/banner)
-         *   - og_image   : single primary (Open Graph / social sharing)
-         *
-         * - Collection:
-         *   - hero       : single primary (collection header/banner)
-         *   - og_image   : single primary (Open Graph / social sharing)
-         *
-         * Selection Rules (storefront)
-         * - Use variant media when available; otherwise fallback to product media.
-         * - Use `role` to decide usage, `is_primary` for the main pick, and `position`
-         *   for deterministic ordering within the same role.
+         * Storefront selection
+         * - Variant overrides product for thumbnail & gallery when variant media exists.
          */
         Schema::create('media_assets', function (Blueprint $table) {
             $table->id();
@@ -214,7 +205,6 @@ return new class extends Migration
             // Storage identity (canonical/original)
             $table->string('disk')->default('s3');    // e.g. s3
             $table->string('key');                    // object key for original
-            $table->string('cdn_url')->nullable();    // optional cached public URL
 
             // Technical metadata
             $table->string('mime_type', 100)->nullable();
@@ -249,7 +239,7 @@ return new class extends Migration
             $table->string('role', 50); // thumbnail, gallery, hero, swatch, og_image, banner, etc.
 
             // Ordering + primary selection
-            $table->unsignedSmallInteger('position')->default(0);
+            $table->unsignedSmallInteger('position')->default(1);
             $table->boolean('is_primary')->default(false);
 
             // Per-context overrides
@@ -273,7 +263,6 @@ return new class extends Migration
 
             $table->string('disk')->default('s3');
             $table->string('key'); // object key for rendition
-            $table->string('cdn_url')->nullable();
 
             $table->string('mime_type', 100)->nullable();
             $table->unsignedInteger('bytes')->nullable();

@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/telescope": "^5.14",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-aws-s3-v3": "^3.30",
         "lezhnev74/pasvl": "^1.0",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.21"

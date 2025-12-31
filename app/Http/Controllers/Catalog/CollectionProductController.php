@@ -76,15 +76,15 @@ class CollectionProductController extends Controller
     private function rules(bool $forCollections, bool $allowEmptyArray = false)
     {
         $rules = [
-            'items' => [$allowEmptyArray ? 'present' : 'required', 'array'],
-            'items.*' => ['required', 'array'],
-            'items.*.sort' => ['required', 'integer', 'min:0', 'max:65535'],
+            'products' => [$allowEmptyArray ? 'present' : 'required', 'array'],
+            'products.*' => ['required', 'array'],
+            'products.*.sort' => ['required', 'integer', 'min:0', 'max:65535'],
         ];
 
         if ($forCollections) {
-            $rules['items.*.collection_id'] = ['required', 'integer', 'exists:collections,id'];
+            $rules['products.*.collection_id'] = ['required', 'integer', 'exists:collections,id'];
         } else {
-            $rules['items.*.product_id'] = ['required', 'integer', 'exists:products,id'];
+            $rules['products.*.product_id'] = ['required', 'integer', 'exists:products,id'];
         }
 
         return $rules;

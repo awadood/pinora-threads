@@ -41,10 +41,9 @@ class ProductController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $product = $this->products->query()
-            ->with(['variants.prices', 'categories', 'prices', 'bundles'])
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $with = ['categories', 'prices', 'bundles', 'media.asset.renditions', 'variants.prices', 'variants.media.asset.renditions'];
+
+        $product = $this->products->query()->with($with)->where('slug', $slug)->firstOrFail();
 
         return ProductResource::make($product);
     }

@@ -16,7 +16,6 @@ class MediaRendition extends AbstractLoggableModel
         'profile',
         'disk',
         'key',
-        'cdn_url',
         'mime_type',
         'bytes',
         'width',

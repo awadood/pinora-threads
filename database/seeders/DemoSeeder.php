@@ -47,12 +47,12 @@ class DemoSeeder extends Seeder
             'email' => 'pk.customer@example.com',
         ])->id;
 
-        $generalId = CustomerGroup::factory()->create(['name' => 'General', 'code' => 'general'])->id;
-        $vipId = CustomerGroup::factory()->create(['name' => 'VIP', 'code' => 'vip'])->id;
+        $standardId = CustomerGroup::firstWhere('code', 'standard')->id;
+        $vipId = CustomerGroup::firstWhere('code', 'vip')->id;
 
         // Use updateOrInsert (no unique index required on the pivot)
         DB::table('customer_group_user')->updateOrInsert(
-            ['customer_group_id' => $generalId, 'user_id' => $usUserId],
+            ['customer_group_id' => $standardId, 'user_id' => $usUserId],
             []
         );
         DB::table('customer_group_user')->updateOrInsert(
@@ -267,7 +267,6 @@ class DemoSeeder extends Seeder
             'type' => 'image',
             'disk' => 's3',
             'key' => 'p/velvet/hero.jpg', // canonical object key
-            'cdn_url' => 'https://cdn.example.com/p/velvet/hero.jpg',
             'mime_type' => 'image/jpeg',
             'alt_text' => 'Velvet product hero image',
             'title' => 'Velvet Hero',
@@ -292,7 +291,6 @@ class DemoSeeder extends Seeder
             'type' => 'image',
             'disk' => 's3',
             'key' => 'p/velvet/red_1.jpg',
-            'cdn_url' => 'https://cdn.example.com/p/velvet/red_1.jpg',
             'mime_type' => 'image/jpeg',
             'alt_text' => 'Velvet variant in red',
             'title' => 'Velvet Red',

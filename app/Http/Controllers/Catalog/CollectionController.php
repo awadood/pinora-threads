@@ -23,6 +23,8 @@ class CollectionController extends Controller
 {
     use QueryFilterable;
 
+    private array $media = ['products', 'heroMedia', 'ogImageMedia'];
+
     public function __construct(protected ICollectionRepository $collections, protected IProductRepository $products)
     {
         $this->allowedFilters = ['name', 'slug', 'active'];
@@ -33,7 +35,7 @@ class CollectionController extends Controller
     public function index(Request $request)
     {
         $query = $this->applySorting(
-            $this->applyFilters($this->collections->query(), $request),
+            $this->applyFilters($this->collections->query()->with($this->media), $request),
             $request
         );
 
@@ -42,14 +44,14 @@ class CollectionController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $collection = $this->collections->query()->where('slug', $slug)->firstOrFail();
+        $collection = $this->collections->query()->with($this->media)->where('slug', $slug)->firstOrFail();
 
         return CollectionResource::make($collection);
     }
 
     public function indexByCollection(string $slug, Request $request)
     {
-        $collection = $this->collections->query()->where('slug', $slug)->firstOrFail();
+        $collection = $this->collections->query()->with($this->media)->where('slug', $slug)->firstOrFail();
 
         $query = $this->products->query()
             ->select('products.*')

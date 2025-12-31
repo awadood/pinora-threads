@@ -41,7 +41,7 @@ class Collection extends AbstractLoggableModel
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'collection_product')->withPivot(['sort'])->withTimestamps();
+        return $this->belongsToMany(Product::class, 'collection_product')->withPivot(['sort']);
     }
 
     public function heroMedia(): MorphOne

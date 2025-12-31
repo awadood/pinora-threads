@@ -13,66 +13,6 @@ return new class extends Migration
         // Driver-guarded CHECK constraints
         if (Schema::getConnection()->getDriverName() === 'pgsql') {
 
-            // ---- Tax engine
-
-            // percentage bounds (0..100) or non-negative flat
-            DB::statement('ALTER TABLE tax_rates ADD CONSTRAINT tax_rates_amount_ck
-                CHECK ((percentage = true AND amount >= 0 AND amount <= 100) OR (percentage = false AND amount >= 0))');
-
-            // zip rules: either (range) or (single)
-            DB::statement('ALTER TABLE tax_rates ADD CONSTRAINT tax_rates_zip_ck
-                CHECK (
-                    (zip_is_range IS TRUE AND zipcode IS NULL AND zip_from IS NOT NULL AND zip_to IS NOT NULL)
-                    OR (
-                        (zip_is_range IS FALSE OR zip_is_range IS NULL) 
-                        AND zipcode IS NOT NULL 
-                        AND zip_from IS NULL 
-                        AND zip_to IS NULL
-                    )
-                )
-            ');
-
-            // ---- Catalog
-
-            // Trigram index support for typo-tolerant search
-            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
-
-            // Product name/slug trigram indexes to help typo-tolerance
-            DB::statement('CREATE INDEX products_name_trgm_idx ON products USING GIN (name gin_trgm_ops)');
-            DB::statement('CREATE INDEX products_slug_trgm_idx ON products USING GIN (slug gin_trgm_ops)');
-
-            // enforce each product will have one DEFAULT variant
-            DB::statement('CREATE UNIQUE INDEX product_variants_one_default_per_product
-                ON product_variants (product_id) WHERE "default" = true');
-
-            // Hygiene: disallow self-relations and duplicate pairs (A,B) vs (B,A)
-            DB::statement('ALTER TABLE related_products ADD CONSTRAINT related_products_no_self 
-                CHECK (product_id <> related_product_id)');
-
-            // Works with BIGINT ids (LEAST/GREATEST)
-            DB::statement('CREATE UNIQUE INDEX related_products_unique_pair
-                ON related_products (LEAST(product_id, related_product_id), GREATEST(product_id, related_product_id))');
-
-            // ---- Orders
-
-            // cart_items
-            DB::statement('ALTER TABLE cart_items ADD CONSTRAINT cart_items_quantity_ck CHECK (quantity > 0)');
-
-            // orders
-            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_items_subtotal_ck CHECK (items_subtotal >= 0)');
-            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_discount_ck CHECK (total_discount >= 0)');
-            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_tax_ck CHECK (total_tax >= 0)');
-            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_shipping_ck CHECK (total_shipping >= 0)');
-            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_ck CHECK (total >= 0)');
-
-            // order_items
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_quantity_ck CHECK (quantity > 0)');
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_unit_price_ck CHECK (unit_price >= 0)');
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_subtotal_ck CHECK (subtotal >= 0)');
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_discount_ck CHECK (discount >= 0)');
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_tax_ck CHECK (tax >= 0)');
-            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_total_ck CHECK (total >= 0)');
-
             // ---- Billing
 
             // invoices, payments, payment_attempts, refunds, shipments
@@ -98,6 +38,27 @@ return new class extends Migration
             DB::statement('ALTER TABLE promotion_redemptions ADD CONSTRAINT promotion_redemptions_actor_ck
                 CHECK (user_id IS NOT NULL OR order_id IS NOT NULL)');
 
+            // ---- Catalog
+
+            // Trigram index support for typo-tolerant search
+            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+
+            // Product name/slug trigram indexes to help typo-tolerance
+            DB::statement('CREATE INDEX products_name_trgm_idx ON products USING GIN (name gin_trgm_ops)');
+            DB::statement('CREATE INDEX products_slug_trgm_idx ON products USING GIN (slug gin_trgm_ops)');
+
+            // enforce each product will have one DEFAULT variant
+            DB::statement('CREATE UNIQUE INDEX product_variants_one_default_per_product
+                ON product_variants (product_id) WHERE "default" = true');
+
+            // Hygiene: disallow self-relations and duplicate pairs (A,B) vs (B,A)
+            DB::statement('ALTER TABLE related_products ADD CONSTRAINT related_products_no_self 
+                CHECK (product_id <> related_product_id)');
+
+            // Works with BIGINT ids (LEAST/GREATEST)
+            DB::statement('CREATE UNIQUE INDEX related_products_unique_pair
+                ON related_products (LEAST(product_id, related_product_id), GREATEST(product_id, related_product_id))');
+
             // ---- Engagement
 
             // testimonials
@@ -110,6 +71,59 @@ return new class extends Migration
                     (status <> 'approved' AND published_at IS NULL)
                 )
             ");
+
+            // ---- Media
+
+            // Single-slot roles: only one attachment per role per owner
+            DB::statement("CREATE UNIQUE INDEX media_attach_single_slot_unique
+                ON media_attachments(owner_type, owner_id, role)
+                WHERE role IN ('thumbnail','hero','og_image');
+            ");
+
+            // Gallery: enforce one primary at most
+            DB::statement("CREATE UNIQUE INDEX media_attach_gallery_primary_unique
+                ON media_attachments(owner_type, owner_id, role)
+                WHERE role = 'gallery' AND is_primary = true;
+            ");
+
+            // ---- Orders
+
+            // cart_items
+            DB::statement('ALTER TABLE cart_items ADD CONSTRAINT cart_items_quantity_ck CHECK (quantity > 0)');
+
+            // orders
+            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_items_subtotal_ck CHECK (items_subtotal >= 0)');
+            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_discount_ck CHECK (total_discount >= 0)');
+            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_tax_ck CHECK (total_tax >= 0)');
+            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_shipping_ck CHECK (total_shipping >= 0)');
+            DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_total_ck CHECK (total >= 0)');
+
+            // order_items
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_quantity_ck CHECK (quantity > 0)');
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_unit_price_ck CHECK (unit_price >= 0)');
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_subtotal_ck CHECK (subtotal >= 0)');
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_discount_ck CHECK (discount >= 0)');
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_tax_ck CHECK (tax >= 0)');
+            DB::statement('ALTER TABLE order_items ADD CONSTRAINT order_items_total_ck CHECK (total >= 0)');
+
+            // ---- Tax engine
+
+            // percentage bounds (0..100) or non-negative flat
+            DB::statement('ALTER TABLE tax_rates ADD CONSTRAINT tax_rates_amount_ck
+                CHECK ((percentage = true AND amount >= 0 AND amount <= 100) OR (percentage = false AND amount >= 0))');
+
+            // zip rules: either (range) or (single)
+            DB::statement('ALTER TABLE tax_rates ADD CONSTRAINT tax_rates_zip_ck
+                CHECK (
+                    (zip_is_range IS TRUE AND zipcode IS NULL AND zip_from IS NOT NULL AND zip_to IS NOT NULL)
+                    OR (
+                        (zip_is_range IS FALSE OR zip_is_range IS NULL) 
+                        AND zipcode IS NOT NULL 
+                        AND zip_from IS NULL 
+                        AND zip_to IS NULL
+                    )
+                )
+            ');
         }
     }
 
@@ -144,6 +158,11 @@ return new class extends Migration
             DB::statement('ALTER TABLE promotion_coupons DROP CONSTRAINT IF EXISTS promotion_coupons_usage_per_user_ck');
             DB::statement('ALTER TABLE promotion_redemptions DROP CONSTRAINT IF EXISTS promotion_redemptions_amounts_ck');
             DB::statement('ALTER TABLE promotion_redemptions DROP CONSTRAINT IF EXISTS promotion_redemptions_actor_ck');
+
+            // ---- Media
+
+            DB::statement('DROP INDEX IF EXISTS media_attach_single_slot_unique;');
+            DB::statement('DROP INDEX IF EXISTS media_attach_gallery_primary_unique;');
 
             // ---- Orders
 

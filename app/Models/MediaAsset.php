@@ -16,7 +16,6 @@ class MediaAsset extends AbstractLoggableModel
         'type',
         'disk',
         'key',
-        'cdn_url',
         'mime_type',
         'bytes',
         'width',
