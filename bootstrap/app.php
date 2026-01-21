@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+        $middleware->appendToGroup('api', [\App\Http\Middleware\ResolveStoreContext::class]);
+
+        // geoip country identification if cloudfront is in front of app - two headers for/proto are more than enough
+        // $middleware->trustProxies('127.0.0.1', Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $t, Request $request) {

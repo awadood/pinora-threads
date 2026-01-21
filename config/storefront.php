@@ -1,0 +1,34 @@
+<?php
+
+return [
+    'cookie_name' => env('STOREFRONT_COOKIE_NAME', 'store_ctx'),
+    'ttl_days' => (int) env('STOREFRONT_TTL_DAYS', 30),
+
+    // Allowed explicit override values (query param)
+    'allowed_countries' => ['US', 'PK', 'GB', 'CA'],
+
+    // Country -> Currency (v1: one currency per country)
+    'country_currency' => [
+        'US' => 'USD',
+        'PK' => 'PKR',
+        'GB' => 'GBP',
+        'CA' => 'CAD',
+    ],
+
+    'default_country' => env('STOREFRONT_DEFAULT_COUNTRY', 'US'),
+    'default_currency' => env('STOREFRONT_DEFAULT_CURRENCY', 'USD'),
+
+    // MaxMind GeoLite2-Country mmdb absolute path
+    'geoip_db_path' => env('STOREFRONT_GEOIP_DB_PATH', storage_path('app/geoip/GeoLite2-Country.mmdb')),
+
+    // IMPORTANT: since cookie is not encrypted, sign it with an HMAC secret.
+    // Recommend a separate secret (not app.key). Keep it long/random.
+    'cookie_signing_secret' => env('STOREFRONT_COOKIE_SIGNING_SECRET', '5RTxfWcu5+UKGx8BT+r/WbGnFCBCNgEnEmnjUfNJHN8AY30n4wcq/kFL0R4s6V8A'),
+
+    // Cache GeoIP resolution per IP (optional but recommended)
+    'geoip_cache_ttl_minutes' => (int) env('STOREFRONT_GEOIP_CACHE_TTL_MINUTES', 60),
+
+    // Cookie attributes
+    'same_site' => env('STOREFRONT_COOKIE_SAMESITE', 'Lax'),
+    'secure' => env('STOREFRONT_COOKIE_SECURE', null), // null => auto: $request->isSecure()
+];
