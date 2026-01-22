@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,8 +15,6 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  */
 class Product extends AbstractLoggableModel
 {
-    use HasMedia;
-
     protected $fillable = [
         'sku',
         'name',
@@ -57,11 +54,6 @@ class Product extends AbstractLoggableModel
     public function bundles(): HasMany
     {
         return $this->hasMany(ProductBundle::class);
-    }
-
-    public function prices(): HasMany
-    {
-        return $this->hasMany(ProductPrice::class);
     }
 
     public function categories(): BelongsToMany

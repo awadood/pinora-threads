@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Catalog;
 
 use App\Http\Requests\Catalog\CollectionRequest;
 use App\Http\Resources\Catalog\CollectionResource;
-use App\Http\Resources\Catalog\ProductResource;
 use App\Models\Collection;
 use App\Repositories\Catalog\Contracts\ICollectionRepository;
 use App\Repositories\Catalog\Contracts\IProductRepository;
@@ -23,7 +22,7 @@ class CollectionController extends Controller
 {
     use QueryFilterable;
 
-    private array $media = ['products', 'heroMedia', 'ogImageMedia'];
+    private array $with = ['heroMedia.asset', 'ogImageMedia.asset', 'thumbnailMedia.asset'];
 
     public function __construct(protected ICollectionRepository $collections, protected IProductRepository $products)
     {
@@ -35,7 +34,7 @@ class CollectionController extends Controller
     public function index(Request $request)
     {
         $query = $this->applySorting(
-            $this->applyFilters($this->collections->query()->with($this->media), $request),
+            $this->applyFilters($this->collections->query()->with($this->with)->withCount('products'), $request),
             $request
         );
 
@@ -44,23 +43,13 @@ class CollectionController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $collection = $this->collections->query()->with($this->media)->where('slug', $slug)->firstOrFail();
+        $collection = $this->collections->query()
+            ->with($this->with)
+            ->where('slug', $slug)
+            ->withCount('products')
+            ->firstOrFail();
 
         return CollectionResource::make($collection);
-    }
-
-    public function indexByCollection(string $slug, Request $request)
-    {
-        $collection = $this->collections->query()->with($this->media)->where('slug', $slug)->firstOrFail();
-
-        $query = $this->products->query()
-            ->select('products.*')
-            ->join('collection_product', 'collection_product.product_id', '=', 'products.id')
-            ->where('collection_product.collection_id', $collection->id);
-
-        $query = $this->applySorting($query, $request);
-
-        return ProductResource::collection($query->get());
     }
 
     public function store(CollectionRequest $request)

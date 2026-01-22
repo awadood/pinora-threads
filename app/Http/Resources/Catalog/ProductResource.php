@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Catalog;
 
-use App\Http\Resources\Media\MediaAttachmentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -32,13 +31,12 @@ class ProductResource extends JsonResource
 
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
 
-            'prices' => ProductPriceResource::collection($this->whenLoaded('prices')),
-
-            'media' => MediaAttachmentResource::collection($this->whenLoaded('media')),
-
             'sort' => $this->whenPivotLoaded('collection_product', function () {
                 return $this->pivot->sort;
             }),
+
+            // storefront displays thumbnail of variant selected by input query params.
+            'selected_variant' => VariantResource::make($this->whenLoaded('selectedVariant')),
         ];
     }
 }

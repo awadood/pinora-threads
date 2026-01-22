@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class InventorySeeder extends Seeder
 {
@@ -13,28 +13,28 @@ class InventorySeeder extends Seeder
         DB::transaction(function () {
 
             // Stocks
-            $pkStockId = $this->upsertStock('PK Main');
-            $usStockId = $this->upsertStock('US NJ');
+            $pkStockId = $this->upsertStock('PK_RWP_RB_1', 'Rawalpindi Commercial', 'Punjab', 'PK', 1);
+            $usStockId = $this->upsertStock('US_CA_MAIN', 'San Jose Main', 'California', 'US', 1);
 
             // Check currencies exist (FK in stock_batches)
             $currencyPk = DB::table('currencies')->where('code', 'PKR')->value('code');
             $currencyUs = DB::table('currencies')->where('code', 'USD')->value('code');
 
-            if (!$currencyPk && !$currencyUs) {
-                throw new \RuntimeException("InventorySeeder: currencies table lacks PKR/USD. Seed currencies first.");
+            if (! $currencyPk && ! $currencyUs) {
+                throw new \RuntimeException('InventorySeeder: currencies table lacks PKR/USD. Seed currencies first.');
             }
 
             // Stock movement type: your table stock_movement_types must contain a usable code
             // We pick first available to avoid FK failure.
             $movementTypeCode = DB::table('stock_movement_types')->value('code'); // first row
             // If not present, we will SKIP stock_movements to avoid FK failures.
-            $canWriteMovements = (bool)$movementTypeCode;
+            $canWriteMovements = (bool) $movementTypeCode;
 
             // For each variant, create stock levels (both stocks), and initial batches.
             $variants = DB::table('product_variants')->select('id')->get();
 
             foreach ($variants as $v) {
-                $variantId = (int)$v->id;
+                $variantId = (int) $v->id;
 
                 // Levels
                 $this->upsertStockLevel($pkStockId, $variantId, rand(0, 250), 50, false);
@@ -58,13 +58,19 @@ class InventorySeeder extends Seeder
         });
     }
 
-    private function upsertStock(string $title): int
+    private function upsertStock(string $code, string $title, string $region, string $countryCode, int $priority): int
     {
         $id = DB::table('stocks')->where('title', $title)->value('id');
-        if ($id) return (int)$id;
+        if ($id) {
+            return (int) $id;
+        }
 
         return DB::table('stocks')->insertGetId([
+            'code' => $code,
             'title' => $title,
+            'region' => $region,
+            'country_code' => $countryCode,
+            'priority' => $priority,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

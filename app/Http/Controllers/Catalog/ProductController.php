@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Catalog;
 
+use App\Http\Requests\Catalog\ProductIndexRequest;
 use App\Http\Requests\Catalog\ProductRequest;
 use App\Http\Resources\Catalog\ProductResource;
 use App\Models\Product;
 use App\Repositories\Catalog\Contracts\IProductRepository;
-use App\Support\QueryFilterable;
+use App\Repositories\Catalog\Filters\ProductFilters;
+use App\Support\ProductListQuery;
+use App\Support\StockScopeResolver;
+use App\Support\Storefront\StoreContext;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
@@ -20,23 +24,57 @@ use Illuminate\Support\Arr;
  */
 class ProductController extends Controller
 {
-    use QueryFilterable;
+    public function __construct(
+        protected IProductRepository $products,
+        protected ProductFilters $filters,
+        protected StockScopeResolver $stockScopeResolver,
+    ) {}
 
-    public function __construct(protected IProductRepository $products)
+    /**
+     * GET /api/products
+     *
+     * Storefront profile:
+     *  - returns product cards (one row per product) and ALWAYS includes selected_variant.
+     * Admin profile:
+     *  - returns products (one row per product) and omits selected_variant by default.
+     */
+    public function index(ProductIndexRequest $request)
     {
-        $this->allowedFilters = ['sku', 'name', 'slug', 'type', 'active', 'tax_class_id'];
-        $this->likeFilters = ['sku', 'name', 'slug'];
-        $this->allowedSorts = ['name', 'sku', 'id'];
-    }
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
 
-    public function index(Request $request)
-    {
-        $query = $this->applySorting(
-            $this->applyFilters($this->products->query(), $request),
-            $request
+        $profile = $request->user()?->roles()->exists() ? ProductFilters::PROFILE_ADMIN : ProductFilters::PROFILE_STOREFRONT;
+
+        $parsed = $this->filters->parse($request, $profile);
+
+        $page = (int) $request->query('page', 1);
+        $perPage = (int) $request->query('per_page', 24);
+
+        $stockIds = $this->stockScopeResolver->forCountry($ctx->country);
+
+        $dto = new ProductListQuery(
+            profile: $parsed['profile'],
+            page: $page,
+            perPage: $perPage,
+            sort: $parsed['sort'],
+            productFilters: $parsed['product'],
+            variantFilters: $parsed['variant'],
+            hasVariantConstraints: (bool) $parsed['has_variant_constraints'],
+            countryCode: $ctx->country,
+            currencyCode: $ctx->currency,
+            stockIds: $stockIds,
+            appliedEcho: $parsed['echo'],
         );
 
-        return ProductResource::collection($query->get());
+        $paginator = $this->products->lookup($dto);
+
+        return ProductResource::collection($paginator)->additional([
+            'query' => [
+                'profile' => $dto->profile,
+                'currency' => $dto->currencyCode,
+                'sort' => $dto->sort,
+                'applied' => $dto->appliedEcho,
+            ],
+        ]);
     }
 
     public function showBySlug(string $slug)

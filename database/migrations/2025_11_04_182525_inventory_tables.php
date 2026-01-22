@@ -14,8 +14,15 @@ return new class extends Migration
         // Stocks
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
-            $table->string('title'); // e.g., "PK Main", "US NJ"
+            $table->string('code')->unique(); // e.g., "PK_RWP_RB_1", "PK_RWP_RB_2"
+            $table->string('title'); // e.g., "Rawalpindi Saddar", "Rawalpindi Commercial", "San Jose Main"
+            $table->string('region')->nullable(); // state/province
+            $table->string('country_code', 3);
+            $table->unsignedSmallInteger('priority')->default(1);
+            $table->boolean('active')->default(true);
             $table->timestampsTz();
+
+            $table->foreign('country_code')->references('code')->on('countries');
         });
 
         // Current levels per stock × variant

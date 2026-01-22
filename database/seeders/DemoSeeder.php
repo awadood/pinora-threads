@@ -25,12 +25,12 @@ class DemoSeeder extends Seeder
             $this->seedProfilesAndAddresses();
         });
 
-        $this->call([CatalogSeeder::class, InventorySeeder::class]);
+        $this->call([CatalogSeeder::class, InventorySeeder::class/* OrderSeeder::class */]);
 
         DB::transaction(function () {
             // $this->seedInventory();
             $this->seedPromotions();
-            $this->seedOrderFlow();
+            // $this->seedOrderFlow();
         });
     }
 

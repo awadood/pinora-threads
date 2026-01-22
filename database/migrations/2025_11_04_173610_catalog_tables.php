@@ -52,7 +52,7 @@ return new class extends Migration
             $table->text('meta_description')->nullable();
             $table->string('slug')->unique();
             $table->unsignedSmallInteger('sort')->default(0);
-            $table->string('notes')->nullable();
+            $table->string('description')->nullable();
             $table->boolean('active')->default(true);
             $table->timestampsTz();
         });
@@ -70,20 +70,6 @@ return new class extends Migration
             $table->foreignId('tax_class_id')->constrained();
             $table->boolean('active')->default(true);
             $table->timestampsTz();
-        });
-
-        // Product prices
-        Schema::create('product_prices', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->string('currency_code', 3);
-            $table->decimal('amount', 12, 2); // the price will always be saved like 10.00 or 9.99
-            $table->decimal('compare_at', 12, 2)->nullable(); // Original price to show strikethrough and compute discount %
-            $table->timestampsTz();
-
-            $table->unique(['product_id', 'currency_code']);
-
-            $table->foreign('currency_code')->references('code')->on('currencies');
         });
 
         // Variants (simple/variable/bundle product will have atleast one variant)
@@ -167,6 +153,17 @@ return new class extends Migration
             $table->unique(['collection_id', 'product_id']);
         });
 
+        // Collection Country (many-to-many)
+        Schema::create('collection_country', function (Blueprint $table) {
+            $table->id();
+            $table->string('country_code', 3);
+            $table->foreignId('collection_id')->constrained()->cascadeOnDelete();
+
+            $table->foreign('country_code')->references('code')->on('countries');
+
+            $table->unique(['country_code', 'collection_id']);
+        });
+
         /**
          * --------------------------------------------------------------------------
          * Media Asset System (v1)
@@ -180,23 +177,19 @@ return new class extends Migration
          *
          * API Contract
          * - Client uses short keys for owner_type:
-         *     product | variant | category | collection
+         *     variant | category | collection
          * - DB stores owner_type as fully-qualified model class:
-         *     App\Models\Product, App\Models\ProductVariant, ...
+         *     App\Models\ProductVariant, ...
          *
          * Roles (v1)
-         * - product:   thumbnail, gallery, hero, og_image
-         * - variant:   thumbnail, gallery
+         * - variant:   thumbnail, gallery, hero, og_image
          * - category:  thumbnail, hero, og_image
-         * - collection: hero, og_image
+         * - collection: thumbnail, hero, og_image
          *
          * Ordering + Primary
          * - position is server-controlled for ordered roles (gallery).
          * - Single-slot roles are unique per owner_type/owner_id/role.
          * - Gallery enforces exactly one primary when any records exist.
-         *
-         * Storefront selection
-         * - Variant overrides product for thumbnail & gallery when variant media exists.
          */
         Schema::create('media_assets', function (Blueprint $table) {
             $table->id();

@@ -61,6 +61,7 @@ use App\Http\Controllers\Promotion\PromotionController;
 use App\Http\Controllers\Promotion\PromotionCouponController;
 use App\Http\Controllers\Promotion\PromotionRedemptionController;
 use App\Http\Controllers\Shipping\ShipmentController;
+use App\Http\Controllers\StoreContextController;
 use App\Http\Controllers\Tax\TaxCalculationController;
 use App\Http\Controllers\Tax\TaxClassController;
 use App\Http\Controllers\Tax\TaxRateController;
@@ -77,11 +78,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Login and password flows
+// Password flows and store context
 Route::post('/login', [AuthController::class, 'loginToken']); // PAT
 Route::post('/register', [RegistrationController::class, 'register'])->middleware('throttle:10,1');
 Route::post('/forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:6,1');
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:6,1');
+Route::get('/store-context', StoreContextController::class)->middleware('throttle:6,1');
 
 // Core tables read only operations
 Route::get('countries', [CountryController::class, 'index']);
@@ -115,19 +117,15 @@ Route::get('attributes/{attribute}', [AttributeController::class, 'show']); // b
 Route::get('attributes/{attribute}/options', [AttributeOptionController::class, 'indexByAttribute']); // color options, etc.
 Route::get('categories', [CategoryController::class, 'index']); // category tree / flat list
 Route::get('categories/{slug}', [CategoryController::class, 'showBySlug']); // details + children
-Route::get('categories/{slug}/products', [ProductController::class, 'indexByCategory']); // PLP by category
 Route::get('collections', [CollectionController::class, 'index']); // list active collections
 Route::get('collections/{slug}', [CollectionController::class, 'showBySlug']);
-Route::get('collections/{slug}/products', [ProductController::class, 'indexByCollection']);
-Route::get('products', [ProductController::class, 'index']); // Product listing. Typical filters: ?filter[type.eq]=simple&filter[active.eq]=1&filter[price.gte]=1000 etc.
+Route::get('products', [ProductController::class, 'index']);
 Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
 Route::get('products/{slug}/variants', [VariantController::class, 'indexByProductSlug']); // variant matrix on PDP
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
 Route::get('product-variants/lookup', [VariantController::class, 'index']); // rarely needed on storefront
 Route::get('product-variants/{variant}', [VariantController::class, 'show']); // rarely needed on storefront
 Route::get('product-variants/{variant}/prices', [VariantPriceController::class, 'indexByVariant']);
-// Route::get('products/{slug}/media', [ProductMediaController::class, 'indexByProductSlug']); // gallery
-// Route::get('product-variants/{id}/media', [ProductVariantMediaController::class, 'indexByVariant']);
 
 // Customer
 Route::get('wishlists/shared/{share_token}', [WishlistController::class, 'showByShareToken']);
@@ -248,6 +246,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('collections/{collection}', [CollectionController::class, 'destroy'])->middleware('permission:'.P::CAT_COLL_DESTROY);
 
     // Products
+    Route::get('admin/products', [ProductController::class, 'index']);
     Route::post('products', [ProductController::class, 'store'])->middleware('permission:'.P::CAT_PROD_CREATE);
     Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:'.P::CAT_PROD_UPDATE);
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:'.P::CAT_PROD_DESTROY);

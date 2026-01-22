@@ -56,11 +56,6 @@ class Category extends AbstractLoggableModel
         return $this->belongsToMany(Product::class);
     }
 
-    public function thumbnailMedia(): MorphOne
-    {
-        return $this->primaryMediaForRole('thumbnail');
-    }
-
     public function heroMedia(): MorphOne
     {
         return $this->primaryMediaForRole('hero');
@@ -69,5 +64,10 @@ class Category extends AbstractLoggableModel
     public function ogImageMedia(): MorphOne
     {
         return $this->primaryMediaForRole('og_image');
+    }
+
+    public function thumbnailMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('thumbnail');
     }
 }

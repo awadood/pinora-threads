@@ -41,16 +41,18 @@ class CatalogSeeder extends Seeder
 
     private function guardPrereqs(): void
     {
+        $hasUsd = DB::table('countries')->where('code', 'US')->exists();
+        $hasPkr = DB::table('countries')->where('code', 'PK')->exists();
         $hasUsd = DB::table('currencies')->where('code', 'USD')->exists();
         $hasPkr = DB::table('currencies')->where('code', 'PKR')->exists();
 
-        if (!$hasUsd || !$hasPkr) {
-            throw new \RuntimeException("Missing currencies. Ensure currencies table includes USD and PKR before seeding.");
+        if (! $hasUsd || ! $hasPkr) {
+            throw new \RuntimeException('Missing currencies. Ensure currencies table includes USD and PKR before seeding.');
         }
 
         $hasTax = DB::table('tax_classes')->where('id', self::TAX_CLASS_ID)->exists();
-        if (!$hasTax) {
-            throw new \RuntimeException("Missing tax_classes row with id=" . self::TAX_CLASS_ID . ". Adjust TAX_CLASS_ID in CatalogSeeder.");
+        if (! $hasTax) {
+            throw new \RuntimeException('Missing tax_classes row with id='.self::TAX_CLASS_ID.'. Adjust TAX_CLASS_ID in CatalogSeeder.');
         }
     }
 
@@ -65,6 +67,7 @@ class CatalogSeeder extends Seeder
                     'active' => $active,
                     'updated_at' => now(),
                 ]);
+
                 return (int) $existing->id;
             }
 
@@ -79,17 +82,17 @@ class CatalogSeeder extends Seeder
         };
 
         $attrs = [
-            'piece_type'     => $upsertAttr('piece_type', 'Piece Type', 'select'),
-            'fabric_type'    => $upsertAttr('fabric_type', 'Fabric Type', 'select'),
-            'color_family'   => $upsertAttr('color_family', 'Color Family', 'select'),
-            'season'         => $upsertAttr('season', 'Season', 'select'),
+            'piece_type' => $upsertAttr('piece_type', 'Piece Type', 'select'),
+            'fabric_type' => $upsertAttr('fabric_type', 'Fabric Type', 'select'),
+            'color_family' => $upsertAttr('color_family', 'Color Family', 'select'),
+            'season' => $upsertAttr('season', 'Season', 'select'),
 
             // Text attributes
-            'occasion_tags'  => $upsertAttr('occasion_tags', 'Occasion Tags', 'text'),
-            'shirt_length'   => $upsertAttr('shirt_length', 'Shirt Fabric Length', 'text'),
+            'occasion_tags' => $upsertAttr('occasion_tags', 'Occasion Tags', 'text'),
+            'shirt_length' => $upsertAttr('shirt_length', 'Shirt Fabric Length', 'text'),
             'trouser_length' => $upsertAttr('trouser_length', 'Trouser Fabric Length', 'text'),
             'dupatta_length' => $upsertAttr('dupatta_length', 'Dupatta Fabric Length', 'text'),
-            'what_included'  => $upsertAttr('what_included', "What's Included", 'text'),
+            'what_included' => $upsertAttr('what_included', "What's Included", 'text'),
         ];
 
         $upsertOptions = function (int $attributeId, array $values): array {
@@ -107,6 +110,7 @@ class CatalogSeeder extends Seeder
                         'updated_at' => now(),
                     ]);
                     $optionIds[$value] = (int) $existing->id;
+
                     continue;
                 }
 
@@ -119,6 +123,7 @@ class CatalogSeeder extends Seeder
                 ]);
                 $optionIds[$value] = (int) $id;
             }
+
             return $optionIds;
         };
 
@@ -141,7 +146,7 @@ class CatalogSeeder extends Seeder
 
         return [
             'attr' => $attrs,
-            'opt'  => $options,
+            'opt' => $options,
         ];
     }
 
@@ -159,6 +164,7 @@ class CatalogSeeder extends Seeder
                     'active' => true,
                     'updated_at' => now(),
                 ]);
+
                 return (int) $existing->id;
             }
 
@@ -176,26 +182,26 @@ class CatalogSeeder extends Seeder
         };
 
         $unstitched = $upsertCategory('Unstitched', null, 1);
-        $separates  = $upsertCategory('Separates', null, 2);
+        $separates = $upsertCategory('Separates', null, 2);
 
         $threePiece = $upsertCategory('Wedding Wear', $unstitched, 1);
-        $twoPiece   = $upsertCategory('Festive Wear', $unstitched, 2);
-        $onePiece   = $upsertCategory('Everyday', $unstitched, 3);
+        $twoPiece = $upsertCategory('Festive Wear', $unstitched, 2);
+        $onePiece = $upsertCategory('Everyday', $unstitched, 3);
 
-        $dupattas   = $upsertCategory('Dupattas', $separates, 1);
-        $shawls     = $upsertCategory('Shawls', $separates, 2);
+        $dupattas = $upsertCategory('Dupattas', $separates, 1);
+        $shawls = $upsertCategory('Shawls', $separates, 2);
 
         return [
             'root' => [
                 'unstitched' => $unstitched,
-                'separates'  => $separates,
+                'separates' => $separates,
             ],
             'leaf' => [
                 'three_piece' => $threePiece,
-                'two_piece'   => $twoPiece,
-                'one_piece'   => $onePiece,
-                'dupatta'     => $dupattas,
-                'shawl'       => $shawls,
+                'two_piece' => $twoPiece,
+                'one_piece' => $onePiece,
+                'dupatta' => $dupattas,
+                'shawl' => $shawls,
             ],
         ];
     }
@@ -215,7 +221,7 @@ class CatalogSeeder extends Seeder
         $ids = [];
         $sort = 1;
 
-        foreach ($names as $name) {
+        foreach ($names as $index => $name) {
             $slug = Str::slug($name);
             $existing = DB::table('collections')->where('slug', $slug)->first();
 
@@ -226,21 +232,34 @@ class CatalogSeeder extends Seeder
                     'active' => true,
                     'updated_at' => now(),
                 ]);
-                $ids[$name] = (int) $existing->id;
-                continue;
+                $collectionId = (int) $existing->id;
+            } else {
+                $collectionId = (int) DB::table('collections')->insertGetId([
+                    'name' => $name,
+                    'meta_title' => $name,
+                    'meta_description' => $name,
+                    'slug' => $slug,
+                    'sort' => $sort++,
+                    'description' => 'Seeded collection for storefront merchandising',
+                    'active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
 
-            $ids[$name] = (int) DB::table('collections')->insertGetId([
-                'name' => $name,
-                'meta_title' => $name,
-                'meta_description' => $name,
-                'slug' => $slug,
-                'sort' => $sort++,
-                'notes' => 'Seeded collection for storefront merchandising',
-                'active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $ids[$name] = $collectionId;
+
+            // 2. Sync Relationships in pivot table (collection_country)
+            // Clear existing to avoid duplicates if re-running
+            DB::table('collection_country')->where('collection_id', $collectionId)->delete();
+
+            // Add PK for all collections
+            DB::table('collection_country')->insert(['collection_id' => $collectionId, 'country_code' => 'PK']);
+
+            // Add USA for the first four collections (index 0, 1, 2, 3)
+            if ($index < 4) {
+                DB::table('collection_country')->insert(['collection_id' => $collectionId, 'country_code' => 'US']);
+            }
         }
 
         return $ids;
@@ -253,9 +272,9 @@ class CatalogSeeder extends Seeder
      */
     private function seedProductsAndVariants(array $attrs, array $cat): array
     {
-        $fabricPool  = ['lawn', 'cotton', 'chiffon', 'silk', 'winter'];
-        $colorPool   = ['black','white','red','blue','green','beige','pink','purple','maroon','teal','grey'];
-        $seasonPool  = ['summer','winter','all-season'];
+        $fabricPool = ['lawn', 'cotton', 'chiffon', 'silk', 'winter'];
+        $colorPool = ['black', 'white', 'red', 'blue', 'green', 'beige', 'pink', 'purple', 'maroon', 'teal', 'grey'];
+        $seasonPool = ['summer', 'winter', 'all-season'];
         $occasionSets = [
             'eid,festive',
             'wedding,festive',
@@ -279,13 +298,13 @@ class CatalogSeeder extends Seeder
         foreach ($plan as $chunk) {
             for ($i = 1; $i <= $chunk['count']; $i++) {
 
-                $fabric  = $fabricPool[array_rand($fabricPool)];
-                $color   = $colorPool[array_rand($colorPool)];
-                $season  = $seasonPool[array_rand($seasonPool)];
-                $ocTags  = $occasionSets[array_rand($occasionSets)];
+                $fabric = $fabricPool[array_rand($fabricPool)];
+                $color = $colorPool[array_rand($colorPool)];
+                $season = $seasonPool[array_rand($seasonPool)];
+                $ocTags = $occasionSets[array_rand($occasionSets)];
 
                 $name = $this->buildProductName($chunk['piece'], $fabric, $color);
-                $slug = Str::slug($name) . '-' . $seq;
+                $slug = Str::slug($name).'-'.$seq;
 
                 $productSku = sprintf('PNR-PROD-%04d', $seq);
 
@@ -321,13 +340,13 @@ class CatalogSeeder extends Seeder
                 for ($v = 1; $v <= $variantCount; $v++) {
                     // Mix up fabric/color per variant for differentiation
                     $vfabric = $fabricPool[array_rand($fabricPool)];
-                    $vcolor  = $colorPool[array_rand($colorPool)];
+                    $vcolor = $colorPool[array_rand($colorPool)];
 
                     $comboKey = "{$vfabric}|{$vcolor}";
                     if (isset($usedCombos[$comboKey])) {
                         // retry once
                         $vfabric = $fabricPool[array_rand($fabricPool)];
-                        $vcolor  = $colorPool[array_rand($colorPool)];
+                        $vcolor = $colorPool[array_rand($colorPool)];
                         $comboKey = "{$vfabric}|{$vcolor}";
                     }
                     $usedCombos[$comboKey] = true;
@@ -356,7 +375,7 @@ class CatalogSeeder extends Seeder
                     // Text attributes
                     $this->attachVariantTextAttr($variantId, $attrs['attr']['occasion_tags'], $ocTags);
 
-                    if (in_array($chunk['piece'], ['3-piece suit','2-piece suit','1-piece (fabric)'], true)) {
+                    if (in_array($chunk['piece'], ['3-piece suit', '2-piece suit', '1-piece (fabric)'], true)) {
                         $lengths = $this->generateUnstitchedLengths($chunk['piece']);
                         $this->attachVariantTextAttr($variantId, $attrs['attr']['shirt_length'], $lengths['shirt']);
                         $this->attachVariantTextAttr($variantId, $attrs['attr']['trouser_length'], $lengths['trouser']);
@@ -393,8 +412,8 @@ class CatalogSeeder extends Seeder
                     ]);
 
                     // Maintain product min prices
-                    $minUsd = $minUsd === null ? (float)$usd : min($minUsd, (float)$usd);
-                    $minPkr = $minPkr === null ? (float)$pkr : min($minPkr, (float)$pkr);
+                    $minUsd = $minUsd === null ? (float) $usd : min($minUsd, (float) $usd);
+                    $minPkr = $minPkr === null ? (float) $pkr : min($minPkr, (float) $pkr);
 
                     // Return structure used by your media/collection logic
                     $products[] = [
@@ -444,12 +463,12 @@ class CatalogSeeder extends Seeder
             default => 'Product',
         };
 
-        return "Pinora Threads " . Str::ucfirst($fabric) . " {$pieceLabel} - " . Str::ucfirst($color);
+        return 'Pinora Threads '.Str::ucfirst($fabric)." {$pieceLabel} - ".Str::ucfirst($color);
     }
 
     private function buildVariantTitle(string $piece, string $fabric, string $color): string
     {
-        return Str::ucfirst($fabric) . " · " . Str::ucfirst($color) . " · " . match ($piece) {
+        return Str::ucfirst($fabric).' · '.Str::ucfirst($color).' · '.match ($piece) {
             '3-piece suit' => '3-Piece',
             '2-piece suit' => '2-Piece',
             '1-piece (fabric)' => '1-Piece',
@@ -461,24 +480,24 @@ class CatalogSeeder extends Seeder
 
     private function buildProductDescription(string $piece, string $fabric, string $color): string
     {
-        $base = "Pinora Threads textile design crafted for modern South Asian women. ";
+        $base = 'Pinora Threads textile design crafted for modern South Asian women. ';
         $base .= "Fabric: {$fabric}. Color family: {$color}. ";
 
-        return $base . match ($piece) {
-            '3-piece suit' => "Includes shirt, trouser, and dupatta fabric (unstitched).",
-            '2-piece suit' => "Includes shirt and trouser fabric (unstitched).",
-            '1-piece (fabric)' => "Includes shirt fabric only (unstitched).",
-            'dupatta' => "Standalone dupatta—no stitching required.",
-            'shawl' => "Standalone shawl—no stitching required.",
-            default => "Premium textile product.",
+        return $base.match ($piece) {
+            '3-piece suit' => 'Includes shirt, trouser, and dupatta fabric (unstitched).',
+            '2-piece suit' => 'Includes shirt and trouser fabric (unstitched).',
+            '1-piece (fabric)' => 'Includes shirt fabric only (unstitched).',
+            'dupatta' => 'Standalone dupatta—no stitching required.',
+            'shawl' => 'Standalone shawl—no stitching required.',
+            default => 'Premium textile product.',
         };
     }
 
     private function generateUnstitchedLengths(string $piece): array
     {
-        $shirt = $this->randStep(2.75, 3.25, 0.25) . " m (shirt)";
-        $trouser = $this->randStep(2.25, 2.75, 0.25) . " m (trouser)";
-        $dupatta = $this->randStep(2.25, 2.75, 0.25) . " m (dupatta)";
+        $shirt = $this->randStep(2.75, 3.25, 0.25).' m (shirt)';
+        $trouser = $this->randStep(2.25, 2.75, 0.25).' m (trouser)';
+        $dupatta = $this->randStep(2.25, 2.75, 0.25).' m (dupatta)';
 
         return match ($piece) {
             '3-piece suit' => [
@@ -517,6 +536,7 @@ class CatalogSeeder extends Seeder
     {
         $count = (int) floor(($max - $min) / $step);
         $n = random_int(0, max(0, $count));
+
         return number_format($min + ($n * $step), 2, '.', '');
     }
 
@@ -536,7 +556,7 @@ class CatalogSeeder extends Seeder
 
         foreach ($map as $collectionName => $items) {
             $collectionId = $collections[$collectionName] ?? null;
-            if (!$collectionId) {
+            if (! $collectionId) {
                 continue;
             }
 
@@ -564,12 +584,12 @@ class CatalogSeeder extends Seeder
             $categoryId = (int) $categoryId;
 
             $thumbAssetId = $this->createImageAsset("Category {$categoryId} thumbnail");
-            $heroAssetId  = $this->createImageAsset("Category {$categoryId} hero");
-            $ogAssetId    = $this->createImageAsset("Category {$categoryId} og image");
+            $heroAssetId = $this->createImageAsset("Category {$categoryId} hero");
+            $ogAssetId = $this->createImageAsset("Category {$categoryId} og image");
 
             $this->attachMedia($thumbAssetId, $ownerCategory, $categoryId, 'thumbnail', 1, true);
-            $this->attachMedia($heroAssetId,  $ownerCategory, $categoryId, 'hero', 1, true);
-            $this->attachMedia($ogAssetId,    $ownerCategory, $categoryId, 'og_image', 1, true);
+            $this->attachMedia($heroAssetId, $ownerCategory, $categoryId, 'hero', 1, true);
+            $this->attachMedia($ogAssetId, $ownerCategory, $categoryId, 'og_image', 1, true);
         }
 
         // Collection media: thumbnail + hero + og_image for each collection (exactly 1 each)
@@ -577,12 +597,12 @@ class CatalogSeeder extends Seeder
             $collectionId = (int) $collectionId;
 
             $thumbAssetId = $this->createImageAsset("Collection {$name} thumbnail");
-            $heroAssetId  = $this->createImageAsset("Collection {$name} hero");
-            $ogAssetId    = $this->createImageAsset("Collection {$name} og image");
+            $heroAssetId = $this->createImageAsset("Collection {$name} hero");
+            $ogAssetId = $this->createImageAsset("Collection {$name} og image");
 
             $this->attachMedia($thumbAssetId, $ownerCollection, $collectionId, 'thumbnail', 1, true);
-            $this->attachMedia($heroAssetId,  $ownerCollection, $collectionId, 'hero', 1, true);
-            $this->attachMedia($ogAssetId,    $ownerCollection, $collectionId, 'og_image', 1, true);
+            $this->attachMedia($heroAssetId, $ownerCollection, $collectionId, 'hero', 1, true);
+            $this->attachMedia($ogAssetId, $ownerCollection, $collectionId, 'og_image', 1, true);
         }
 
         // Variant media ONLY (products have no media):
@@ -648,7 +668,7 @@ class CatalogSeeder extends Seeder
                 'media_asset_id' => $assetId,
                 'profile' => $p['profile'],
                 'disk' => 's3',
-                'key' => str_replace('.jpg', '_' . $p['profile'] . '.jpg', $key),
+                'key' => str_replace('.jpg', '_'.$p['profile'].'.jpg', $key),
                 'mime_type' => 'image/jpeg',
                 'bytes' => random_int(40_000, 220_000),
                 'width' => $p['w'],

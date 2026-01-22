@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Support\Storefront\StoreContext;
+use Illuminate\Http\Request;
 
 final class StoreContextController extends Controller
 {

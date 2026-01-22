@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Storefront\StoreContext;
+use App\Support\Storefront\StoreContextResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Cookie;
-use App\Support\Storefront\StoreContext;
-use App\Support\Storefront\StoreContextResolver;
 
 final class ResolveStoreContext
 {
@@ -56,7 +56,9 @@ final class ResolveStoreContext
         $cookieName = (string) config('storefront.cookie_name');
         $raw = $request->cookie($cookieName);
 
-        if (!is_string($raw) || $raw === '') return null;
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
 
         // Let resolver verify fully by doing a resolve() with no query param:
         // But resolve() would possibly GeoIP which we don’t want just to compare.

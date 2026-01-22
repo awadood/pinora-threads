@@ -19,7 +19,7 @@ class Collection extends AbstractLoggableModel
         'name',
         'slug',
         'sort',
-        'notes',
+        'description',
         'active',
     ];
 
@@ -44,6 +44,11 @@ class Collection extends AbstractLoggableModel
         return $this->belongsToMany(Product::class, 'collection_product')->withPivot(['sort']);
     }
 
+    public function countries(): BelongsToMany
+    {
+        return $this->belongsToMany(Country::class, 'collection_country', 'country_code');
+    }
+
     public function heroMedia(): MorphOne
     {
         return $this->primaryMediaForRole('hero');
@@ -52,5 +57,10 @@ class Collection extends AbstractLoggableModel
     public function ogImageMedia(): MorphOne
     {
         return $this->primaryMediaForRole('og_image');
+    }
+
+    public function thumbnailMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('thumbnail');
     }
 }
