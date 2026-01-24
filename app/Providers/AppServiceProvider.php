@@ -19,12 +19,14 @@ use App\Repositories\Catalog\Contracts\ICategoryProductRepository;
 use App\Repositories\Catalog\Contracts\ICategoryRepository;
 use App\Repositories\Catalog\Contracts\ICollectionProductRepository;
 use App\Repositories\Catalog\Contracts\ICollectionRepository;
+use App\Repositories\Catalog\Contracts\IPlpRepository;
 use App\Repositories\Catalog\Contracts\IProductBundleRepository;
 use App\Repositories\Catalog\Contracts\IProductPriceRepository;
 use App\Repositories\Catalog\Contracts\IProductRepository;
 use App\Repositories\Catalog\Contracts\IProductVariantPriceRepository;
 use App\Repositories\Catalog\Contracts\IProductVariantRepository;
 use App\Repositories\Catalog\Contracts\IRelatedProductRepository;
+use App\Repositories\Catalog\PlpRepository;
 use App\Repositories\Catalog\ProductBundleRepository;
 use App\Repositories\Catalog\ProductPriceRepository;
 use App\Repositories\Catalog\ProductRepository;
@@ -116,6 +118,7 @@ class AppServiceProvider extends ServiceProvider
         IAttributeOptionRepository::class => AttributeOptionRepository::class,
         ICategoryRepository::class => CategoryRepository::class,
         ICollectionRepository::class => CollectionRepository::class,
+        IPlpRepository::class => PlpRepository::class,
         IProductRepository::class => ProductRepository::class,
         IProductVariantRepository::class => ProductVariantRepository::class,
         IProductPriceRepository::class => ProductPriceRepository::class,

@@ -4,8 +4,6 @@ namespace App\Repositories\Catalog\Contracts;
 
 use App\Models\Product;
 use App\Repositories\IBaseRepository;
-use App\Support\ProductListQuery;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
  * IProductRepository — repository contract for Product model.
@@ -16,39 +14,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
  */
 interface IProductRepository extends IBaseRepository
 {
-    /**
-     * Lookup products for admin typeahead and selector UIs.
-     *
-     * Used by search-as-you-type fields or filter components
-     * (e.g. Stock Batches, Inventory, Bundles, Filter)
-     * to quickly find sellable variants and return a small result set.
-     *
-     * Supports the standard `filter[field.op]` format, typically:
-     *
-     * product-level:
-     * - filter[active.eq]=1
-     * - filter[category.slug.eq]=unstitched
-     * - filter[collection.slug.eq]=eid-edit
-     *
-     * variant attribute (match any variant):
-     * - filter[attr.fabric_type.in]=lawn,cotton
-     * - filter[attr.color_family.in]=red,blue
-     *
-     * price range (currency from store_ctx):
-     * - filter[price.gte]=10000
-     * - filter[price.lte]=15000
-     *
-     * optional stock-only:
-     * - filter[in_stock.eq]=1 (means: there exists a matching variant with qty > 0 in the ctx stock)
-     *
-     * Results are paginated and intended for dropdowns/autocomplete,
-     * with optional eager-loaded relations to avoid N+1 queries.
-     *
-     * @param  \App\Support\ProductListQuery  $query
-     * @param  array<int,string>  $with
-     */
-    public function lookup(ProductListQuery $q): LengthAwarePaginator;
-
     /**
      * Create a product and ensure it has a valid default variant at creation time.
      *

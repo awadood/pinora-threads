@@ -16,6 +16,7 @@ use App\Http\Controllers\Catalog\CollectionController;
 use App\Http\Controllers\Catalog\CollectionProductController;
 use App\Http\Controllers\Catalog\ProductBundleController;
 use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\ProductFilterController;
 use App\Http\Controllers\Catalog\ProductPriceController;
 use App\Http\Controllers\Catalog\RelatedProductController;
 use App\Http\Controllers\Catalog\VariantController;
@@ -120,6 +121,7 @@ Route::get('categories/{slug}', [CategoryController::class, 'showBySlug']); // d
 Route::get('collections', [CollectionController::class, 'index']); // list active collections
 Route::get('collections/{slug}', [CollectionController::class, 'showBySlug']);
 Route::get('products', [ProductController::class, 'index']);
+Route::get('products/filters', [ProductFilterController::class, 'index']);
 Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
 Route::get('products/{slug}/variants', [VariantController::class, 'indexByProductSlug']); // variant matrix on PDP
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional

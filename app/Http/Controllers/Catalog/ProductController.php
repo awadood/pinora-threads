@@ -6,12 +6,12 @@ use App\Http\Requests\Catalog\ProductIndexRequest;
 use App\Http\Requests\Catalog\ProductRequest;
 use App\Http\Resources\Catalog\ProductResource;
 use App\Models\Product;
+use App\Repositories\Catalog\Contracts\IPlpRepository;
 use App\Repositories\Catalog\Contracts\IProductRepository;
 use App\Repositories\Catalog\Filters\ProductFilters;
 use App\Support\ProductListQuery;
 use App\Support\StockScopeResolver;
 use App\Support\Storefront\StoreContext;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 
@@ -25,6 +25,7 @@ use Illuminate\Support\Arr;
 class ProductController extends Controller
 {
     public function __construct(
+        protected IPlpRepository $plp,
         protected IProductRepository $products,
         protected ProductFilters $filters,
         protected StockScopeResolver $stockScopeResolver,
@@ -65,7 +66,7 @@ class ProductController extends Controller
             appliedEcho: $parsed['echo'],
         );
 
-        $paginator = $this->products->lookup($dto);
+        $paginator = $this->plp->list($dto);
 
         return ProductResource::collection($paginator)->additional([
             'query' => [
@@ -79,7 +80,7 @@ class ProductController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $with = ['categories', 'prices', 'bundles', 'media.asset.renditions', 'variants.prices', 'variants.media.asset.renditions'];
+        $with = ['categories', 'bundles', 'variants.prices', 'variants.media.asset.renditions'];
 
         $product = $this->products->query()->with($with)->where('slug', $slug)->firstOrFail();
 
