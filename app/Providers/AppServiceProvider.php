@@ -92,6 +92,8 @@ use App\Repositories\Promotion\PromotionRedemptionRepository;
 use App\Repositories\Promotion\PromotionRepository;
 use App\Repositories\Shipping\Contracts\IShipmentRepository;
 use App\Repositories\Shipping\ShipmentRepository;
+use App\Repositories\Storefront\Contracts\IMerchandisingRepository;
+use App\Repositories\Storefront\MerchandisingRepository;
 use App\Repositories\Tax\Contracts\ITaxCalculationRepository;
 use App\Repositories\Tax\Contracts\ITaxClassRepository;
 use App\Repositories\Tax\Contracts\ITaxRateRepository;
@@ -172,6 +174,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Shipping
         IShipmentRepository::class => ShipmentRepository::class,
+
+        // Storefront
+        IMerchandisingRepository::class => MerchandisingRepository::class,
 
         // Tax
         ITaxClassRepository::class => TaxClassRepository::class,

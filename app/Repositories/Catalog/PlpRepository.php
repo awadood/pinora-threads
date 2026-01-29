@@ -54,7 +54,9 @@ class PlpRepository implements IPlpRepository
          *
          * Keep your existing LATERAL / correlated approach here.
          */
-        $base = Product::query()->select('products.*');
+        $base = Product::query()
+            ->select('products.*')
+            ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)]);
 
         $this->applyProductFilters($base, $q);
         $this->applyStorefrontSortingAndSelectedVariant($base, $q); // your existing lateral logic lives here
@@ -111,6 +113,18 @@ class PlpRepository implements IPlpRepository
             $slug = $f['collection_slug'];
             $query->whereHas('collections', fn (Builder $c) => $c->where('slug', $slug));
         }
+
+        /**
+         * Internal-only filter used by merchandising curated sections.
+         * It is NOT exposed via ProductFilters::parse() allow-lists.
+         * This keeps the PLP selection+hydration logic centralized and prevents drift.
+         */
+        if (! empty($f['ids_in']) && is_array($f['ids_in'])) {
+            $ids = collect($f['ids_in'] ?? [])->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)->values()->all();
+            if (count($ids)) {
+                $query->whereIn('products.id', $ids);
+            }
+        }
     }
 
     /**
@@ -132,7 +146,7 @@ class PlpRepository implements IPlpRepository
             return;
         }
 
-        // EXISTS: variants matching ONLY q (sku/title/description + attributes/value/options)
+        // EXISTS: variants matching ONLY q (sku/name/description + attributes/value/options)
         $existsQ = function ($parent) use ($vf) {
             $qText = trim((string) ($vf['q'] ?? ''));
             $needle = '%'.$qText.'%';
@@ -144,7 +158,7 @@ class PlpRepository implements IPlpRepository
                     ->where('pv.active', true)
                     ->where(function ($w) use ($needle) {
                         $w->where('pv.sku', 'ilike', $needle)
-                            ->orWhere('pv.title', 'ilike', $needle)
+                            ->orWhere('pv.name', 'ilike', $needle)
                             ->orWhere('pv.description', 'ilike', $needle)
 
                             // free-text attribute values
@@ -509,7 +523,7 @@ class PlpRepository implements IPlpRepository
                         OR
                         (
                             pv.sku ILIKE ?
-                            OR pv.title ILIKE ?
+                            OR pv.name ILIKE ?
                             OR pv.description ILIKE ?
                             OR EXISTS (
                                 SELECT 1
@@ -535,7 +549,7 @@ class PlpRepository implements IPlpRepository
 
                 // variant match (5)
                 $bindings[] = $like; // pv.sku
-                $bindings[] = $like; // pv.title
+                $bindings[] = $like; // pv.name
                 $bindings[] = $like; // pv.description
                 $bindings[] = $like; // pva.value
                 $bindings[] = $like; // ao.value
@@ -543,7 +557,7 @@ class PlpRepository implements IPlpRepository
                 $sql .= '
                     AND (
                         pv.sku ILIKE ?
-                        OR pv.title ILIKE ?
+                        OR pv.name ILIKE ?
                         OR pv.description ILIKE ?
                         OR EXISTS (
                             SELECT 1
@@ -563,7 +577,7 @@ class PlpRepository implements IPlpRepository
                 ';
 
                 $bindings[] = $like; // pv.sku
-                $bindings[] = $like; // pv.title
+                $bindings[] = $like; // pv.name
                 $bindings[] = $like; // pv.description
                 $bindings[] = $like; // pva.value
                 $bindings[] = $like; // ao.value
@@ -695,7 +709,7 @@ class PlpRepository implements IPlpRepository
             ->whereIn('id', $variantIds)
             ->with([
                 // PLP needs thumbnail only - later renditions or other media can be addded
-                'thumbnailMedia.asset',
+                'thumbnailMedia.asset.renditions',
                 'prices' => fn ($p) => $p->where('currency_code', $q->currencyCode),
             ])
             ->get()

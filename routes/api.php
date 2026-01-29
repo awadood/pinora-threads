@@ -63,6 +63,8 @@ use App\Http\Controllers\Promotion\PromotionCouponController;
 use App\Http\Controllers\Promotion\PromotionRedemptionController;
 use App\Http\Controllers\Shipping\ShipmentController;
 use App\Http\Controllers\StoreContextController;
+use App\Http\Controllers\Storefront\AdminMerchController;
+use App\Http\Controllers\Storefront\StoreMerchController;
 use App\Http\Controllers\Tax\TaxCalculationController;
 use App\Http\Controllers\Tax\TaxClassController;
 use App\Http\Controllers\Tax\TaxRateController;
@@ -170,6 +172,9 @@ Route::post('orders/{order}/payment-attempts', [PaymentAttemptController::class,
 // Promotion
 Route::get('promotions', [PromotionController::class, 'indexPublic']);
 Route::get('promotions/{promotion}', [PromotionController::class, 'showPublic']);
+
+// Storefront
+Route::get('sections/{code}', [StoreMerchController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
@@ -443,7 +448,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('lookbook-items/{item}/products', [LookbookItemProductController::class, 'store'])->middleware('permission:'.P::ENG_LBKITEMPROD_CREATE);
     Route::put('lookbook-item-products/{attachment}', [LookbookItemProductController::class, 'update'])->middleware('permission:'.P::ENG_LBKITEMPROD_UPDATE);
     Route::delete('lookbook-item-products/{attachment}', [LookbookItemProductController::class, 'destroy'])->middleware('permission:'.P::ENG_LBKITEMPROD_DESTROY);
-
 });
 
 /*
@@ -630,6 +634,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Sanctum protected APIs - Storefront
+|--------------------------------------------------------------------------
+|
+| These routes are for admin with permissions.
+|
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('merch-sections', [AdminMerchController::class, 'index'])->middleware('permission:'.P::MERCH_MANAGE);
+    Route::post('merch-sections', [AdminMerchController::class, 'store'])->middleware('permission:'.P::MERCH_MANAGE);
+    Route::put('merch-sections/{section}', [AdminMerchController::class, 'update'])->middleware('permission:'.P::MERCH_MANAGE);
+    Route::put('merch-sections/{section}/items', [AdminMerchController::class, 'setItems'])->middleware('permission:'.P::MERCH_MANAGE);
+    Route::put('merch-sections/{section}/query-config', [AdminMerchController::class, 'setQueryConfig'])->middleware('permission:'.P::MERCH_MANAGE);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Sanctum protected APIs - Tax
 |--------------------------------------------------------------------------
 |
@@ -638,6 +660,7 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+
     // Tax Classes
     Route::get('tax-classes', [TaxClassController::class, 'index']);
     Route::get('tax-classes/{tax_class}', [TaxClassController::class, 'show']);

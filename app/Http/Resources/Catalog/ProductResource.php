@@ -37,6 +37,8 @@ class ProductResource extends JsonResource
 
             // storefront displays thumbnail of variant selected by input query params.
             'selected_variant' => VariantResource::make($this->whenLoaded('selectedVariant')),
+
+            'variants_count' => $this->variants_count ?? 0,
         ];
     }
 }

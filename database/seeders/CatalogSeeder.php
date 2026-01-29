@@ -8,46 +8,62 @@ use Illuminate\Support\Str;
 
 class CatalogSeeder extends Seeder
 {
+    /**
+     * Adjust if your tax_classes seed uses a different ID.
+     */
     private const TAX_CLASS_ID = 1;
+
+    /**
+     * Safety: keep the seed volume reasonable for local/dev.
+     */
+    private const PRODUCT_COUNT = 100;
 
     public function run(): void
     {
         DB::transaction(function () {
             $this->guardPrereqs();
 
-            // 1) Attributes + options (for filters)
+            // 1) Attributes + options
             $attrs = $this->seedAttributes();
 
             // 2) Categories (tree)
             $cat = $this->seedCategories();
 
-            // 3) Collections (manual)
+            // 3) Collections + collection_country
             $collections = $this->seedCollections();
 
-            // 4) 100 products + (1-3) variants + prices + attributes + category assignment
+            // 4) Products + variants + prices + variant attributes + category assignment
             $products = $this->seedProductsAndVariants($attrs, $cat);
 
             // 5) Attach products to collections (manual curation)
             $this->attachCollections($collections, $products);
 
-            // 6) Seed media assets + attachments + renditions (dummy keys)
-            //    NOTE: Products have NO media anymore. Media belongs to:
-            //    - variants: thumbnail, gallery, hero, og_image
-            //    - categories: thumbnail, hero, og_image
-            //    - collections: thumbnail, hero, og_image
-            $this->seedMediaSystem($cat, $collections, $products);
+            // 6) Related products + some bundles (optional but matches schema)
+            $this->seedRelatedProducts($products);
+            $this->seedBundleProducts($products);
+
+            // 7) Media assets + attachments + renditions (deterministic)
+            $this->seedMediaSystem($collections, $products);
+
+            // 8) Merchandising sections (Featured, New Arrivals, etc.)
+            $this->seedMerchSections($products, $collections, $cat);
         });
     }
 
     private function guardPrereqs(): void
     {
-        $hasUsd = DB::table('countries')->where('code', 'US')->exists();
-        $hasPkr = DB::table('countries')->where('code', 'PK')->exists();
-        $hasUsd = DB::table('currencies')->where('code', 'USD')->exists();
-        $hasPkr = DB::table('currencies')->where('code', 'PKR')->exists();
+        $hasCountryUS = DB::table('countries')->where('code', 'US')->exists();
+        $hasCountryPK = DB::table('countries')->where('code', 'PK')->exists();
 
-        if (! $hasUsd || ! $hasPkr) {
-            throw new \RuntimeException('Missing currencies. Ensure currencies table includes USD and PKR before seeding.');
+        if (! $hasCountryUS || ! $hasCountryPK) {
+            throw new \RuntimeException('Missing countries. Ensure countries table includes US and PK before seeding catalog.');
+        }
+
+        $hasCurrencyUSD = DB::table('currencies')->where('code', 'USD')->exists();
+        $hasCurrencyPKR = DB::table('currencies')->where('code', 'PKR')->exists();
+
+        if (! $hasCurrencyUSD || ! $hasCurrencyPKR) {
+            throw new \RuntimeException('Missing currencies. Ensure currencies table includes USD and PKR before seeding catalog.');
         }
 
         $hasTax = DB::table('tax_classes')->where('id', self::TAX_CLASS_ID)->exists();
@@ -56,10 +72,18 @@ class CatalogSeeder extends Seeder
         }
     }
 
+    /**
+     * Returns:
+     * [
+     *   'attr' => ['piece_type' => 1, ...],
+     *   'opt'  => ['piece_type' => ['3-piece suit' => 10, ...], ...],
+     * ]
+     */
     private function seedAttributes(): array
     {
         $upsertAttr = function (string $code, string $label, string $type = 'select', bool $active = true): int {
             $existing = DB::table('attributes')->where('code', $code)->first();
+
             if ($existing) {
                 DB::table('attributes')->where('id', $existing->id)->update([
                     'label' => $label,
@@ -81,84 +105,111 @@ class CatalogSeeder extends Seeder
             ]);
         };
 
-        $attrs = [
-            'piece_type' => $upsertAttr('piece_type', 'Piece Type', 'select'),
-            'fabric_type' => $upsertAttr('fabric_type', 'Fabric Type', 'select'),
-            'color_family' => $upsertAttr('color_family', 'Color Family', 'select'),
-            'season' => $upsertAttr('season', 'Season', 'select'),
+        $upsertOption = function (int $attributeId, string $value, int $sort): int {
+            $existing = DB::table('attribute_options')
+                ->where('attribute_id', $attributeId)
+                ->where('value', $value)
+                ->first();
 
-            // Text attributes
-            'occasion_tags' => $upsertAttr('occasion_tags', 'Occasion Tags', 'text'),
-            'shirt_length' => $upsertAttr('shirt_length', 'Shirt Fabric Length', 'text'),
-            'trouser_length' => $upsertAttr('trouser_length', 'Trouser Fabric Length', 'text'),
-            'dupatta_length' => $upsertAttr('dupatta_length', 'Dupatta Fabric Length', 'text'),
-            'what_included' => $upsertAttr('what_included', "What's Included", 'text'),
-        ];
-
-        $upsertOptions = function (int $attributeId, array $values): array {
-            $optionIds = [];
-            $sort = 1;
-            foreach ($values as $value) {
-                $existing = DB::table('attribute_options')
-                    ->where('attribute_id', $attributeId)
-                    ->where('value', $value)
-                    ->first();
-
-                if ($existing) {
-                    DB::table('attribute_options')->where('id', $existing->id)->update([
-                        'sort' => $sort++,
-                        'updated_at' => now(),
-                    ]);
-                    $optionIds[$value] = (int) $existing->id;
-
-                    continue;
-                }
-
-                $id = DB::table('attribute_options')->insertGetId([
-                    'attribute_id' => $attributeId,
-                    'value' => $value,
-                    'sort' => $sort++,
-                    'created_at' => now(),
+            if ($existing) {
+                DB::table('attribute_options')->where('id', $existing->id)->update([
+                    'sort' => $sort,
                     'updated_at' => now(),
                 ]);
-                $optionIds[$value] = (int) $id;
+
+                return (int) $existing->id;
             }
 
-            return $optionIds;
+            return (int) DB::table('attribute_options')->insertGetId([
+                'attribute_id' => $attributeId,
+                'value' => $value,
+                'sort' => $sort,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         };
 
-        $options = [];
-        $options['piece_type'] = $upsertOptions($attrs['piece_type'], [
-            '3-piece suit', '2-piece suit', '1-piece (fabric)', 'dupatta', 'shawl',
-        ]);
+        $attrIds = [
+            // Select attributes
+            'piece_type' => $upsertAttr('piece_type', 'Piece Type', 'select'),
+            'fabric' => $upsertAttr('fabric', 'Fabric', 'select'),
+            'color' => $upsertAttr('color', 'Color', 'select'),
+            'size' => $upsertAttr('size', 'Size', 'select'),
 
-        $options['fabric_type'] = $upsertOptions($attrs['fabric_type'], [
-            'lawn', 'cotton', 'chiffon', 'silk', 'winter',
-        ]);
+            // Text attributes (stored on product_variant_attributes.value)
+            'material_notes' => $upsertAttr('material_notes', 'Material Notes', 'text'),
+            'what_included' => $upsertAttr('what_included', 'What’s Included', 'text'),
+        ];
 
-        $options['color_family'] = $upsertOptions($attrs['color_family'], [
-            'black', 'white', 'red', 'blue', 'green', 'beige', 'pink', 'purple', 'maroon', 'teal', 'grey',
-        ]);
+        $options = [
+            'piece_type' => [
+                '3-piece suit',
+                '2-piece suit',
+                '1-piece (fabric)',
+                'dupatta',
+                'shawl',
+            ],
+            'fabric' => [
+                'Lawn',
+                'Khaddar',
+                'Cotton',
+                'Silk',
+                'Chiffon',
+                'Linen',
+            ],
+            'color' => [
+                'Black',
+                'White',
+                'Off White',
+                'Navy',
+                'Maroon',
+                'Teal',
+                'Mustard',
+                'Olive',
+                'Pink',
+                'Beige',
+            ],
+            'size' => [
+                'XS', 'S', 'M', 'L', 'XL',
+            ],
+        ];
 
-        $options['season'] = $upsertOptions($attrs['season'], [
-            'summer', 'winter', 'all-season',
-        ]);
+        $optIds = [];
+        foreach ($options as $code => $values) {
+            $attrId = $attrIds[$code];
+            $optIds[$code] = [];
+
+            $sort = 1;
+            foreach ($values as $v) {
+                $optIds[$code][$v] = $upsertOption($attrId, $v, $sort);
+                $sort++;
+            }
+        }
 
         return [
-            'attr' => $attrs,
-            'opt' => $options,
+            'attr' => $attrIds,
+            'opt' => $optIds,
         ];
     }
 
+    /**
+     * Returns a map of helpful category IDs:
+     * [
+     *   'root' => ['unstitched' => 1, 'separates' => 2],
+     *   'leaf' => ['wedding_wear' => 3, ...]
+     * ]
+     */
     private function seedCategories(): array
     {
         $upsertCategory = function (string $name, ?int $parentId, int $sort): int {
             $slug = Str::slug($name);
-            $existing = DB::table('categories')->where('slug', $slug)->first();
 
+            $existing = DB::table('categories')->where('slug', $slug)->first();
             if ($existing) {
                 DB::table('categories')->where('id', $existing->id)->update([
                     'name' => $name,
+                    'meta_title' => $name,
+                    'meta_description' => $name,
                     'parent_id' => $parentId,
                     'sort' => $sort,
                     'active' => true,
@@ -184,9 +235,9 @@ class CatalogSeeder extends Seeder
         $unstitched = $upsertCategory('Unstitched', null, 1);
         $separates = $upsertCategory('Separates', null, 2);
 
-        $threePiece = $upsertCategory('Wedding Wear', $unstitched, 1);
-        $twoPiece = $upsertCategory('Festive Wear', $unstitched, 2);
-        $onePiece = $upsertCategory('Everyday', $unstitched, 3);
+        $wedding = $upsertCategory('Wedding Wear', $unstitched, 1);
+        $festive = $upsertCategory('Festive Wear', $unstitched, 2);
+        $everyday = $upsertCategory('Everyday', $unstitched, 3);
 
         $dupattas = $upsertCategory('Dupattas', $separates, 1);
         $shawls = $upsertCategory('Shawls', $separates, 2);
@@ -197,41 +248,46 @@ class CatalogSeeder extends Seeder
                 'separates' => $separates,
             ],
             'leaf' => [
-                'three_piece' => $threePiece,
-                'two_piece' => $twoPiece,
-                'one_piece' => $onePiece,
-                'dupatta' => $dupattas,
-                'shawl' => $shawls,
+                'wedding_wear' => $wedding,
+                'festive_wear' => $festive,
+                'everyday' => $everyday,
+                'dupattas' => $dupattas,
+                'shawls' => $shawls,
             ],
         ];
     }
 
+    /**
+     * Creates collections and sets collection_country.
+     * Returns map: [name => collection_id]
+     */
     private function seedCollections(): array
     {
         $names = [
-            'Latest Drop',
-            'Eid Edit',
-            'Wedding Guest Edit',
+            'New Arrivals',
+            'Best Sellers',
             'Festive Edit',
-            'Everyday Elegance',
-            'Signature Prints',
-            'Limited Pieces',
+            'Wedding Edit',
+            'Everyday Essentials',
+            'Limited Stock',
         ];
 
         $ids = [];
-        $sort = 1;
-
         foreach ($names as $index => $name) {
             $slug = Str::slug($name);
-            $existing = DB::table('collections')->where('slug', $slug)->first();
 
+            $existing = DB::table('collections')->where('slug', $slug)->first();
             if ($existing) {
                 DB::table('collections')->where('id', $existing->id)->update([
                     'name' => $name,
-                    'sort' => $sort++,
+                    'meta_title' => $name,
+                    'meta_description' => $name,
+                    'sort' => $index + 1,
+                    'description' => $this->collectionDescription($name),
                     'active' => true,
                     'updated_at' => now(),
                 ]);
+
                 $collectionId = (int) $existing->id;
             } else {
                 $collectionId = (int) DB::table('collections')->insertGetId([
@@ -239,8 +295,8 @@ class CatalogSeeder extends Seeder
                     'meta_title' => $name,
                     'meta_description' => $name,
                     'slug' => $slug,
-                    'sort' => $sort++,
-                    'description' => 'Seeded collection for storefront merchandising',
+                    'sort' => $index + 1,
+                    'description' => $this->collectionDescription($name),
                     'active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -249,16 +305,21 @@ class CatalogSeeder extends Seeder
 
             $ids[$name] = $collectionId;
 
-            // 2. Sync Relationships in pivot table (collection_country)
-            // Clear existing to avoid duplicates if re-running
+            // Sync collection_country (no timestamps in schema)
             DB::table('collection_country')->where('collection_id', $collectionId)->delete();
 
-            // Add PK for all collections
-            DB::table('collection_country')->insert(['collection_id' => $collectionId, 'country_code' => 'PK']);
+            // PK for all collections
+            DB::table('collection_country')->insertOrIgnore([
+                'collection_id' => $collectionId,
+                'country_code' => 'PK',
+            ]);
 
-            // Add USA for the first four collections (index 0, 1, 2, 3)
+            // US for the first 4 collections
             if ($index < 4) {
-                DB::table('collection_country')->insert(['collection_id' => $collectionId, 'country_code' => 'US']);
+                DB::table('collection_country')->insertOrIgnore([
+                    'collection_id' => $collectionId,
+                    'country_code' => 'US',
+                ]);
             }
         }
 
@@ -266,175 +327,230 @@ class CatalogSeeder extends Seeder
     }
 
     /**
-     * Creates exactly 100 products.
-     * Each product: 1-3 variants (so “at least one or more variants” is satisfied).
-     * Product type set to "variable" because now we truly have multiple variants.
+     * Returns:
+     * [
+     *   'products' => [product_id, ...],
+     *   'variants' => [variant_id, ...],
+     *   'by_product' => [product_id => [variant_id, ...]],
+     * ]
      */
     private function seedProductsAndVariants(array $attrs, array $cat): array
     {
-        $fabricPool = ['lawn', 'cotton', 'chiffon', 'silk', 'winter'];
-        $colorPool = ['black', 'white', 'red', 'blue', 'green', 'beige', 'pink', 'purple', 'maroon', 'teal', 'grey'];
-        $seasonPool = ['summer', 'winter', 'all-season'];
-        $occasionSets = [
-            'eid,festive',
-            'wedding,festive',
-            'festive',
-            'casual,everyday',
-            'eid,wedding',
-            'everyday',
-        ];
-
-        $plan = [
-            ['piece' => '3-piece suit',        'leaf' => 'three_piece', 'count' => 30],
-            ['piece' => '2-piece suit',        'leaf' => 'two_piece',   'count' => 25],
-            ['piece' => '1-piece (fabric)',    'leaf' => 'one_piece',   'count' => 15],
-            ['piece' => 'dupatta',             'leaf' => 'dupatta',     'count' => 15],
-            ['piece' => 'shawl',               'leaf' => 'shawl',       'count' => 15],
-        ];
+        $leafCategoryIds = array_values($cat['leaf']);
 
         $products = [];
+        $variants = [];
+        $byProduct = [];
+
         $seq = 1;
 
-        foreach ($plan as $chunk) {
-            for ($i = 1; $i <= $chunk['count']; $i++) {
+        // A controlled mix of product types supported by schema
+        $targets = [
+            'variable' => (int) floor(self::PRODUCT_COUNT * 0.60),
+            'simple' => (int) floor(self::PRODUCT_COUNT * 0.30),
+        ];
+        $targets['bundle'] = self::PRODUCT_COUNT - $targets['variable'] - $targets['simple'];
 
-                $fabric = $fabricPool[array_rand($fabricPool)];
-                $color = $colorPool[array_rand($colorPool)];
-                $season = $seasonPool[array_rand($seasonPool)];
-                $ocTags = $occasionSets[array_rand($occasionSets)];
+        $typePlan = array_merge(
+            array_fill(0, $targets['variable'], 'variable'),
+            array_fill(0, $targets['simple'], 'simple'),
+            array_fill(0, $targets['bundle'], 'bundle'),
+        );
 
-                $name = $this->buildProductName($chunk['piece'], $fabric, $color);
-                $slug = Str::slug($name).'-'.$seq;
+        foreach ($typePlan as $type) {
+            $piece = $this->pick(array_keys($attrs['opt']['piece_type']));
+            $fabric = $this->pick(array_keys($attrs['opt']['fabric']));
+            $color = $this->pick(array_keys($attrs['opt']['color']));
 
-                $productSku = sprintf('PNR-PROD-%04d', $seq);
+            $productName = $this->buildProductName($piece, $fabric, $color);
+            $productSku = $this->sku('PRD', $seq);
+            $slug = $this->uniqueSlug('products', Str::slug($productName), $productSku);
 
-                $productId = (int) DB::table('products')->insertGetId([
-                    'sku' => $productSku,
-                    'name' => $name,
-                    'meta_title' => $name,
-                    'meta_description' => "Pinora Threads: {$name}",
-                    'slug' => $slug,
-                    'type' => 'variable',
-                    'description' => $this->buildProductDescription($chunk['piece'], $fabric, $color),
-                    'tax_class_id' => self::TAX_CLASS_ID,
-                    'active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            $productId = $this->upsertProduct(
+                sku: $productSku,
+                name: $productName,
+                slug: $slug,
+                type: $type,
+                description: $this->buildProductDescription($piece, $fabric, $color),
+            );
 
-                // Pivot table has no timestamps in your migration, so do not add them.
-                DB::table('category_product')->insert([
-                    'category_id' => $cat['leaf'][$chunk['leaf']],
-                    'product_id' => $productId,
-                ]);
+            $products[] = $productId;
 
-                // Variants: 1–3 per product
-                $variantCount = random_int(1, 3);
+            // Assign to one leaf category
+            $categoryId = (int) $this->pick($leafCategoryIds);
+            DB::table('category_product')->insertOrIgnore([
+                'category_id' => $categoryId,
+                'product_id' => $productId,
+            ]);
 
-                // Ensure we don’t repeat exact same (fabric,color) inside the same product
-                $usedCombos = [];
+            // Variants rule: "at least one variant" for all types.
+            $variantCount = match ($type) {
+                'variable' => random_int(2, 3),
+                default => 1, // simple + bundle => single variant by default
+            };
 
-                $minUsd = null;
-                $minPkr = null;
+            $byProduct[$productId] = [];
 
-                for ($v = 1; $v <= $variantCount; $v++) {
-                    // Mix up fabric/color per variant for differentiation
-                    $vfabric = $fabricPool[array_rand($fabricPool)];
-                    $vcolor = $colorPool[array_rand($colorPool)];
+            for ($v = 1; $v <= $variantCount; $v++) {
+                $variantSku = $this->sku('VAR', $seq, $v);
 
-                    $comboKey = "{$vfabric}|{$vcolor}";
-                    if (isset($usedCombos[$comboKey])) {
-                        // retry once
-                        $vfabric = $fabricPool[array_rand($fabricPool)];
-                        $vcolor = $colorPool[array_rand($colorPool)];
-                        $comboKey = "{$vfabric}|{$vcolor}";
-                    }
-                    $usedCombos[$comboKey] = true;
+                // IMPORTANT: schema column is "name" (not title)
+                $variantName = $variantCount > 1 ? "{$productName} - Option {$v}" : null;
 
-                    $variantSku = sprintf('PNR-VAR-%04d-%02d', $seq, $v);
+                $variantId = $this->upsertVariant(
+                    productId: $productId,
+                    sku: $variantSku,
+                    name: $variantName,
+                    description: null,
+                    isDefault: $v === 1,
+                    active: true,
+                );
 
-                    $variantTitle = $this->buildVariantTitle($chunk['piece'], $vfabric, $vcolor);
+                $variants[] = $variantId;
+                $byProduct[$productId][] = $variantId;
 
-                    $variantId = (int) DB::table('product_variants')->insertGetId([
-                        'product_id' => $productId,
-                        'sku' => $variantSku,
-                        'title' => $variantTitle,
-                        'description' => null,
-                        'default' => $v === 1,
-                        'active' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+                // Variant attributes (select)
+                $this->attachVariantSelectAttr($variantId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$piece]);
+                $this->attachVariantSelectAttr($variantId, $attrs['attr']['fabric'], $attrs['opt']['fabric'][$fabric]);
+                $this->attachVariantSelectAttr($variantId, $attrs['attr']['color'], $attrs['opt']['color'][$color]);
 
-                    // Select attributes via option_id
-                    $this->attachVariantSelectAttr($variantId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$chunk['piece']]);
-                    $this->attachVariantSelectAttr($variantId, $attrs['attr']['fabric_type'], $attrs['opt']['fabric_type'][$vfabric]);
-                    $this->attachVariantSelectAttr($variantId, $attrs['attr']['color_family'], $attrs['opt']['color_family'][$vcolor]);
-                    $this->attachVariantSelectAttr($variantId, $attrs['attr']['season'], $attrs['opt']['season'][$season]);
+                // Size: vary a bit for variable products
+                $size = $type === 'variable'
+                    ? $this->pick(['S', 'M', 'L', 'XL'])
+                    : $this->pick(['S', 'M', 'L']);
 
-                    // Text attributes
-                    $this->attachVariantTextAttr($variantId, $attrs['attr']['occasion_tags'], $ocTags);
+                $this->attachVariantSelectAttr($variantId, $attrs['attr']['size'], $attrs['opt']['size'][$size]);
 
-                    if (in_array($chunk['piece'], ['3-piece suit', '2-piece suit', '1-piece (fabric)'], true)) {
-                        $lengths = $this->generateUnstitchedLengths($chunk['piece']);
-                        $this->attachVariantTextAttr($variantId, $attrs['attr']['shirt_length'], $lengths['shirt']);
-                        $this->attachVariantTextAttr($variantId, $attrs['attr']['trouser_length'], $lengths['trouser']);
-                        $this->attachVariantTextAttr($variantId, $attrs['attr']['dupatta_length'], $lengths['dupatta']);
-                        $this->attachVariantTextAttr($variantId, $attrs['attr']['what_included'], $lengths['included']);
-                    } else {
-                        $included = $chunk['piece'] === 'dupatta'
-                            ? '1 x Dupatta (standalone)'
-                            : '1 x Shawl (standalone)';
-                        $this->attachVariantTextAttr($variantId, $attrs['attr']['what_included'], $included);
-                    }
+                // Variant attributes (text)
+                $this->attachVariantTextAttr($variantId, $attrs['attr']['material_notes'], $this->materialNotes($fabric));
+                $this->attachVariantTextAttr($variantId, $attrs['attr']['what_included'], $this->includedText($piece));
 
-                    // Prices per variant
-                    $usd = $this->randMoney(150, 600);
-                    $pkr = $this->randMoney(4000, 60000);
+                // Variant prices per currency (unique per variant + currency)
+                $usd = $this->randMoney(35, 250);
+                $pkr = $this->randMoney(2500, 45000);
 
-                    DB::table('product_variant_prices')->insert([
-                        [
-                            'product_variant_id' => $variantId,
-                            'currency_code' => 'USD',
-                            'amount' => $usd,
-                            'compare_at' => null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ],
-                        [
-                            'product_variant_id' => $variantId,
-                            'currency_code' => 'PKR',
-                            'amount' => $pkr,
-                            'compare_at' => null,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ],
-                    ]);
-
-                    // Maintain product min prices
-                    $minUsd = $minUsd === null ? (float) $usd : min($minUsd, (float) $usd);
-                    $minPkr = $minPkr === null ? (float) $pkr : min($minPkr, (float) $pkr);
-
-                    // Return structure used by your media/collection logic
-                    $products[] = [
-                        'product_id' => $productId,
-                        'variant_id' => $variantId,
-                        'piece' => $chunk['piece'],
-                        'fabric' => $vfabric,
-                        'color' => $vcolor,
-                    ];
-                }
-
-                $seq++;
+                $this->upsertVariantPrice($variantId, 'USD', $usd, null);
+                $this->upsertVariantPrice($variantId, 'PKR', $pkr, null);
             }
+
+            // Publish product (optional but useful for dev)
+            DB::table('products')->where('id', $productId)->update([
+                'active' => true,
+                'published_at' => now(),
+                'first_published_at' => DB::raw('COALESCE(first_published_at, published_at)'),
+                'updated_at' => now(),
+            ]);
+
+            $seq++;
         }
 
-        return $products;
+        return [
+            'products' => $products,
+            'variants' => $variants,
+            'by_product' => $byProduct,
+        ];
+    }
+
+    private function upsertProduct(string $sku, string $name, string $slug, string $type, ?string $description): int
+    {
+        $existing = DB::table('products')->where('sku', $sku)->first();
+        if ($existing) {
+            DB::table('products')->where('id', $existing->id)->update([
+                'name' => $name,
+                'meta_title' => $name,
+                'meta_description' => "Pinora Threads: {$name}",
+                'slug' => $slug,
+                'type' => $type,
+                'description' => $description,
+                'tax_class_id' => self::TAX_CLASS_ID,
+                'active' => true,
+                'updated_at' => now(),
+            ]);
+
+            return (int) $existing->id;
+        }
+
+        return (int) DB::table('products')->insertGetId([
+            'sku' => $sku,
+            'name' => $name,
+            'meta_title' => $name,
+            'meta_description' => "Pinora Threads: {$name}",
+            'slug' => $slug,
+            'type' => $type,
+            'description' => $description,
+            'tax_class_id' => self::TAX_CLASS_ID,
+            'active' => true,
+            'published_at' => null,
+            'first_published_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function upsertVariant(
+        int $productId,
+        string $sku,
+        ?string $name,
+        ?string $description,
+        bool $isDefault,
+        bool $active
+    ): int {
+        $existing = DB::table('product_variants')->where('sku', $sku)->first();
+        if ($existing) {
+            DB::table('product_variants')->where('id', $existing->id)->update([
+                'product_id' => $productId,
+                'name' => $name,
+                'description' => $description,
+                'default' => $isDefault,
+                'active' => $active,
+                'updated_at' => now(),
+            ]);
+
+            return (int) $existing->id;
+        }
+
+        return (int) DB::table('product_variants')->insertGetId([
+            'product_id' => $productId,
+            'sku' => $sku,
+            'name' => $name,
+            'description' => $description,
+            'default' => $isDefault,
+            'active' => $active,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    private function upsertVariantPrice(int $variantId, string $currencyCode, string $amount, ?string $compareAt): void
+    {
+        $existing = DB::table('product_variant_prices')
+            ->where('product_variant_id', $variantId)
+            ->where('currency_code', $currencyCode)
+            ->first();
+
+        if ($existing) {
+            DB::table('product_variant_prices')->where('id', $existing->id)->update([
+                'amount' => $amount,
+                'compare_at' => $compareAt,
+                'updated_at' => now(),
+            ]);
+
+            return;
+        }
+
+        DB::table('product_variant_prices')->insert([
+            'product_variant_id' => $variantId,
+            'currency_code' => $currencyCode,
+            'amount' => $amount,
+            'compare_at' => $compareAt,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     private function attachVariantSelectAttr(int $variantId, int $attributeId, int $optionId): void
     {
-        DB::table('product_variant_attributes')->insert([
+        DB::table('product_variant_attributes')->insertOrIgnore([
             'product_variant_id' => $variantId,
             'attribute_id' => $attributeId,
             'option_id' => $optionId,
@@ -444,7 +560,7 @@ class CatalogSeeder extends Seeder
 
     private function attachVariantTextAttr(int $variantId, int $attributeId, string $value): void
     {
-        DB::table('product_variant_attributes')->insert([
+        DB::table('product_variant_attributes')->insertOrIgnore([
             'product_variant_id' => $variantId,
             'attribute_id' => $attributeId,
             'option_id' => null,
@@ -452,219 +568,201 @@ class CatalogSeeder extends Seeder
         ]);
     }
 
-    private function buildProductName(string $piece, string $fabric, string $color): string
-    {
-        $pieceLabel = match ($piece) {
-            '3-piece suit' => '3-Piece Unstitched Suit',
-            '2-piece suit' => '2-Piece Unstitched Suit',
-            '1-piece (fabric)' => '1-Piece Fabric',
-            'dupatta' => 'Dupatta',
-            'shawl' => 'Shawl',
-            default => 'Product',
-        };
-
-        return 'Pinora Threads '.Str::ucfirst($fabric)." {$pieceLabel} - ".Str::ucfirst($color);
-    }
-
-    private function buildVariantTitle(string $piece, string $fabric, string $color): string
-    {
-        return Str::ucfirst($fabric).' · '.Str::ucfirst($color).' · '.match ($piece) {
-            '3-piece suit' => '3-Piece',
-            '2-piece suit' => '2-Piece',
-            '1-piece (fabric)' => '1-Piece',
-            'dupatta' => 'Dupatta',
-            'shawl' => 'Shawl',
-            default => 'Variant',
-        };
-    }
-
-    private function buildProductDescription(string $piece, string $fabric, string $color): string
-    {
-        $base = 'Pinora Threads textile design crafted for modern South Asian women. ';
-        $base .= "Fabric: {$fabric}. Color family: {$color}. ";
-
-        return $base.match ($piece) {
-            '3-piece suit' => 'Includes shirt, trouser, and dupatta fabric (unstitched).',
-            '2-piece suit' => 'Includes shirt and trouser fabric (unstitched).',
-            '1-piece (fabric)' => 'Includes shirt fabric only (unstitched).',
-            'dupatta' => 'Standalone dupatta—no stitching required.',
-            'shawl' => 'Standalone shawl—no stitching required.',
-            default => 'Premium textile product.',
-        };
-    }
-
-    private function generateUnstitchedLengths(string $piece): array
-    {
-        $shirt = $this->randStep(2.75, 3.25, 0.25).' m (shirt)';
-        $trouser = $this->randStep(2.25, 2.75, 0.25).' m (trouser)';
-        $dupatta = $this->randStep(2.25, 2.75, 0.25).' m (dupatta)';
-
-        return match ($piece) {
-            '3-piece suit' => [
-                'shirt' => $shirt,
-                'trouser' => $trouser,
-                'dupatta' => $dupatta,
-                'included' => 'Shirt fabric + Trouser fabric + Dupatta fabric (unstitched)',
-            ],
-            '2-piece suit' => [
-                'shirt' => $shirt,
-                'trouser' => $trouser,
-                'dupatta' => '',
-                'included' => 'Shirt fabric + Trouser fabric (unstitched)',
-            ],
-            '1-piece (fabric)' => [
-                'shirt' => $shirt,
-                'trouser' => '',
-                'dupatta' => '',
-                'included' => 'Shirt fabric only (unstitched)',
-            ],
-            default => [
-                'shirt' => '',
-                'trouser' => '',
-                'dupatta' => '',
-                'included' => '',
-            ],
-        };
-    }
-
-    private function randMoney(int $min, int $max): string
-    {
-        return number_format(random_int($min, $max), 2, '.', '');
-    }
-
-    private function randStep(float $min, float $max, float $step): string
-    {
-        $count = (int) floor(($max - $min) / $step);
-        $n = random_int(0, max(0, $count));
-
-        return number_format($min + ($n * $step), 2, '.', '');
-    }
-
     private function attachCollections(array $collections, array $products): void
     {
-        $byId = array_values($products);
+        // Curate with simple rules; ensure pivot uniqueness.
+        $productIds = $products['products'];
 
         $map = [
-            'Latest Drop' => array_slice($byId, 0, 20),
-            'Eid Edit' => array_slice($byId, 20, 16),
-            'Wedding Guest Edit' => array_slice($byId, 36, 16),
-            'Festive Edit' => array_slice($byId, 52, 16),
-            'Everyday Elegance' => array_slice($byId, 68, 16),
-            'Signature Prints' => array_slice($byId, 84, 12),
-            'Limited Pieces' => array_slice($byId, 96, 4),
+            'New Arrivals' => array_slice($productIds, 0, 12),
+            'Best Sellers' => array_slice($productIds, 10, 12),
+            'Festive Edit' => array_slice($productIds, 25, 12),
+            'Wedding Edit' => array_slice($productIds, 40, 12),
+            'Everyday Essentials' => array_slice($productIds, 55, 12),
+            'Limited Stock' => array_slice($productIds, 70, 12),
         ];
 
-        foreach ($map as $collectionName => $items) {
-            $collectionId = $collections[$collectionName] ?? null;
-            if (! $collectionId) {
+        foreach ($map as $collectionName => $ids) {
+            if (! isset($collections[$collectionName])) {
                 continue;
             }
 
-            $sort = 1;
-            foreach ($items as $p) {
-                // collection_product has no timestamps in your migration
+            $collectionId = (int) $collections[$collectionName];
+            $pos = 1;
+
+            foreach ($ids as $pid) {
                 DB::table('collection_product')->insertOrIgnore([
                     'collection_id' => $collectionId,
-                    'product_id' => $p['product_id'],
-                    'sort' => $sort++,
+                    'product_id' => (int) $pid,
+                    'sort' => $pos,
+                ]);
+                $pos++;
+            }
+        }
+    }
+
+    private function seedRelatedProducts(array $products): void
+    {
+        $ids = array_values(array_unique($products['products']));
+        if (count($ids) < 8) {
+            return;
+        }
+
+        // Create 3 related links per product (small, safe volume)
+        foreach ($ids as $pid) {
+            $pid = (int) $pid;
+
+            $candidates = array_values(array_filter($ids, fn ($x) => (int) $x !== $pid));
+            shuffle($candidates);
+
+            $picked = array_slice($candidates, 0, 3);
+            foreach ($picked as $rid) {
+                DB::table('related_products')->insertOrIgnore([
+                    'product_id' => $pid,
+                    'related_product_id' => (int) $rid,
                 ]);
             }
         }
     }
 
-    private function seedMediaSystem(array $cat, array $collections, array $products): void
+    private function seedBundleProducts(array $products): void
+    {
+        // For products typed "bundle", create bundle lines pointing to other variants.
+        $bundleProductIds = DB::table('products')->where('type', 'bundle')->pluck('id')->all();
+        if (empty($bundleProductIds)) {
+            return;
+        }
+
+        $allVariantIds = DB::table('product_variants')->pluck('id')->all();
+        if (count($allVariantIds) < 5) {
+            return;
+        }
+
+        foreach ($bundleProductIds as $bundlePid) {
+            $bundlePid = (int) $bundlePid;
+
+            // Avoid duplicates across reruns
+            DB::table('product_bundles')->where('product_id', $bundlePid)->delete();
+
+            $pick = $this->pickMany($allVariantIds, random_int(2, 4));
+            foreach ($pick as $vid) {
+                DB::table('product_bundles')->insertOrIgnore([
+                    'product_id' => $bundlePid,
+                    'product_variant_id' => (int) $vid,
+                    'quantity' => random_int(1, 2),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function seedMediaSystem(array $collections, array $products): void
     {
         $ownerVariant = 'App\\Models\\ProductVariant';
         $ownerCategory = 'App\\Models\\Category';
         $ownerCollection = 'App\\Models\\Collection';
 
-        // Category media: thumbnail + hero + og_image for each category (exactly 1 each)
+        // Category media: thumbnail + hero + og_image (single-slot roles)
         $categoryIds = DB::table('categories')->pluck('id')->all();
         foreach ($categoryIds as $categoryId) {
             $categoryId = (int) $categoryId;
 
-            $thumbAssetId = $this->createImageAsset("Category {$categoryId} thumbnail");
-            $heroAssetId = $this->createImageAsset("Category {$categoryId} hero");
-            $ogAssetId = $this->createImageAsset("Category {$categoryId} og image");
+            $thumbAssetId = $this->getOrCreateImageAsset("categories/{$categoryId}/thumbnail");
+            $heroAssetId = $this->getOrCreateImageAsset("categories/{$categoryId}/hero");
+            $ogAssetId = $this->getOrCreateImageAsset("categories/{$categoryId}/og_image");
 
             $this->attachMedia($thumbAssetId, $ownerCategory, $categoryId, 'thumbnail', 1, true);
             $this->attachMedia($heroAssetId, $ownerCategory, $categoryId, 'hero', 1, true);
             $this->attachMedia($ogAssetId, $ownerCategory, $categoryId, 'og_image', 1, true);
         }
 
-        // Collection media: thumbnail + hero + og_image for each collection (exactly 1 each)
+        // Collection media: thumbnail + hero + og_image
         foreach ($collections as $name => $collectionId) {
             $collectionId = (int) $collectionId;
+            $slug = Str::slug($name);
 
-            $thumbAssetId = $this->createImageAsset("Collection {$name} thumbnail");
-            $heroAssetId = $this->createImageAsset("Collection {$name} hero");
-            $ogAssetId = $this->createImageAsset("Collection {$name} og image");
+            $thumbAssetId = $this->getOrCreateImageAsset("collections/{$collectionId}-{$slug}/thumbnail");
+            $heroAssetId = $this->getOrCreateImageAsset("collections/{$collectionId}-{$slug}/hero");
+            $ogAssetId = $this->getOrCreateImageAsset("collections/{$collectionId}-{$slug}/og_image");
 
             $this->attachMedia($thumbAssetId, $ownerCollection, $collectionId, 'thumbnail', 1, true);
             $this->attachMedia($heroAssetId, $ownerCollection, $collectionId, 'hero', 1, true);
             $this->attachMedia($ogAssetId, $ownerCollection, $collectionId, 'og_image', 1, true);
         }
 
-        // Variant media ONLY (products have no media):
+        // Variant media:
         // - thumbnail (1)
-        // - gallery (7) => position 1 primary, others not
         // - hero (1)
         // - og_image (1)
-        foreach ($products as $p) {
-            $variantId = (int) $p['variant_id'];
+        // - gallery (3) with exactly one primary among gallery items
+        $variantIds = DB::table('product_variants')->pluck('id')->all();
+        foreach ($variantIds as $variantId) {
+            $variantId = (int) $variantId;
 
-            // thumbnail
-            $vThumbAssetId = $this->createImageAsset("Variant {$variantId} thumbnail");
-            $this->attachMedia($vThumbAssetId, $ownerVariant, $variantId, 'thumbnail', 1, true);
+            $thumbAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/thumbnail");
+            $heroAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/hero");
+            $ogAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/og_image");
 
-            // gallery (7)
-            for ($i = 1; $i <= 7; $i++) {
-                $assetId = $this->createImageAsset("Variant {$variantId} gallery {$i}");
-                $this->attachMedia($assetId, $ownerVariant, $variantId, 'gallery', $i, $i === 1);
+            $this->attachMedia($thumbAssetId, $ownerVariant, $variantId, 'thumbnail', 1, true);
+            $this->attachMedia($heroAssetId, $ownerVariant, $variantId, 'hero', 1, true);
+            $this->attachMedia($ogAssetId, $ownerVariant, $variantId, 'og_image', 1, true);
+
+            // Gallery positions 1..3 with one primary
+            $galleryPrimaryPos = random_int(1, 3);
+            for ($pos = 1; $pos <= 3; $pos++) {
+                $assetId = $this->getOrCreateImageAsset("variants/{$variantId}/gallery/{$pos}");
+                $this->attachMedia($assetId, $ownerVariant, $variantId, 'gallery', $pos, $pos === $galleryPrimaryPos);
             }
-
-            // hero
-            $vHeroAssetId = $this->createImageAsset("Variant {$variantId} hero");
-            $this->attachMedia($vHeroAssetId, $ownerVariant, $variantId, 'hero', 1, true);
-
-            // og_image
-            $vOgAssetId = $this->createImageAsset("Variant {$variantId} og image");
-            $this->attachMedia($vOgAssetId, $ownerVariant, $variantId, 'og_image', 1, true);
         }
     }
 
-    private function createImageAsset(string $label): int
+    private function getOrCreateImageAsset(string $seedPath): int
     {
-        $key = sprintf(
-            'local/assets/image/%s/%s.jpg',
-            now()->format('Y/m'),
-            (string) Str::uuid()
-        );
+        // Deterministic disk+key so reruns do not create orphaned assets.
+        $disk = 's3';
+        $key = 'seed/'.trim($seedPath, '/').'.jpg';
+
+        $existing = DB::table('media_assets')->where('disk', $disk)->where('key', $key)->first();
+        if ($existing) {
+            // ensure at least basic renditions exist (idempotent)
+            $this->ensureRenditions((int) $existing->id, $key);
+
+            return (int) $existing->id;
+        }
 
         $assetId = (int) DB::table('media_assets')->insertGetId([
             'type' => 'image',
-            'disk' => 's3',
+            'disk' => $disk,
             'key' => $key,
             'mime_type' => 'image/jpeg',
-            'bytes' => random_int(120_000, 600_000),
-            'width' => 1200,
-            'height' => 1600,
-            'alt_text' => $label,
-            'title' => $label,
+            'bytes' => random_int(80_000, 350_000),
+            'width' => 1600,
+            'height' => 2000,
+            'alt_text' => null,
+            'title' => null,
             'caption' => null,
             'checksum' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Only the two thumbnail renditions requested: thumb_sm + thumb_md
+        $this->ensureRenditions($assetId, $key);
+
+        return $assetId;
+    }
+
+    private function ensureRenditions(int $assetId, string $key): void
+    {
         $profiles = [
-            ['profile' => 'thumb_sm', 'w' => 200, 'h' => 260],
-            ['profile' => 'thumb_md', 'w' => 360, 'h' => 480],
+            ['profile' => 'thumb_sm', 'w' => 120, 'h' => 150],
+            ['profile' => 'thumb_md', 'w' => 240, 'h' => 300],
+            ['profile' => 'plp_480w', 'w' => 480, 'h' => 600],
+            ['profile' => 'pdp_1200w', 'w' => 1200, 'h' => 1500],
         ];
 
         foreach ($profiles as $p) {
-            DB::table('media_renditions')->insert([
+            DB::table('media_renditions')->insertOrIgnore([
                 'media_asset_id' => $assetId,
                 'profile' => $p['profile'],
                 'disk' => 's3',
@@ -677,8 +775,6 @@ class CatalogSeeder extends Seeder
                 'updated_at' => now(),
             ]);
         }
-
-        return $assetId;
     }
 
     private function attachMedia(
@@ -701,5 +797,327 @@ class CatalogSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    private function seedMerchSections(array $products, array $collections, array $cat): void
+    {
+        // Sections are homogeneous by schema: product OR collection OR category.
+        // Seed home sections (mix of curated + query).
+        $sections = [
+            [
+                'code' => 'home_shop_by_collection',
+                'name' => 'Shop by Collection',
+                'surface' => 'home',
+                'item_type' => 'collection',
+                'mode' => 'curated',
+                'default_limit' => 6,
+                'country_code' => null,
+                'sort' => 10,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                'code' => 'home_new_arrivals',
+                'name' => 'New Arrivals',
+                'surface' => 'home',
+                'item_type' => 'product',
+                'mode' => 'curated',
+                'default_limit' => 8,
+                'country_code' => null,
+                'sort' => 20,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                'code' => 'home_shop_by_category',
+                'name' => 'Shop by Category',
+                'surface' => 'home',
+                'item_type' => 'category',
+                'mode' => 'curated',
+                'default_limit' => 6,
+                'country_code' => null,
+                'sort' => 30,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                'code' => 'home_capsule_collection',
+                'name' => 'Capsule Collection',
+                'surface' => 'home',
+                'item_type' => 'collection',
+                'mode' => 'curated',
+                'default_limit' => 1,
+                'country_code' => null,
+                'sort' => 40,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                'code' => 'home_featured_products',
+                'name' => 'Featured Products',
+                'surface' => 'home',
+                'item_type' => 'product',
+                'mode' => 'curated',
+                'default_limit' => 8,
+                'country_code' => null,
+                'sort' => 50,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                'code' => 'home_best_sellers_query',
+                'name' => 'Best Sellers',
+                'surface' => 'home',
+                'item_type' => 'product',
+                'mode' => 'query',
+                'default_limit' => 8,
+                'country_code' => null,
+                'sort' => 60,
+                'active' => true,
+                // Normalized payload shape expected by StoreMerchController::resolveQueryProducts()
+                // (q intentionally excluded).
+                'query_payload' => [
+                    'sort' => 'newest',
+                    'filter' => [
+                        // Example: drive best-sellers from a dedicated collection.
+                        // Replace slug to match your seeded/real collection.
+                        'collection.slug.eq' => 'best-sellers',
+                    ],
+                ],
+            ],
+        ];
+
+        foreach ($sections as $s) {
+            $sectionId = $this->upsertMerchSection($s);
+
+            if ($s['mode'] !== 'curated') {
+                continue;
+            }
+
+            // Curated items
+            DB::table('merch_section_items')->where('merch_section_id', $sectionId)->delete();
+
+            if ($s['item_type'] === 'product') {
+                $allProductIds = array_values($products['products'] ?? []);
+                $limit = (int) $s['default_limit'];
+
+                $items = match ($s['code']) {
+                    'home_featured_products' => array_slice($allProductIds, 0, $limit),
+                    'home_new_arrivals' => array_slice($allProductIds, max(0, count($allProductIds) - $limit), $limit),
+                    default => array_slice($allProductIds, 0, $limit),
+                };
+
+                $pos = 1;
+                foreach ($items as $pid) {
+                    DB::table('merch_section_items')->insertOrIgnore([
+                        'merch_section_id' => $sectionId,
+                        'item_type' => 'product',
+                        'item_id' => (int) $pid,
+                        'position' => $pos++,
+                        'active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($s['item_type'] === 'collection') {
+                $collectionIds = array_values($collections ?? []);
+                $limit = (int) $s['default_limit'];
+
+                $items = match ($s['code']) {
+                    // exactly one collection
+                    'home_capsule_collection' => [end($collectionIds)],
+                    default => array_slice($collectionIds, 0, $limit),
+                };
+
+                $pos = 1;
+                foreach ($items as $cid) {
+                    DB::table('merch_section_items')->insertOrIgnore([
+                        'merch_section_id' => $sectionId,
+                        'item_type' => 'collection',
+                        'item_id' => (int) $cid,
+                        'position' => $pos++,
+                        'active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($s['item_type'] === 'category') {
+                $leafIds = array_values($cat['leaf'] ?? []);
+                $limit = (int) $s['default_limit'];
+                $items = array_slice($leafIds, 0, $limit);
+
+                $pos = 1;
+                foreach ($items as $cid) {
+                    DB::table('merch_section_items')->insertOrIgnore([
+                        'merch_section_id' => $sectionId,
+                        'item_type' => 'category',
+                        'item_id' => (int) $cid,
+                        'position' => $pos++,
+                        'active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+    }
+
+    private function upsertMerchSection(array $s): int
+    {
+        $existing = DB::table('merch_sections')->where('code', $s['code'])->first();
+
+        // Normalize query_payload:
+        // - curated: null
+        // - query: array with keys { sort, filter }
+        $payload = $s['query_payload'] ?? null;
+        if (is_array($payload)) {
+            $payload = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        } elseif (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            $payload = (json_last_error() === JSON_ERROR_NONE)
+                ? json_encode($decoded, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+                : null;
+        } elseif ($payload !== null) {
+            $payload = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+
+        $data = [
+            'name' => $s['name'],
+            'surface' => $s['surface'],
+            'item_type' => $s['item_type'],
+            'mode' => $s['mode'],
+            'default_limit' => (int) $s['default_limit'],
+            'country_code' => $s['country_code'],
+            'starts_at' => $s['starts_at'] ?? null,
+            'ends_at' => $s['ends_at'] ?? null,
+            'sort' => (int) $s['sort'],
+            'active' => (bool) $s['active'],
+            'query_payload' => $payload,
+            'updated_at' => now(),
+        ];
+
+        if ($existing) {
+            DB::table('merch_sections')->where('id', $existing->id)->update($data);
+
+            return (int) $existing->id;
+        }
+
+        $data['code'] = $s['code'];
+        $data['created_at'] = now();
+
+        return (int) DB::table('merch_sections')->insertGetId($data);
+    }
+
+    // -----------------------------
+    // Helpers (naming + text)
+    // -----------------------------
+
+    private function buildProductName(string $piece, string $fabric, string $color): string
+    {
+        $pieceLabel = match ($piece) {
+            '3-piece suit' => '3-Piece Unstitched Suit',
+            '2-piece suit' => '2-Piece Unstitched Suit',
+            '1-piece (fabric)' => '1-Piece Fabric',
+            'dupatta' => 'Dupatta',
+            'shawl' => 'Shawl',
+            default => 'Product',
+        };
+
+        return "Pinora Threads {$pieceLabel} - {$fabric} - {$color}";
+    }
+
+    private function buildProductDescription(string $piece, string $fabric, string $color): string
+    {
+        return implode("\n", array_filter([
+            "Premium {$fabric} in {$color}.",
+            $this->includedText($piece),
+            'Care: Dry clean recommended. Color may vary due to lighting and device display.',
+        ]));
+    }
+
+    private function includedText(string $piece): string
+    {
+        return match ($piece) {
+            '3-piece suit' => 'Includes: Shirt, Trouser, Dupatta.',
+            '2-piece suit' => 'Includes: Shirt, Trouser.',
+            '1-piece (fabric)' => 'Includes: Fabric cut (unstitched).',
+            'dupatta' => 'Includes: Dupatta only.',
+            'shawl' => 'Includes: Shawl only.',
+            default => 'Includes: As shown.',
+        };
+    }
+
+    private function materialNotes(string $fabric): string
+    {
+        return match ($fabric) {
+            'Lawn' => 'Lightweight lawn with breathable weave, ideal for warm weather.',
+            'Khaddar' => 'Warm khaddar texture, best for cooler seasons.',
+            'Cotton' => 'Soft cotton with durable finish.',
+            'Silk' => 'Smooth silk hand-feel with natural sheen.',
+            'Chiffon' => 'Flowy chiffon drape, delicate handling recommended.',
+            'Linen' => 'Linen blend with crisp texture.',
+            default => 'Quality fabric with comfortable wear.',
+        };
+    }
+
+    private function collectionDescription(string $name): string
+    {
+        return match ($name) {
+            'New Arrivals' => 'Fresh styles added recently—discover what’s new.',
+            'Best Sellers' => 'Customer favorites and top picks.',
+            'Festive Edit' => 'Statement looks curated for festive moments.',
+            'Wedding Edit' => 'Elevated pieces curated for wedding season.',
+            'Everyday Essentials' => 'Easy-to-wear staples for everyday styling.',
+            'Limited Stock' => 'Low-quantity items—grab before they’re gone.',
+            default => null,
+        };
+    }
+
+    private function sku(string $prefix, int $seq, ?int $variant = null): string
+    {
+        $base = $prefix.'-'.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        if ($variant !== null) {
+            $base .= '-'.str_pad((string) $variant, 2, '0', STR_PAD_LEFT);
+        }
+
+        return $base;
+    }
+
+    private function uniqueSlug(string $table, string $baseSlug, string $sku): string
+    {
+        $slug = $baseSlug;
+        $i = 1;
+
+        while (DB::table($table)->where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.Str::lower($sku).($i > 1 ? "-{$i}" : '');
+            $i++;
+        }
+
+        return $slug;
+    }
+
+    private function randMoney(int $min, int $max): string
+    {
+        // Decimal(12,2) compatible; always "xx.yy"
+        $amount = random_int($min * 100, $max * 100);
+
+        return number_format($amount / 100, 2, '.', '');
+    }
+
+    private function pick(array $arr)
+    {
+        return $arr[array_rand($arr)];
+    }
+
+    private function pickMany(array $arr, int $count): array
+    {
+        $arr = array_values($arr);
+        shuffle($arr);
+
+        return array_slice($arr, 0, max(0, $count));
     }
 }

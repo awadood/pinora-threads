@@ -22,6 +22,8 @@ class CategoryController extends Controller
 {
     use QueryFilterable;
 
+    private array $with = ['thumbnailMedia.asset'];
+
     public function __construct(protected ICategoryRepository $categories, protected IProductRepository $products)
     {
         $this->allowedFilters = ['name', 'slug', 'parent_id', 'active'];
@@ -32,7 +34,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $query = $this->applySorting(
-            $this->applyFilters($this->categories->query(), $request),
+            $this->applyFilters($this->categories->query()->with($this->with), $request),
             $request
         );
 
@@ -41,7 +43,7 @@ class CategoryController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $category = $this->categories->query()->where('slug', $slug)->firstOrFail();
+        $category = $this->categories->query()->with($this->with)->where('slug', $slug)->firstOrFail();
 
         return CategoryResource::make($category);
     }

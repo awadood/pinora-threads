@@ -69,7 +69,11 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->foreignId('tax_class_id')->constrained();
             $table->boolean('active')->default(true);
+            $table->timestampTz('published_at')->nullable();
+            $table->timestampTz('first_published_at')->nullable();
             $table->timestampsTz();
+
+            $table->index(['active', 'published_at']);
         });
 
         // Variants (simple/variable/bundle product will have atleast one variant)
@@ -77,8 +81,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained();
             $table->string('sku')->unique();
-            $table->string('title'); // title for PLP/PDP. e.g., Valvet fabric with local design
-            $table->text('description')->nullable(); // detailed description for PLP/PDP. if null, inherit
+            $table->string('name')->nullable(); // specific variant name for PDP. if null, inherit.
+            $table->text('description')->nullable(); // detailed variant description for PLP/PDP. if null, inherit
             $table->boolean('default')->default(false);
             $table->boolean('active')->default(false);
             $table->timestampsTz();
@@ -92,6 +96,7 @@ return new class extends Migration
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
             $table->foreignId('option_id')->nullable()->constrained('attribute_options')->cascadeOnDelete();
             $table->string('value')->nullable();
+            $table->timestampsTz();
 
             $table->primary(['product_variant_id', 'attribute_id']);
 
@@ -229,7 +234,7 @@ return new class extends Migration
             $table->unsignedBigInteger('owner_id');
 
             // Purpose of attachment
-            $table->string('role', 50); // thumbnail, gallery, hero, swatch, og_image, banner, etc.
+            $table->string('role', 50); // thumbnail, gallery, hero, og_image, banner, etc.
 
             // Ordering + primary selection
             $table->unsignedSmallInteger('position')->default(1);
@@ -283,6 +288,68 @@ return new class extends Migration
 
             $table->timestampsTz();
         });
+
+        /**
+         * Merchandising Sections (v1)
+         *
+         * Goals
+         * - One unified merchandising system for home/landing blocks.
+         * - Homogeneous sections: a section contains only products OR only collections OR only categories.
+         * - Two population modes:
+         *   1) curated: admin assigns ordered items
+         *   2) query: admin stores normalized PLP query config; backend executes via existing PLP engine
+         * - Country scoping: optional. Storefront resolves "country-specific" first, then falls back to global.
+         * - Scheduling: starts_at / ends_at
+         *
+         * query_payload (LOCKED)
+         * - Stored structure is normalized output derived from ProductFilters::parse(...storefront profile).
+         * - Admin does NOT submit query_payload directly.
+         *
+         * meta (LOCKED)
+         * - Flexible JSON for future presentation fields (headline/cta/layout) without schema changes.
+         */
+        Schema::create('merch_sections', function (Blueprint $table) {
+            $table->id();
+            $table->string('code')->unique(); // e.g. home_featured_products, home_new_arrivals
+            $table->string('name'); // Admin-facing label
+            $table->string('surface', 50)->default('home'); // Used for grouping/admin UX (home, plp, pdp, etc.)
+
+            $table->enum('item_type', ['product', 'collection', 'category']); // Homogeneous constraint
+            $table->enum('mode', ['curated', 'query'])->default('curated'); // Unified system with two strategies
+            $table->unsignedSmallInteger('default_limit')->default(8); // Default item count returned to storefront
+            $table->string('country_code', 3)->nullable(); // Optional country scoping (StoreContext country code)
+
+            // Scheduling
+            $table->timestampTz('starts_at')->nullable();
+            $table->timestampTz('ends_at')->nullable();
+
+            $table->unsignedSmallInteger('sort')->default(0); // Admin ordering of sections (not items)
+            $table->boolean('active')->default(true);
+            $table->json('query_payload')->nullable(); // Normalized listing config (ONLY for mode=query)
+            $table->json('meta')->nullable();
+            $table->timestampsTz();
+
+            $table->index(['surface', 'active']);
+            $table->index(['country_code', 'surface', 'active']);
+
+            $table->foreign('country_code')->references('code')->on('countries');
+        });
+
+        Schema::create('merch_section_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('merch_section_id')->constrained('merch_sections')->cascadeOnDelete();
+
+            $table->enum('item_type', ['product', 'collection', 'category']); // Repeated for safety; must match section.item_type
+            $table->unsignedBigInteger('item_id');
+            $table->unsignedSmallInteger('position')->default(1); // Ordered list for curated mode
+            $table->boolean('active')->default(true);
+            $table->timestampsTz();
+
+            $table->unique(['merch_section_id', 'item_type', 'item_id']);
+
+            $table->index(['merch_section_id', 'active', 'position']);
+            $table->index(['item_type', 'item_id']);
+        });
     }
 
     /**
@@ -290,10 +357,13 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('merch_section_items');
+        Schema::dropIfExists('merch_sections');
         Schema::dropIfExists('media_videos');
         Schema::dropIfExists('media_renditions');
         Schema::dropIfExists('media_attachments');
         Schema::dropIfExists('media_assets');
+        Schema::dropIfExists('collection_country');
         Schema::dropIfExists('collection_product');
         Schema::dropIfExists('category_product');
         Schema::dropIfExists('related_products');
@@ -301,7 +371,6 @@ return new class extends Migration
         Schema::dropIfExists('product_variant_prices');
         Schema::dropIfExists('product_variant_attributes');
         Schema::dropIfExists('product_variants');
-        Schema::dropIfExists('product_prices');
         Schema::dropIfExists('products');
         Schema::dropIfExists('collections');
         Schema::dropIfExists('categories');

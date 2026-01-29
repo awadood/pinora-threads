@@ -46,7 +46,7 @@ class Collection extends AbstractLoggableModel
 
     public function countries(): BelongsToMany
     {
-        return $this->belongsToMany(Country::class, 'collection_country', 'country_code');
+        return $this->belongsToMany(Country::class, 'collection_country', 'collection_id', 'country_code');
     }
 
     public function heroMedia(): MorphOne

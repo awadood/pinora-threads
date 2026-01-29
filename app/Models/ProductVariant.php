@@ -20,7 +20,7 @@ class ProductVariant extends AbstractLoggableModel
     protected $fillable = [
         'product_id',
         'sku',
-        'title',
+        'name',
         'description',
         'default',
         'active',
