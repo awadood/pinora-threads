@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\MediaAsset;
+use App\Observers\MediaAssetObserver;
 use App\Repositories\Auth\Contracts\IRoleRepository;
 use App\Repositories\Auth\Contracts\IUserRepository;
 use App\Repositories\Auth\RoleRepository;
@@ -203,5 +205,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         JsonResource::withoutWrapping();
+
+        MediaAsset::observe(MediaAssetObserver::class);
     }
 }
