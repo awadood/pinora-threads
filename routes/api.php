@@ -254,6 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Products
     Route::get('admin/products', [ProductController::class, 'index']);
+    Route::get('admin/products/{slug}', [ProductController::class, 'showBySlug']);
     Route::post('products', [ProductController::class, 'store'])->middleware('permission:'.P::CAT_PROD_CREATE);
     Route::put('products/{product}', [ProductController::class, 'update'])->middleware('permission:'.P::CAT_PROD_UPDATE);
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->middleware('permission:'.P::CAT_PROD_DESTROY);

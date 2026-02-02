@@ -51,13 +51,18 @@ return new class extends Migration
         Schema::create('recently_viewed', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('visitor_key')->nullable();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestampTz('viewed_at')->useCurrent();
             $table->timestampsTz();
 
-            $table->index(['user_id', 'viewed_at']);
+            $table->unique(['visitor_key', 'product_id', 'product_variant_id']);
+            $table->unique(['user_id', 'product_id', 'product_variant_id']);
+
             $table->index(['product_id']);
+            $table->index(['visitor_key']);
+            $table->index(['user_id', 'viewed_at']);
         });
 
         // Testimonials

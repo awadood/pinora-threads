@@ -192,67 +192,66 @@ class CatalogSeeder extends Seeder
         ];
     }
 
-    /**
-     * Returns a map of helpful category IDs:
-     * [
-     *   'root' => ['unstitched' => 1, 'separates' => 2],
-     *   'leaf' => ['wedding_wear' => 3, ...]
-     * ]
-     */
     private function seedCategories(): array
     {
         $upsertCategory = function (string $name, ?int $parentId, int $sort): int {
             $slug = Str::slug($name);
 
-            $existing = DB::table('categories')->where('slug', $slug)->first();
-            if ($existing) {
-                DB::table('categories')->where('id', $existing->id)->update([
-                    'name' => $name,
-                    'meta_title' => $name,
-                    'meta_description' => $name,
-                    'parent_id' => $parentId,
-                    'sort' => $sort,
-                    'active' => true,
-                    'updated_at' => now(),
-                ]);
+            $existing = DB::table('categories')
+                ->where('slug', $slug)
+                ->when($parentId === null, fn ($q) => $q->whereNull('parent_id'))
+                ->when($parentId !== null, fn ($q) => $q->where('parent_id', $parentId))
+                ->first();
 
-                return (int) $existing->id;
-            }
-
-            return (int) DB::table('categories')->insertGetId([
+            $data = [
                 'name' => $name,
-                'meta_title' => $name,
-                'meta_description' => $name,
                 'slug' => $slug,
                 'parent_id' => $parentId,
                 'sort' => $sort,
                 'active' => true,
-                'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
+
+            if ($existing) {
+                DB::table('categories')->where('id', $existing->id)->update($data);
+                return (int) $existing->id;
+            }
+
+            $data['created_at'] = now();
+            return (int) DB::table('categories')->insertGetId($data);
         };
 
-        $unstitched = $upsertCategory('Unstitched', null, 1);
-        $separates = $upsertCategory('Separates', null, 2);
+        // Roots (LOCKED)
+        $unstitched = $upsertCategory('Unstitched', null, 10);
+        $occasion   = $upsertCategory('Occasion', null, 20);
 
-        $wedding = $upsertCategory('Wedding Wear', $unstitched, 1);
-        $festive = $upsertCategory('Festive Wear', $unstitched, 2);
-        $everyday = $upsertCategory('Everyday', $unstitched, 3);
+        // Unstitched -> Fabrics (LOCKED)
+        $fabricNames = ['Lawn', 'Khaddar', 'Chiffon', 'Silk', 'Organza'];
+        $fabricLeafIds = [];
+        $pos = 1;
+        foreach ($fabricNames as $name) {
+            $fabricLeafIds[] = $upsertCategory($name, $unstitched, $pos * 10);
+            $pos++;
+        }
 
-        $dupattas = $upsertCategory('Dupattas', $separates, 1);
-        $shawls = $upsertCategory('Shawls', $separates, 2);
+        // Occasion -> (LOCKED)
+        $occasionNames = ['Everyday Wear', 'Festive Wear', 'Wedding Wear', 'Party Wear'];
+        $occasionLeafIds = [];
+        $pos = 1;
+        foreach ($occasionNames as $name) {
+            $occasionLeafIds[] = $upsertCategory($name, $occasion, $pos * 10);
+            $pos++;
+        }
 
         return [
-            'root' => [
+            'roots' => [
                 'unstitched' => $unstitched,
-                'separates' => $separates,
+                'occasion' => $occasion,
             ],
-            'leaf' => [
-                'wedding_wear' => $wedding,
-                'festive_wear' => $festive,
-                'everyday' => $everyday,
-                'dupattas' => $dupattas,
-                'shawls' => $shawls,
+            'leaf' => array_values(array_merge($fabricLeafIds, $occasionLeafIds)),
+            'leaf_by_root' => [
+                'unstitched' => array_values($fabricLeafIds),
+                'occasion' => array_values($occasionLeafIds),
             ],
         ];
     }
@@ -829,8 +828,8 @@ class CatalogSeeder extends Seeder
                 'query_payload' => null,
             ],
             [
-                'code' => 'home_shop_by_category',
-                'name' => 'Shop by Category',
+                'code' => 'home_shop_by_occasion',
+                'name' => 'Shop by Occasion',
                 'surface' => 'home',
                 'item_type' => 'category',
                 'mode' => 'curated',
@@ -841,6 +840,20 @@ class CatalogSeeder extends Seeder
                 'query_payload' => null,
             ],
             [
+                // NEW: Unstitched items (Lawn/Khaddar/Chiffon/Silk/Organza)
+                'code' => 'home_shop_by_fabric',
+                'name' => 'Shop by Fabric',
+                'surface' => 'home',
+                'item_type' => 'category',
+                'mode' => 'curated',
+                'default_limit' => 6,
+                'country_code' => null,
+                'sort' => 40,
+                'active' => true,
+                'query_payload' => null,
+            ],
+            [
+                // just add one collection
                 'code' => 'home_capsule_collection',
                 'name' => 'Capsule Collection',
                 'surface' => 'home',
@@ -848,7 +861,7 @@ class CatalogSeeder extends Seeder
                 'mode' => 'curated',
                 'default_limit' => 1,
                 'country_code' => null,
-                'sort' => 40,
+                'sort' => 50,
                 'active' => true,
                 'query_payload' => null,
             ],
@@ -860,22 +873,22 @@ class CatalogSeeder extends Seeder
                 'mode' => 'curated',
                 'default_limit' => 8,
                 'country_code' => null,
-                'sort' => 50,
+                'sort' => 60,
                 'active' => true,
                 'query_payload' => null,
             ],
             [
                 'code' => 'home_best_sellers_query',
-                'name' => 'Best Sellers',
+                'name' => 'Best Sellers (Query)',
                 'surface' => 'home',
                 'item_type' => 'product',
                 'mode' => 'query',
                 'default_limit' => 8,
                 'country_code' => null,
-                'sort' => 60,
+                'sort' => 70,
                 'active' => true,
-                // Normalized payload shape expected by StoreMerchController::resolveQueryProducts()
-                // (q intentionally excluded).
+                // normalized shape used by your storefront query-mode section:
+                // ['sort' => ..., 'filter' => [...]]
                 'query_payload' => [
                     'sort' => 'newest',
                     'filter' => [
@@ -898,13 +911,10 @@ class CatalogSeeder extends Seeder
             DB::table('merch_section_items')->where('merch_section_id', $sectionId)->delete();
 
             if ($s['item_type'] === 'product') {
-                $allProductIds = array_values($products['products'] ?? []);
-                $limit = (int) $s['default_limit'];
-
                 $items = match ($s['code']) {
-                    'home_featured_products' => array_slice($allProductIds, 0, $limit),
-                    'home_new_arrivals' => array_slice($allProductIds, max(0, count($allProductIds) - $limit), $limit),
-                    default => array_slice($allProductIds, 0, $limit),
+                    'home_featured_products' => array_slice($products['products'], 0, (int) $s['default_limit']),
+                    'home_new_arrivals' => array_slice($products['products'], 0, (int) $s['default_limit']),
+                    default => array_slice($products['products'], 0, (int) $s['default_limit']),
                 };
 
                 $pos = 1;
@@ -913,23 +923,22 @@ class CatalogSeeder extends Seeder
                         'merch_section_id' => $sectionId,
                         'item_type' => 'product',
                         'item_id' => (int) $pid,
-                        'position' => $pos++,
+                        'position' => $pos,
                         'active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    $pos++;
                 }
             }
 
             if ($s['item_type'] === 'collection') {
-                $collectionIds = array_values($collections ?? []);
-                $limit = (int) $s['default_limit'];
+                $collectionIds = array_values($collections);
 
-                $items = match ($s['code']) {
-                    // exactly one collection
-                    'home_capsule_collection' => [end($collectionIds)],
-                    default => array_slice($collectionIds, 0, $limit),
-                };
+                // capsule collection: only one
+                $items = $s['code'] === 'home_capsule_collection'
+                    ? array_slice($collectionIds, 0, 1)
+                    : array_slice($collectionIds, 0, (int) $s['default_limit']);
 
                 $pos = 1;
                 foreach ($items as $cid) {
@@ -937,18 +946,25 @@ class CatalogSeeder extends Seeder
                         'merch_section_id' => $sectionId,
                         'item_type' => 'collection',
                         'item_id' => (int) $cid,
-                        'position' => $pos++,
+                        'position' => $pos,
                         'active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    $pos++;
                 }
             }
 
             if ($s['item_type'] === 'category') {
-                $leafIds = array_values($cat['leaf'] ?? []);
-                $limit = (int) $s['default_limit'];
-                $items = array_slice($leafIds, 0, $limit);
+                $leafByRoot = $cat['leaf_by_root'] ?? [];
+
+                $pool = match ($s['code']) {
+                    'home_shop_by_occasion' => $leafByRoot['occasion'] ?? ($cat['leaf'] ?? []),
+                    'home_shop_by_fabric' => $leafByRoot['unstitched'] ?? ($cat['leaf'] ?? []),
+                    default => $cat['leaf'] ?? [],
+                };
+
+                $items = array_slice(array_values($pool), 0, (int) $s['default_limit']);
 
                 $pos = 1;
                 foreach ($items as $cid) {
@@ -956,11 +972,12 @@ class CatalogSeeder extends Seeder
                         'merch_section_id' => $sectionId,
                         'item_type' => 'category',
                         'item_id' => (int) $cid,
-                        'position' => $pos++,
+                        'position' => $pos,
                         'active' => true,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
+                    $pos++;
                 }
             }
         }

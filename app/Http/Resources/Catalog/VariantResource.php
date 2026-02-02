@@ -31,7 +31,11 @@ class VariantResource extends JsonResource
 
             'prices' => VariantPriceResource::collection($this->whenLoaded('prices')),
 
-            'thumbnailMedia' => MediaAttachmentResource::make($this->whenLoaded('thumbnailMedia')),
+            'media' => MediaAttachmentResource::collection($this->whenLoaded('media')),
+
+            'gallery_media' => MediaAttachmentResource::collection($this->whenLoaded('galleryMedia')),
+
+            'thumbnail_media' => MediaAttachmentResource::make($this->whenLoaded('thumbnailMedia')),
 
             'availability' => [
                 'in_stock' => $this->in_stock ?? false,

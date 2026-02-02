@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('state_code')->nullable(); // for PK null; for US we store code
             $table->string('postal_code')->nullable(); // for PK null; for US we store postal code
             $table->string('country_code', 2);
-            $table->string('phone')->nullable();
+            $table->string('phone', 14)->nullable();
             $table->boolean('default_shipping')->default(false);
             $table->boolean('default_billing')->default(false);
             $table->timestampsTz();

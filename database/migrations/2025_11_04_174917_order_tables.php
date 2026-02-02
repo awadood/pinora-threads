@@ -39,6 +39,9 @@ return new class extends Migration
             $table->bigInteger('number')->unique(); // unix timestamp. 10 digits
             $table->foreignId('user_id')->constrained(); // a user would have been created after placing order
             $table->string('currency_code', 3);
+            $table->string('customer_name');
+            $table->string('customer_email');
+            $table->string('customer_phone', 14);
             $table->string('order_status_code')->default(OrderStatus::PENDING);
             $table->foreignId('billing_address_id')->nullable()->constrained('addresses');
             $table->foreignId('shipping_address_id')->nullable()->constrained('addresses');

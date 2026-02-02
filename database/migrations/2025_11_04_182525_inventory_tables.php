@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('code')->unique(); // e.g., "PK_RWP_RB_1", "PK_RWP_RB_2"
             $table->string('title'); // e.g., "Rawalpindi Saddar", "Rawalpindi Commercial", "San Jose Main"
             $table->string('region')->nullable(); // state/province
-            $table->string('country_code', 3);
+            $table->string('country_code', 2);
             $table->unsignedSmallInteger('priority')->default(1);
             $table->boolean('active')->default(true);
             $table->timestampsTz();

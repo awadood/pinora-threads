@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Catalog;
 use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Collection;
+use App\Support\Storefront\StoreContext;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
@@ -16,8 +18,10 @@ use Illuminate\Routing\Controller;
  */
 class ProductFilterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
+
         // Allowed filters/sorts (locked)
         $capabilities = [
             'filters' => [
@@ -64,6 +68,13 @@ class ProductFilterController extends Controller
                 'params' => ['page', 'per_page'],
                 'style' => 'length_aware',
             ],
+        ];
+
+        $priceBounds = [
+            'currency_code' => $ctx->currency,
+            'min' => $ctx->currency === config('storefront.default_currency') ? 150 : 3000,
+            'max' => $ctx->currency === config('storefront.default_currency') ? 350 : 65000,
+            'step' => $ctx->currency === config('storefront.default_currency') ? 10 : 100,
         ];
 
         // Attributes (active only) + options (for select)
@@ -120,6 +131,7 @@ class ProductFilterController extends Controller
 
         return response()->json([
             'capabilities' => $capabilities,
+            'price_bounds' => $priceBounds,
             'attributes' => $attributes,
             'categories' => $categories,
             'collections' => $collections,

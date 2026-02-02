@@ -116,6 +116,8 @@ return new class extends Migration
 
             $table->unique(['product_variant_id', 'currency_code']);
 
+            $table->index(['currency_code', 'amount']);
+
             $table->foreign('currency_code')->references('code')->on('currencies');
         });
 
@@ -161,7 +163,7 @@ return new class extends Migration
         // Collection Country (many-to-many)
         Schema::create('collection_country', function (Blueprint $table) {
             $table->id();
-            $table->string('country_code', 3);
+            $table->string('country_code', 2);
             $table->foreignId('collection_id')->constrained()->cascadeOnDelete();
 
             $table->foreign('country_code')->references('code')->on('countries');
@@ -317,7 +319,7 @@ return new class extends Migration
             $table->enum('item_type', ['product', 'collection', 'category']); // Homogeneous constraint
             $table->enum('mode', ['curated', 'query'])->default('curated'); // Unified system with two strategies
             $table->unsignedSmallInteger('default_limit')->default(8); // Default item count returned to storefront
-            $table->string('country_code', 3)->nullable(); // Optional country scoping (StoreContext country code)
+            $table->string('country_code', 2)->nullable(); // Optional country scoping (StoreContext country code)
 
             // Scheduling
             $table->timestampTz('starts_at')->nullable();

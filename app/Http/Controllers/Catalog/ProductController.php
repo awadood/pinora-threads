@@ -12,6 +12,7 @@ use App\Repositories\Catalog\Filters\ProductFilters;
 use App\Support\ProductListQuery;
 use App\Support\StockScopeResolver;
 use App\Support\Storefront\StoreContext;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 
@@ -78,9 +79,20 @@ class ProductController extends Controller
         ]);
     }
 
-    public function showBySlug(string $slug)
+    public function showBySlug(Request $request, string $slug)
     {
-        $with = ['categories', 'bundles', 'variants.prices', 'variants.media.asset.renditions'];
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
+        $isAdmin = $request->user()?->roles()->exists();
+        $with = [
+            'categories',
+            'bundles',
+            'variants' => fn ($v) => $isAdmin ? $v : $v->where('active', true),
+            'variants.attributes.attribute',
+            'variants.attributes.option',
+            'variants.galleryMedia.asset.renditions',
+            'variants.thumbnailMedia.asset.renditions',
+            'variants.prices' => fn ($p) => $isAdmin ? $p : $p->where('currency_code', $ctx->currency),
+        ];
 
         $product = $this->products->query()->with($with)->where('slug', $slug)->firstOrFail();
 

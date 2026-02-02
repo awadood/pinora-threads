@@ -25,6 +25,8 @@ class ProductResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
+            'related_products' => RelatedProductResource::collection($this->whenLoaded('relatedProducts')),
+
             'variants' => VariantResource::collection($this->whenLoaded('variants')),
 
             'bundles' => ProductBundleResource::collection($this->whenLoaded('bundles')),

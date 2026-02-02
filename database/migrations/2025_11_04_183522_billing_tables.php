@@ -151,6 +151,19 @@ return new class extends Migration
             $table->index(['shipment_method_code', 'carrier']);
         });
 
+        Schema::create('cod_postal_codes', function (Blueprint $table) {
+            $table->id();
+            $table->string('country_code', 2);
+            $table->string('postal_code');
+            $table->decimal('cod_fee', 12, 2)->default(0);
+            $table->boolean('active')->default(true);
+            $table->timestamps();
+
+            $table->unique(['country_code', 'postal_code']);
+
+            $table->index(['country_code', 'active']);
+        });
+
         // Promotions
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
