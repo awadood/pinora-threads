@@ -35,8 +35,6 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
             $table->string('slug')->unique();
             $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->unsignedSmallInteger('sort')->default(0);
@@ -48,8 +46,6 @@ return new class extends Migration
         Schema::create('collections', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
             $table->string('slug')->unique();
             $table->unsignedSmallInteger('sort')->default(0);
             $table->string('description')->nullable();
@@ -62,8 +58,6 @@ return new class extends Migration
             $table->id();
             $table->string('sku')->unique();
             $table->string('name');
-            $table->string('meta_title')->nullable();
-            $table->text('meta_description')->nullable();
             $table->string('slug')->unique();
             $table->enum('type', ['simple', 'variable', 'bundle']);
             $table->text('description')->nullable();
@@ -351,6 +345,51 @@ return new class extends Migration
 
             $table->index(['merch_section_id', 'active', 'position']);
             $table->index(['item_type', 'item_id']);
+        });
+
+        /**
+         * SEO
+         */
+        Schema::create('seo_meta', function (Blueprint $table) {
+            $table->id();
+
+            // Polymorphic owner
+            $table->string('owner_type');          // e.g. App\Models\Product
+            $table->unsignedBigInteger('owner_id');
+
+            // Core SEO
+            $table->string('meta_title', 255)->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_robots', 50)->nullable();   // e.g. "index,follow" "noindex,nofollow"
+            $table->string('canonical_url', 1024)->nullable();
+
+            // Open Graph
+            $table->string('og_title', 255)->nullable();
+            $table->text('og_description')->nullable();
+            $table->string('og_type', 30)->nullable();       // product, website, article, etc.
+            $table->string('og_url', 1024)->nullable();
+            $table->foreignId('og_image_id')->nullable()->constrained('media_assets')->nullOnDelete();
+
+            // Twitter
+            $table->string('twitter_card', 40)->nullable();  // summary, summary_large_image
+            $table->string('twitter_title', 255)->nullable();
+            $table->text('twitter_description')->nullable();
+            $table->foreignId('twitter_image_id')->nullable()->constrained('media_assets')->nullOnDelete();
+
+            // Schema.org (cached payload)
+            $table->string('schema_type', 60)->nullable();    // Product, CollectionPage, Article...
+            $table->json('schema_payload')->nullable();       // cached/normalized schema data
+
+            // Optional: freeform extras for future without migrations
+            $table->json('extra')->nullable();
+
+            $table->timestampsTz();
+
+            // Constraints & indexes
+            $table->unique(['owner_type', 'owner_id']); // one seo record per owner
+            $table->index(['owner_type', 'owner_id']);
+            $table->index(['meta_robots']);
+            $table->index(['og_type']);
         });
     }
 

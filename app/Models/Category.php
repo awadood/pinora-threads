@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSeoMeta;
 use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class Category extends AbstractLoggableModel
 {
     use HasMedia;
+    use HasSeoMeta;
 
     protected $fillable = [
         'name',
