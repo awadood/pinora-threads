@@ -30,13 +30,11 @@ class FavoriteController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
         ]);
 
         $isFavorite = $this->service->toggle(
             $request->user(),
-            $validated['product_id'],
-            $validated['product_variant_id'] ?? null
+            $validated['product_id']
         );
 
         return response()->json(['favorite' => $isFavorite]);

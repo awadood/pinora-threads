@@ -14,7 +14,7 @@ class StockBatch extends AbstractLoggableModel
 {
     protected $fillable = [
         'stock_id',
-        'variant_id',
+        'product_id',
         'received_at',
         'currency_code',
         'unit_cost',
@@ -41,9 +41,9 @@ class StockBatch extends AbstractLoggableModel
         return $this->belongsTo(Stock::class);
     }
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'variant_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function currency(): BelongsTo

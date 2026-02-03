@@ -19,7 +19,7 @@ class StockBatchRepository extends BaseRepository implements IStockBatchReposito
 
     protected array $allowedSearchColumns = [
         'stock_id' => true,
-        'variant_id' => true,
+        'product_id' => true,
         'currency_code' => true,
     ];
 }

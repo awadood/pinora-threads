@@ -37,13 +37,13 @@ class StockAdjustmentService
      */
     public function adjust(
         int $stockId,
-        int $variantId,
+        int $productId,
         int $quantityDelta,
         string $movementTypeCode,
         array $meta = [],
     ): StockMovement {
-        return DB::transaction(function () use ($stockId, $variantId, $quantityDelta, $movementTypeCode, $meta) {
-            return $this->adjustInTransaction($stockId, $variantId, $quantityDelta, $movementTypeCode, $meta);
+        return DB::transaction(function () use ($stockId, $productId, $quantityDelta, $movementTypeCode, $meta) {
+            return $this->adjustInTransaction($stockId, $productId, $quantityDelta, $movementTypeCode, $meta);
         });
     }
 
@@ -55,7 +55,7 @@ class StockAdjustmentService
      */
     public function adjustInTransaction(
         int $stockId,
-        int $variantId,
+        int $productId,
         int $quantityDelta,
         string $movementTypeCode,
         array $meta = [],
@@ -63,7 +63,7 @@ class StockAdjustmentService
         // Lock the existing level row (if present) to prevent concurrent lost updates.
         $level = $this->stockLevels->query()
             ->where('stock_id', $stockId)
-            ->where('variant_id', $variantId)
+            ->where('product_id', $productId)
             ->lockForUpdate()
             ->first();
 
@@ -74,7 +74,7 @@ class StockAdjustmentService
                 /** @var StockLevel $level */
                 $level = $this->stockLevels->create([
                     'stock_id' => $stockId,
-                    'variant_id' => $variantId,
+                    'product_id' => $productId,
                     'quantity' => 0,
                     'notify_below' => $meta['notify_below'] ?? 50,
                     'allow_backorder' => $meta['allow_backorder'] ?? false,
@@ -90,7 +90,7 @@ class StockAdjustmentService
                 // Someone else created the row; fetch it with lock.
                 $level = $this->stockLevels->query()
                     ->where('stock_id', $stockId)
-                    ->where('variant_id', $variantId)
+                    ->where('product_id', $productId)
                     ->lockForUpdate()
                     ->first();
 
@@ -110,7 +110,7 @@ class StockAdjustmentService
         /** @var StockMovement $movement */
         $movement = $this->movements->create([
             'stock_id' => $stockId,
-            'variant_id' => $variantId,
+            'product_id' => $productId,
             'stock_movement_type_code' => $movementTypeCode,
             'quantity_delta' => $quantityDelta,
             'stock_batch_id' => $meta['stock_batch_id'] ?? null,
@@ -120,7 +120,7 @@ class StockAdjustmentService
         ]);
 
         if ($wasOutOfStock && $level->quantity > 0) {
-            $this->notificationService->notifyAll($variantId);
+            $this->notificationService->notifyAll($productId);
         }
 
         return $movement;

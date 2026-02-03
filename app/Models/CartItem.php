@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Represents a single product-variant line inside a cart with pricing.
+ * Represents a single product line inside a cart with pricing.
  *
  * @author Abdul Wadood
  */
@@ -13,7 +13,7 @@ class CartItem extends AbstractModel
 {
     protected $fillable = [
         'cart_id',
-        'product_variant_id',
+        'product_id',
         'quantity',
     ];
 
@@ -36,8 +36,8 @@ class CartItem extends AbstractModel
         return $this->belongsTo(Cart::class);
     }
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class);
     }
 }

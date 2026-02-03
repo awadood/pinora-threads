@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * StockLevelRequest
  *
- * Validation for creating/updating stock levels per variant.
+ * Validation for creating/updating stock levels per product.
  *
  * @author Abdul Wadood
  */
@@ -22,7 +22,7 @@ class StockLevelRequest extends FormRequest
     {
         return [
             'stock_id' => ['required', 'integer', 'exists:stocks,id'],
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:0'],
             'notify_below' => ['nullable', 'integer', 'min:0'],
             'allow_backorder' => ['boolean'],

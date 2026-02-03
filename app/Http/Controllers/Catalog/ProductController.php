@@ -36,9 +36,9 @@ class ProductController extends Controller
      * GET /api/products
      *
      * Storefront profile:
-     *  - returns product cards (one row per product) and ALWAYS includes selected_variant.
+     *  - returns product cards (one row per product).
      * Admin profile:
-     *  - returns products (one row per product) and omits selected_variant by default.
+     *  - returns products (one row per product).
      */
     public function index(ProductIndexRequest $request)
     {
@@ -59,8 +59,8 @@ class ProductController extends Controller
             perPage: $perPage,
             sort: $parsed['sort'],
             productFilters: $parsed['product'],
-            variantFilters: $parsed['variant'],
-            hasVariantConstraints: (bool) $parsed['has_variant_constraints'],
+            detailFilters: $parsed['detail'],
+            hasDetailConstraints: (bool) $parsed['has_detail_constraints'],
             countryCode: $ctx->country,
             currencyCode: $ctx->currency,
             stockIds: $stockIds,
@@ -86,12 +86,17 @@ class ProductController extends Controller
         $with = [
             'categories',
             'bundles',
+            'attributes.attribute',
+            'attributes.option',
+            'prices' => fn ($p) => $isAdmin ? $p : $p->where('currency_code', $ctx->currency),
+            'thumbnailMedia.asset.renditions',
+            'galleryMedia.asset.renditions',
             'variants' => fn ($v) => $isAdmin ? $v : $v->where('active', true),
             'variants.attributes.attribute',
             'variants.attributes.option',
-            'variants.galleryMedia.asset.renditions',
-            'variants.thumbnailMedia.asset.renditions',
             'variants.prices' => fn ($p) => $isAdmin ? $p : $p->where('currency_code', $ctx->currency),
+            'variants.thumbnailMedia.asset.renditions',
+            'variants.galleryMedia.asset.renditions',
         ];
 
         $product = $this->products->query()->with($with)->where('slug', $slug)->firstOrFail();
@@ -104,7 +109,7 @@ class ProductController extends Controller
         $data = $request->validated();
         $data['active'] = false;
 
-        $product = $this->products->createWithDefaultVariant($request->validated());
+        $product = $this->products->createProduct($request->validated());
 
         return ProductResource::make($product)->response()->setStatusCode(201);
     }

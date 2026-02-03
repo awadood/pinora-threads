@@ -17,7 +17,6 @@ class LookbookItemProductResource extends JsonResource
             'id' => $this->id,
             'lookbook_item_id' => $this->lookbook_item_id,
             'product_id' => $this->product_id,
-            'product_variant_id' => $this->product_variant_id,
             'sort_order' => $this->sort_order,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Inventory;
 
-use App\Http\Resources\Catalog\VariantResource;
+use App\Http\Resources\Catalog\ProductResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -17,7 +17,7 @@ class StockMovementResource extends JsonResource
         return [
             'id' => $this->id,
             'stock_id' => $this->stock_id,
-            'variant_id' => $this->variant_id,
+            'product_id' => $this->product_id,
             'stock_movement_type_code' => $this->stock_movement_type_code,
             'quantity_delta' => $this->quantity_delta,
             'stock_batch_id' => $this->stock_batch_id,
@@ -29,7 +29,7 @@ class StockMovementResource extends JsonResource
 
             'stock' => StockResource::make($this->whenLoaded('stock')),
 
-            'variant' => VariantResource::make($this->whenLoaded('variant')),
+            'product' => ProductResource::make($this->whenLoaded('product')),
         ];
     }
 }

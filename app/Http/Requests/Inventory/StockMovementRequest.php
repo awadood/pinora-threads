@@ -22,7 +22,7 @@ class StockMovementRequest extends FormRequest
     {
         return [
             'stock_id' => ['required', 'integer', 'exists:stocks,id'],
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'stock_movement_type_code' => ['required', 'string', 'exists:stock_movement_types,code'],
             'quantity_delta' => ['required', 'integer', 'not_in:0'],
             'stock_batch_id' => ['nullable', 'integer', 'exists:stock_batches,id'],

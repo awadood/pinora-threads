@@ -29,7 +29,7 @@ class StockMovementController extends Controller
     ) {
         $this->allowedFilters = [
             'stock_id',
-            'variant_id',
+            'product_id',
             'stock_movement_type_code',
             'stock_batch_id',
             'performed_by',
@@ -48,7 +48,7 @@ class StockMovementController extends Controller
         return StockMovementResource::collection(
             $query->with([
                 'stock',
-                'variant.attributes.option.attribute',
+                'product.attributes.option.attribute',
             ])->paginate($perPage)
         );
     }
@@ -64,7 +64,7 @@ class StockMovementController extends Controller
 
         $movement = $this->stockAdjustmentService->adjust(
             stockId: $data['stock_id'],
-            variantId: $data['variant_id'],
+            productId: $data['product_id'],
             quantityDelta: $data['quantity_delta'],
             movementTypeCode: $data['stock_movement_type_code'],
             meta: [

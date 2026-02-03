@@ -17,7 +17,7 @@ interface IPlpRepository
      *
      * Used by search-as-you-type fields or filter components
      * (e.g. Stock Batches, Inventory, Bundles, Filter)
-     * to quickly find sellable variants and return a small result set.
+     * to quickly find sellable products and return a small result set.
      *
      * Supports the standard `filter[field.op]` format, typically:
      *
@@ -26,7 +26,7 @@ interface IPlpRepository
      * - filter[category.slug.eq]=unstitched
      * - filter[collection.slug.eq]=eid-edit
      *
-     * variant attribute (match any variant):
+     * product attribute:
      * - filter[attr.fabric_type.in]=lawn,cotton
      * - filter[attr.color_family.in]=red,blue
      *
@@ -35,7 +35,7 @@ interface IPlpRepository
      * - filter[price.lte]=15000
      *
      * optional stock-only:
-     * - filter[in_stock.eq]=1 (means: there exists a matching variant with qty > 0 in the ctx stock)
+     * - filter[in_stock.eq]=1 (means: there exists a product with qty > 0 in the ctx stock)
      *
      * Results are paginated and intended for dropdowns/autocomplete,
      * with optional eager-loaded relations to avoid N+1 queries.

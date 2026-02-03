@@ -4,7 +4,6 @@ namespace App\Repositories\Catalog;
 
 use App\Models\Product;
 use App\Models\ProductPrice;
-use App\Models\ProductVariantPrice;
 use App\Repositories\BaseRepository;
 use App\Repositories\Catalog\Contracts\IProductPriceRepository;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +23,6 @@ class ProductPriceRepository extends BaseRepository implements IProductPriceRepo
     {
         return DB::transaction(function () use ($product, $payload) {
             $productUpserted = 0;
-            $variantUpserted = 0;
-
             // 1) Product prices: upsert by (product_id, currency_code)
             $productPrices = $payload['product_prices'] ?? [];
             if (is_array($productPrices) && count($productPrices) > 0) {
@@ -48,43 +45,8 @@ class ProductPriceRepository extends BaseRepository implements IProductPriceRepo
                 $productUpserted = count($rows);
             }
 
-            // 2) Variant prices: flatten and upsert by (product_variant_id, currency_code)
-            $variantPrices = $payload['variant_prices'] ?? [];
-            if (is_array($variantPrices) && count($variantPrices) > 0) {
-                $rows = [];
-
-                foreach ($variantPrices as $vp) {
-                    $variantId = (int) $vp['product_variant_id'];
-                    $prices = $vp['prices'] ?? [];
-
-                    if (! is_array($prices)) {
-                        continue;
-                    }
-
-                    foreach ($prices as $p) {
-                        $rows[] = [
-                            'product_variant_id' => $variantId,
-                            'currency_code' => $p['currency_code'],
-                            'amount' => $p['amount'],
-                            'compare_at' => $p['compare_at'] ?? null,
-                        ];
-                    }
-                }
-
-                if (count($rows) > 0) {
-                    ProductVariantPrice::upsert(
-                        $rows,
-                        ['product_variant_id', 'currency_code'],
-                        ['amount', 'compare_at']
-                    );
-
-                    $variantUpserted = count($rows);
-                }
-            }
-
             return [
                 'product_upserted' => $productUpserted,
-                'variant_upserted' => $variantUpserted,
             ];
         });
     }

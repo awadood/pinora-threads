@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,11 +16,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $email = 'admin@pinorathreads.com';
+        User::firstOrCreate(['email' => $email], ['name' => 'Administrator', 'password' => Hash::make('password')]);
 
         $this->call([
-            DemoSeeder::class,
+            CoreTablesSeeder::class,
+            TaxSeeder::class,
             PermissionSeeder::class,
+            CatalogSeeder::class,
+            InventorySeeder::class,
+            CustomerSeeder::class,
         ]);
     }
 }

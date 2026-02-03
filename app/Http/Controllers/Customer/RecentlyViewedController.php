@@ -34,13 +34,11 @@ class RecentlyViewedController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
         ]);
 
         $this->service->recordView(
             $request->user(),
-            $validated['product_id'],
-            $validated['product_variant_id'] ?? null
+            $validated['product_id']
         );
 
         return response()->json([], 204);

@@ -24,7 +24,7 @@ interface IFavoriteRepository extends IBaseRepository
     public function forUser(int $userId): Collection;
 
     /**
-     * Find an existing favorite for a user-product(-variant) combination.
+     * Find an existing favorite for a user-product combination.
      */
-    public function findForUserAndProduct(int $userId, int $productId, ?int $productVariantId = null): ?\App\Models\Favorite;
+    public function findForUserAndProduct(int $userId, int $productId): ?\App\Models\Favorite;
 }

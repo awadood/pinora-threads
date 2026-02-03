@@ -42,7 +42,7 @@ class GenerateMediaRenditionsJob implements ShouldQueue
 
     public function handle(): void
     {
-        return ; // do nothing for now.
+        return; // do nothing for now.
         $asset = MediaAsset::query()->find($this->mediaAssetId);
 
         if (! $asset || $asset->type !== 'image') {

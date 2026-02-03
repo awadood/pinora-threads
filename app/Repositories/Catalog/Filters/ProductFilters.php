@@ -19,13 +19,12 @@ use Illuminate\Support\Str;
  *      - filter[category.slug.eq]
  *      - filter[collection.slug.eq]
  *      - filter[attr.<code>.eq|in]
- *      - filter[price.gte|lte]            (ctx currency, any variant)
+ *      - filter[price.gte|lte]            (ctx currency, product price)
  *      - filter[in_stock.eq]=1           (purchasable: stock_levels.quantity > 0, any stock in country)
  *    Sort:
  *      - newest | name | -name | price | -price
  *    Notes:
  *      - Always one row per product.
- *      - selected_variant is returned by storefront response layer.
  *
  * 2) admin (authenticated product index)
  *    Filters (superset of storefront):
@@ -33,11 +32,10 @@ use Illuminate\Support\Str;
  *      - filter[active.eq]=1|0
  *      - filter[type.eq|in]=...
  *      - filter[sku.eq], filter[slug.eq], filter[name.like]
- *      - filter[publishable.eq]=1|0      (default variant: thumbnail exists AND gallery_count >= 7)
+ *      - filter[publishable.eq]=1|0      (product: thumbnail exists AND gallery_count >= 7)
  *    Sort:
  *      - name | -name | updated_at | -updated_at | active | -active | type | -type
  *    Notes:
- *      - Admin response omits selected_variant by default.
  */
 final class ProductFilters
 {
@@ -70,9 +68,9 @@ final class ProductFilters
      *   sort:string,
      *   raw_filters:array,
      *   echo:array,
-     *   has_variant_constraints:bool,
+     *   has_detail_constraints:bool,
      *   product:array,
-     *   variant:array
+     *   detail:array
      * }
      */
     public function parse(Request $request, string $profile): array
@@ -105,19 +103,19 @@ final class ProductFilters
             'category_slug' => $this->getScalar($rawFilters, 'category.slug.eq'),
             'collection_slug' => $this->getScalar($rawFilters, 'collection.slug.eq'),
 
-            // publishability is admin-only (default variant: thumbnail exists + gallery >= 7)
+            // publishability is admin-only (product: thumbnail exists + gallery >= 7)
             'publishable' => $profile === self::PROFILE_ADMIN ? $this->getBoolish($rawFilters, 'publishable.eq') : null,
         ];
 
-        // ---------- Variant-level filters (match ANY variant) ----------
-        $variant = [
+        // ---------- Product detail filters (attributes, price, stock) ----------
+        $detail = [
             'q' => $q,
 
             // attributes: attr.<code>.eq / attr.<code>.in
             'attrs_eq' => $this->getAttrEqFilters($rawFilters),
             'attrs_in' => $this->getAttrInFilters($rawFilters),
 
-            // price range (ctx currency, any variant)
+            // price range (ctx currency)
             'price_gte' => $this->getNumeric($rawFilters, 'price.gte'),
             'price_lte' => $this->getNumeric($rawFilters, 'price.lte'),
 
@@ -129,29 +127,29 @@ final class ProductFilters
         // - storefront ignores admin-only keys by leaving them null
         // - admin can use both sets (superset)
 
-        $hasVariantConstraints =
-            ($variant['q'] !== null)
-            || (! empty($variant['attrs_eq']))
-            || (! empty($variant['attrs_in']))
-            || ($variant['price_gte'] !== null)
-            || ($variant['price_lte'] !== null)
-            || ($variant['in_stock'] === true);
+        $hasDetailConstraints =
+            ($detail['q'] !== null)
+            || (! empty($detail['attrs_eq']))
+            || (! empty($detail['attrs_in']))
+            || ($detail['price_gte'] !== null)
+            || ($detail['price_lte'] !== null)
+            || ($detail['in_stock'] === true);
 
         // Echo: return what was actually applied (normalized, not raw)
         $echo = [
-            'q' => $variant['q'],
+            'q' => $detail['q'],
             'sort' => $sort,
             'filter' => array_filter([
                 'category.slug.eq' => $product['category_slug'],
                 'collection.slug.eq' => $product['collection_slug'],
 
-                'price.gte' => $variant['price_gte'],
-                'price.lte' => $variant['price_lte'],
-                'in_stock.eq' => $variant['in_stock'] ? 1 : null,
+                'price.gte' => $detail['price_gte'],
+                'price.lte' => $detail['price_lte'],
+                'in_stock.eq' => $detail['in_stock'] ? 1 : null,
 
                 // attributes
-                'attr.eq' => $variant['attrs_eq'],
-                'attr.in' => $variant['attrs_in'],
+                'attr.eq' => $detail['attrs_eq'],
+                'attr.in' => $detail['attrs_in'],
 
                 // admin-only
                 'active.eq' => $profile === self::PROFILE_ADMIN ? ($product['active'] === null ? null : ($product['active'] ? 1 : 0)) : null,
@@ -169,9 +167,9 @@ final class ProductFilters
             'sort' => $sort,
             'raw_filters' => $rawFilters,
             'echo' => $echo,
-            'has_variant_constraints' => $hasVariantConstraints,
+            'has_detail_constraints' => $hasDetailConstraints,
             'product' => $product,
-            'variant' => $variant,
+            'detail' => $detail,
         ];
     }
 

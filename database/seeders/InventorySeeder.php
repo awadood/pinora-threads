@@ -30,28 +30,28 @@ class InventorySeeder extends Seeder
             // If not present, we will SKIP stock_movements to avoid FK failures.
             $canWriteMovements = (bool) $movementTypeCode;
 
-            // For each variant, create stock levels (both stocks), and initial batches.
-            $variants = DB::table('product_variants')->select('id')->get();
+            // For each product, create stock levels (both stocks), and initial batches.
+            $products = DB::table('products')->select('id')->get();
 
-            foreach ($variants as $v) {
-                $variantId = (int) $v->id;
+            foreach ($products as $p) {
+                $productId = (int) $p->id;
 
                 // Levels
-                $this->upsertStockLevel($pkStockId, $variantId, rand(0, 250), 50, false);
-                $this->upsertStockLevel($usStockId, $variantId, rand(0, 250), 50, false);
+                $this->upsertStockLevel($pkStockId, $productId, rand(0, 250), 50, false);
+                $this->upsertStockLevel($usStockId, $productId, rand(0, 250), 50, false);
 
                 // Batches (one per stock, if currency exists)
                 if ($currencyPk) {
-                    $batchIdPk = $this->insertBatch($pkStockId, $variantId, 'PKR', rand(2500, 12000), rand(30, 200));
+                    $batchIdPk = $this->insertBatch($pkStockId, $productId, 'PKR', rand(2500, 12000), rand(30, 200));
                     if ($canWriteMovements) {
-                        $this->insertMovement($pkStockId, $variantId, $movementTypeCode, +1 * DB::table('stock_batches')->where('id', $batchIdPk)->value('qty_received'), $batchIdPk);
+                        $this->insertMovement($pkStockId, $productId, $movementTypeCode, +1 * DB::table('stock_batches')->where('id', $batchIdPk)->value('qty_received'), $batchIdPk);
                     }
                 }
 
                 if ($currencyUs) {
-                    $batchIdUs = $this->insertBatch($usStockId, $variantId, 'USD', rand(10, 80), rand(30, 200));
+                    $batchIdUs = $this->insertBatch($usStockId, $productId, 'USD', rand(10, 80), rand(30, 200));
                     if ($canWriteMovements) {
-                        $this->insertMovement($usStockId, $variantId, $movementTypeCode, +1 * DB::table('stock_batches')->where('id', $batchIdUs)->value('qty_received'), $batchIdUs);
+                        $this->insertMovement($usStockId, $productId, $movementTypeCode, +1 * DB::table('stock_batches')->where('id', $batchIdUs)->value('qty_received'), $batchIdUs);
                     }
                 }
             }
@@ -76,10 +76,10 @@ class InventorySeeder extends Seeder
         ]);
     }
 
-    private function upsertStockLevel(int $stockId, int $variantId, int $qty, int $notifyBelow, bool $allowBackorder): void
+    private function upsertStockLevel(int $stockId, int $productId, int $qty, int $notifyBelow, bool $allowBackorder): void
     {
         DB::table('stock_levels')->updateOrInsert(
-            ['stock_id' => $stockId, 'variant_id' => $variantId],
+            ['stock_id' => $stockId, 'product_id' => $productId],
             [
                 'quantity' => $qty,
                 'notify_below' => $notifyBelow,
@@ -92,13 +92,13 @@ class InventorySeeder extends Seeder
         );
     }
 
-    private function insertBatch(int $stockId, int $variantId, string $currencyCode, float $unitCost, int $qty): int
+    private function insertBatch(int $stockId, int $productId, string $currencyCode, float $unitCost, int $qty): int
     {
         $receivedAt = Carbon::now()->subDays(rand(1, 120))->toDateString();
 
         return DB::table('stock_batches')->insertGetId([
             'stock_id' => $stockId,
-            'variant_id' => $variantId,
+            'product_id' => $productId,
             'received_at' => $receivedAt,
             'currency_code' => $currencyCode,
             'unit_cost' => number_format($unitCost, 2, '.', ''),
@@ -109,11 +109,11 @@ class InventorySeeder extends Seeder
         ]);
     }
 
-    private function insertMovement(int $stockId, int $variantId, string $typeCode, int $delta, int $batchId): void
+    private function insertMovement(int $stockId, int $productId, string $typeCode, int $delta, int $batchId): void
     {
         DB::table('stock_movements')->insert([
             'stock_id' => $stockId,
-            'variant_id' => $variantId,
+            'product_id' => $productId,
             'stock_movement_type_code' => $typeCode,
             'quantity_delta' => $delta,
             'stock_batch_id' => $batchId,

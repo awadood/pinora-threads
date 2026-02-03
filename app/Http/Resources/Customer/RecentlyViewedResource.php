@@ -17,7 +17,6 @@ class RecentlyViewedResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'product_id' => $this->product_id,
-            'product_variant_id' => $this->product_variant_id,
         ], $this->withTimestamps(['viewed_at' => 'viewed_at']));
     }
 }

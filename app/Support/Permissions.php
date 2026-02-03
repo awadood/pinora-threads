@@ -179,26 +179,10 @@ final class Permissions
 
     public const CAT_PPRICE_DESTROY = 'catalog.product.price.destroy';
 
-    // Catalog: Product variants
+    // Catalog: Product variant links
     public const CAT_PVAR_CREATE = 'catalog.product.variant.create';
 
-    public const CAT_PVAR_UPDATE = 'catalog.product.variant.update';
-
     public const CAT_PVAR_DESTROY = 'catalog.product.variant.destroy';
-
-    // Catalog: Variant media
-    public const CAT_PVMEDIA_CREATE = 'catalog.product.variant.media.create';
-
-    public const CAT_PVMEDIA_UPDATE = 'catalog.product.variant.media.update';
-
-    public const CAT_PVMEDIA_DESTROY = 'catalog.product.variant.media.destroy';
-
-    // Catalog: Variant prices
-    public const CAT_PVPRICE_CREATE = 'catalog.product.variant.price.create';
-
-    public const CAT_PVPRICE_UPDATE = 'catalog.product.variant.price.update';
-
-    public const CAT_PVPRICE_DESTROY = 'catalog.product.variant.price.destroy';
 
     // Catalog: Bundles
     public const CAT_PBUNDLE_CREATE = 'catalog.product.bundle.create';

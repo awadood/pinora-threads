@@ -37,7 +37,9 @@ class PermissionSeeder extends Seeder
         $this->command->info('Seeding Roles...');
         $rootUser = Role::firstOrCreate(['name' => Roles::SUPER_ADMIN]);
         $user = User::where('email', 'admin@pinorathreads.com')->first();
-        $user->assignRole($rootUser);
+        if ($user) {
+            $user->assignRole($rootUser);
+        }
 
         $adminRole = Role::firstOrCreate(['name' => Roles::ADMIN]);
         $adminRole->syncPermissions($permissions);

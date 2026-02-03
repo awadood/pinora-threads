@@ -16,8 +16,15 @@ class StockMovementFactory extends Factory
     {
         return [
             'stock_id' => \App\Models\Stock::factory(),
-            'variant_id' => \App\Models\ProductVariant::factory(),
-            'type' => fake()->randomElement(['purchase', 'sale', 'refund', 'adjustment', 'transfer_in', 'transfer_out']),
+            'product_id' => \App\Models\Product::factory(),
+            'stock_movement_type_code' => fake()->randomElement([
+                \App\Models\StockMovementType::PURCHASE,
+                \App\Models\StockMovementType::SALE,
+                \App\Models\StockMovementType::REFUND,
+                \App\Models\StockMovementType::ADJUSTMENT,
+                \App\Models\StockMovementType::TRANSFER_IN,
+                \App\Models\StockMovementType::TRANSFER_OUT,
+            ]),
             'quantity_delta' => fake()->numberBetween(-5, 10),
             'reason' => fake()->optional()->sentence(),
         ];

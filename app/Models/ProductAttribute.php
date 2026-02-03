@@ -5,20 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Pivot mapping selected attribute options to a product variant.
+ * Pivot mapping selected attribute options to a product.
  *
  * @author Abdul Wadood
  */
-class ProductVariantAttribute extends AbstractLoggableModel
+class ProductAttribute extends AbstractLoggableModel
 {
     protected $fillable = [
-        'product_variant_id',
+        'product_id',
         'attribute_id',
         'option_id',
         'value',
     ];
-
-    public $timestamps = false;
 
     /**
      * Get the attributes that should be cast.
@@ -34,9 +32,9 @@ class ProductVariantAttribute extends AbstractLoggableModel
 
     // Relationships
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function attribute(): BelongsTo

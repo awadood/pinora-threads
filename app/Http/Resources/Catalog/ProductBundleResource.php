@@ -16,7 +16,7 @@ class ProductBundleResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
-            'product_variant_id' => $this->product_variant_id,
+            'bundle_item_id' => $this->bundle_item_id,
             'quantity' => $this->quantity,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

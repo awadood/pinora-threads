@@ -16,7 +16,7 @@ class ProductBundleFactory extends Factory
     {
         return [
             'product_id' => \App\Models\Product::factory(),
-            'product_variant_id' => \App\Models\ProductVariant::factory(),
+            'bundle_item_id' => \App\Models\Product::factory(),
             'quantity' => fake()->numberBetween(1, 3),
         ];
     }

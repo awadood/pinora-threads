@@ -15,7 +15,7 @@ class StockBackInSubscriptionFactory extends Factory
     public function definition(): array
     {
         return [
-            'variant_id' => \App\Models\ProductVariant::factory(),
+            'product_id' => \App\Models\Product::factory(),
             'user_id' => null,
             'email' => fake()->safeEmail(),
             'notified_at' => null,

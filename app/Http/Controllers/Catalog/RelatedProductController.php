@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Catalog;
 
 use App\Http\Requests\Catalog\RelatedProductRequest;
 use App\Http\Resources\Catalog\ProductResource;
+use App\Models\Product;
 use App\Repositories\Catalog\Contracts\IProductRepository;
-use App\Repositories\Catalog\Contracts\IRelatedProductRepository;
 use App\Support\QueryFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -21,13 +21,10 @@ class RelatedProductController extends Controller
 {
     use QueryFilterable;
 
-    protected IRelatedProductRepository $related;
-
     protected IProductRepository $products;
 
-    public function __construct(IRelatedProductRepository $related, IProductRepository $products)
+    public function __construct(IProductRepository $products)
     {
-        $this->related = $related;
         $this->products = $products;
 
         $this->allowedFilters = [];
@@ -51,21 +48,25 @@ class RelatedProductController extends Controller
 
     public function store(RelatedProductRequest $request)
     {
-        $pivot = $this->related->create($request->validated());
+        $data = $request->validated();
 
-        $product = $this->products->find($pivot->related_product_id);
+        /** @var Product $product */
+        $product = $this->products->query()->findOrFail($data['product_id']);
+        $product->relatedProducts()->syncWithoutDetaching([(int) $data['related_product_id']]);
 
-        return ProductResource::make($product)->response()->setStatusCode(201);
+        $related = $this->products->query()->findOrFail($data['related_product_id']);
+
+        return ProductResource::make($related)->response()->setStatusCode(201);
     }
 
     public function destroy(int $product, int $related_product)
     {
-        $record = $this->related->query()
-            ->where('product_id', $product)
-            ->where('related_product_id', $related_product)
-            ->firstOrFail();
-
-        $this->related->destroy($record->getKey());
+        /** @var Product $owner */
+        $owner = $this->products->query()->findOrFail($product);
+        $deleted = $owner->relatedProducts()->detach($related_product);
+        if ((int) $deleted === 0) {
+            abort(404);
+        }
 
         return response()->json([], 204);
     }

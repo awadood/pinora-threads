@@ -18,9 +18,8 @@ use App\Http\Controllers\Catalog\ProductBundleController;
 use App\Http\Controllers\Catalog\ProductController;
 use App\Http\Controllers\Catalog\ProductFilterController;
 use App\Http\Controllers\Catalog\ProductPriceController;
+use App\Http\Controllers\Catalog\ProductVariantController;
 use App\Http\Controllers\Catalog\RelatedProductController;
-use App\Http\Controllers\Catalog\VariantController;
-use App\Http\Controllers\Catalog\VariantPriceController;
 use App\Http\Controllers\Core\CountryController;
 use App\Http\Controllers\Core\CurrencyController;
 use App\Http\Controllers\Core\CustomerGroupController;
@@ -124,12 +123,10 @@ Route::get('collections', [CollectionController::class, 'index']); // list activ
 Route::get('collections/{slug}', [CollectionController::class, 'showBySlug']);
 Route::get('products', [ProductController::class, 'index']);
 Route::get('products/filters', [ProductFilterController::class, 'index']);
+Route::get('products/lookup', [ProductVariantController::class, 'index']); // typeahead/selector
 Route::get('products/{slug}', [ProductController::class, 'showBySlug']); // PDP
-Route::get('products/{slug}/variants', [VariantController::class, 'indexByProductSlug']); // variant matrix on PDP
+Route::get('products/{slug}/variants', [ProductVariantController::class, 'indexByProductSlug']); // variant matrix on PDP
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
-Route::get('product-variants/lookup', [VariantController::class, 'index']); // rarely needed on storefront
-Route::get('product-variants/{variant}', [VariantController::class, 'show']); // rarely needed on storefront
-Route::get('product-variants/{variant}/prices', [VariantPriceController::class, 'indexByVariant']);
 
 // Customer
 Route::get('wishlists/shared/{share_token}', [WishlistController::class, 'showByShareToken']);
@@ -267,17 +264,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'update'])->middleware('permission:'.P::CAT_PPRICE_UPDATE);
     Route::delete('products/{product}/prices/{currency_code}', [ProductPriceController::class, 'destroy'])->middleware('permission:'.P::CAT_PPRICE_DESTROY);
 
-    // Product variants
-    Route::post('products/{product}/variants', [VariantController::class, 'store'])->middleware('permission:'.P::CAT_PVAR_CREATE);
-    Route::put('product-variants/{variant}', [VariantController::class, 'update'])->middleware('permission:'.P::CAT_PVAR_UPDATE);
-    Route::delete('product-variants/{variant}', [VariantController::class, 'destroy'])->middleware('permission:'.P::CAT_PVAR_DESTROY);
+    // Product variants (links)
+    Route::post('products/{product}/variants', [ProductVariantController::class, 'store'])->middleware('permission:'.P::CAT_PVAR_CREATE);
+    Route::delete('products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])->middleware('permission:'.P::CAT_PVAR_DESTROY);
 
-    // Product variant prices
-    Route::post('product-variants/{variant}/prices', [VariantPriceController::class, 'store'])->middleware('permission:'.P::CAT_PVPRICE_CREATE);
-    Route::put('product-variants/{variant}/prices/{currency_code}', [VariantPriceController::class, 'update'])->middleware('permission:'.P::CAT_PVPRICE_UPDATE);
-    Route::delete('product-variants/{variant}/prices/{currency_code}', [VariantPriceController::class, 'destroy'])->middleware('permission:'.P::CAT_PVPRICE_DESTROY);
-
-    // Product bundles - mapping bundle product -> child variants
+    // Product bundles - mapping bundle product -> child products
     Route::post('product-bundles', [ProductBundleController::class, 'store'])->middleware('permission:'.P::CAT_PBUNDLE_CREATE);
     Route::put('product-bundles/{bundle}', [ProductBundleController::class, 'update'])->middleware('permission:'.P::CAT_PBUNDLE_UPDATE);
     Route::delete('product-bundles/{bundle}', [ProductBundleController::class, 'destroy'])->middleware('permission:'.P::CAT_PBUNDLE_DESTROY);
@@ -398,7 +389,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Favorites for current user
     Route::get('favorites', [FavoriteController::class, 'index']);
-    Route::post('favorites', [FavoriteController::class, 'store']);      // body: product_id, product_variant_id?
+    Route::post('favorites', [FavoriteController::class, 'store']);      // body: product_id
     Route::delete('favorites/{favorite}', [FavoriteController::class, 'destroy']);
 
     // Wishlists for current user
@@ -485,7 +476,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('stock-back-in-subscriptions', [StockBackInSubscriptionController::class, 'index'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
     Route::get('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'show'])->middleware('permission:'.P::INVT_BACKINSTOCK_VIEW);
     Route::delete('stock-back-in-subscriptions/{stock_back_in_subscription}', [StockBackInSubscriptionController::class, 'destroy'])->middleware('permission:'.P::INVT_BACKINSTOCK_DESTROY);
-    Route::post('stock-back-in-subscriptions/{stock_back_in_subscription}/notify', [StockBackInSubscriptionController::class, 'notify']); // Notify all eligible subscriptions for a variant (for "Notify All In-Stock" action)
+    Route::post('stock-back-in-subscriptions/{stock_back_in_subscription}/notify', [StockBackInSubscriptionController::class, 'notify']); // Notify all eligible subscriptions for a product (for "Notify All In-Stock" action)
     Route::post('stock-back-in-subscriptions/notify-all', [StockBackInSubscriptionController::class, 'notifyAll']);
 });
 

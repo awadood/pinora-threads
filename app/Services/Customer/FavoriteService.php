@@ -29,13 +29,11 @@ class FavoriteService
 
     public function toggle(
         Authenticatable $user,
-        int $productId,
-        ?int $productVariantId = null
+        int $productId
     ): bool {
         $existing = $this->favorites->findForUserAndProduct(
             $user->getAuthIdentifier(),
-            $productId,
-            $productVariantId
+            $productId
         );
 
         if ($existing) {
@@ -47,7 +45,6 @@ class FavoriteService
         $this->favorites->create([
             'user_id' => $user->getAuthIdentifier(),
             'product_id' => $productId,
-            'product_variant_id' => $productVariantId,
         ]);
 
         return true;

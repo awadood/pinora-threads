@@ -16,7 +16,7 @@ class StockLevelFactory extends Factory
     {
         return [
             'stock_id' => \App\Models\Stock::factory(),
-            'variant_id' => \App\Models\ProductVariant::factory(),
+            'product_id' => \App\Models\Product::factory(),
             'quantity' => fake()->numberBetween(0, 500),
             'notify_below' => 50,
             'allow_backorder' => false,

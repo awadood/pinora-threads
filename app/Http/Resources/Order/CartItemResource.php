@@ -17,21 +17,16 @@ class CartItemResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $variant = $this->whenLoaded('productVariant');
-        $product = $variant?->product;
+        $product = $this->whenLoaded('product');
 
         return [
             'id' => $this->id,
             'cart_id' => $this->cart_id,
-            'product_variant_id' => $this->product_variant_id,
+            'product_id' => $this->product_id,
             'quantity' => $this->quantity,
-            'variant' => $variant ? [
-                'id' => $variant->id,
-                'sku' => $variant->sku,
-                'title' => $variant->title,
-            ] : null,
             'product' => $product ? [
                 'id' => $product->id,
+                'sku' => $product->sku,
                 'name' => $product->name,
                 'slug' => $product->slug,
             ] : null,

@@ -27,8 +27,8 @@ class StockRepository extends BaseRepository implements IStockRepository
     {
         return $this->query()
             ->withCount([
-                'stockLevels as total_variants' => function ($query) {
-                    $query->select(DB::raw('COUNT(DISTINCT variant_id)'));
+                'stockLevels as total_products' => function ($query) {
+                    $query->select(DB::raw('COUNT(DISTINCT product_id)'));
                 },
             ])
             ->withSum('stockLevels as total_quantity', 'quantity')

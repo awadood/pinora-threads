@@ -20,14 +20,14 @@ class StockLevelRepository extends BaseRepository implements IStockLevelReposito
 
     protected array $allowedSearchColumns = [
         'stock_id' => true,
-        'variant_id' => true,
+        'product_id' => true,
     ];
 
-    public function findByStockAndVariant(int $stockId, int $variantId): ?StockLevel
+    public function findByStockAndProduct(int $stockId, int $productId): ?StockLevel
     {
         return $this->query()
             ->where('stock_id', $stockId)
-            ->where('variant_id', $variantId)
+            ->where('product_id', $productId)
             ->first();
     }
 

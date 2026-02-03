@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasSeoMeta;
+use App\Models\Traits\HasSeoMeta;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**

@@ -16,7 +16,7 @@ class StockBatchFactory extends Factory
     {
         return [
             'stock_id' => \App\Models\Stock::factory(),
-            'variant_id' => \App\Models\ProductVariant::factory(),
+            'product_id' => \App\Models\Product::factory(),
             'received_at' => fake()->date(),
             'currency_code' => fake()->randomElement(['USD', 'PKR']),
             'unit_cost' => fake()->randomFloat(2, 5, 300),

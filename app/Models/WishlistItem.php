@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A specific product or variant saved inside a wishlist.
+ * A specific product saved inside a wishlist.
  *
  * @author Abdul Wadood
  */
@@ -14,7 +14,6 @@ class WishlistItem extends AbstractModel
     protected $fillable = [
         'wishlist_id',
         'product_id',
-        'product_variant_id',
     ];
 
     /**
@@ -39,10 +38,5 @@ class WishlistItem extends AbstractModel
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

@@ -20,6 +20,16 @@ class ProductPriceController extends Controller
 {
     public function __construct(protected IProductPriceRepository $prices) {}
 
+    public function show(Product $product, string $currency_code)
+    {
+        $price = $this->prices->query()
+            ->where('product_id', $product->id)
+            ->where('currency_code', $currency_code)
+            ->firstOrFail();
+
+        return ProductPriceResource::make($price);
+    }
+
     public function save(PriceRequest $request, Product $product)
     {
         $data = $request->validated();

@@ -36,14 +36,12 @@ class WishlistItemController extends Controller
     {
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
-            'product_variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
         ]);
 
         $item = $this->service->addToWishlist(
             $request->user(),
             $wishlist,
-            $validated['product_id'],
-            $validated['product_variant_id'] ?? null
+            $validated['product_id']
         );
 
         return WishlistItemResource::make($item);

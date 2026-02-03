@@ -9,16 +9,16 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * IStockLevelRepository
  *
- * Repository contract for managing stock levels for each variant at each stock location.
+ * Repository contract for managing stock levels for each product at each stock location.
  *
  * @author Abdul Wadood
  */
 interface IStockLevelRepository extends IBaseRepository
 {
     /**
-     * Find a stock level row for the given stock and variant, if any.
+     * Find a stock level row for the given stock and product, if any.
      */
-    public function findByStockAndVariant(int $stockId, int $variantId): ?StockLevel;
+    public function findByStockAndProduct(int $stockId, int $productId): ?StockLevel;
 
     /**
      * Apply business status filtering for stock levels.

@@ -7,7 +7,7 @@ final class ProductListQuery
     /**
      * @param  string  $profile  'storefront'|'admin'
      * @param  array  $productFilters  normalized product-level filters
-     * @param  array  $variantFilters  normalized variant-level filters (match-any-variant)
+     * @param  array  $detailFilters  normalized product detail filters (attributes, price, stock)
      */
     public function __construct(
         public readonly string $profile,
@@ -16,8 +16,8 @@ final class ProductListQuery
         public readonly string $sort,
 
         public readonly array $productFilters,
-        public readonly array $variantFilters,
-        public readonly bool $hasVariantConstraints,
+        public readonly array $detailFilters,
+        public readonly bool $hasDetailConstraints,
 
         public readonly string $countryCode,
         public readonly string $currencyCode,

@@ -13,7 +13,7 @@ class StockMovement extends AbstractLoggableModel
 {
     protected $fillable = [
         'stock_id',
-        'variant_id',
+        'product_id',
         'stock_movement_type_code',
         'quantity_delta',
         'stock_batch_id',
@@ -41,9 +41,9 @@ class StockMovement extends AbstractLoggableModel
         return $this->belongsTo(Stock::class);
     }
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'variant_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function batch(): BelongsTo

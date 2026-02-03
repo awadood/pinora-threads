@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A purchased product-variant line within an order.
+ * A purchased product line within an order.
  *
  * @author Abdul Wadood
  */
@@ -14,10 +14,9 @@ class OrderItem extends AbstractLoggableModel
     protected $fillable = [
         'order_id',
         'product_id',
-        'product_variant_id',
         'product_name',
         'sku',
-        'variant',
+        'product',
         'quantity',
         'unit_price',
         'subtotal',
@@ -34,7 +33,7 @@ class OrderItem extends AbstractLoggableModel
     protected function casts(): array
     {
         return [
-            'variant' => 'array',
+            'product' => 'array',
         ];
     }
 
@@ -50,10 +49,5 @@ class OrderItem extends AbstractLoggableModel
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variantModel(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
  * WishlistItemService
  *
  * Manages add/remove operations for wishlist items and ensures
- * that each product/variant pair is unique per wishlist.
+ * that each product is unique per wishlist.
  *
  * @author Abdul Wadood
  */
@@ -32,14 +32,13 @@ class WishlistItemService
     public function addToWishlist(
         Authenticatable $user,
         Wishlist $wishlist,
-        int $productId,
-        ?int $productVariantId = null
+        int $productId
     ): WishlistItem {
         if ($wishlist->user_id !== $user->getAuthIdentifier()) {
             abort(403);
         }
 
-        $existing = $this->items->findUnique($wishlist->getKey(), $productId, $productVariantId);
+        $existing = $this->items->findUnique($wishlist->getKey(), $productId);
         if ($existing) {
             return $existing;
         }
@@ -47,7 +46,6 @@ class WishlistItemService
         return $this->items->create([
             'wishlist_id' => $wishlist->getKey(),
             'product_id' => $productId,
-            'product_variant_id' => $productVariantId,
         ]);
     }
 

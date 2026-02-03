@@ -16,14 +16,14 @@ use Illuminate\Database\Eloquent\Collection;
 interface IStockBackInSubscriptionRepository extends IBaseRepository
 {
     /**
-     * Find existing subscription for the same variant + (user or email).
+     * Find existing subscription for the same product + (user or email).
      */
-    public function findExisting(int $variantId, ?int $userId, ?string $email): ?StockBackInSubscription;
+    public function findExisting(int $productId, ?int $userId, ?string $email): ?StockBackInSubscription;
 
     /**
-     * Find pending (not yet notified) subscriptions for a given variant.
+     * Find pending (not yet notified) subscriptions for a given product.
      *
      * @return Collection<int, StockBackInSubscription>
      */
-    public function findPendingForVariant(int $variantId): Collection;
+    public function findPendingForProduct(int $productId): Collection;
 }

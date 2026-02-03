@@ -17,7 +17,6 @@ class LookbookItemProductFactory extends Factory
         return [
             'lookbook_item_id' => \App\Models\LookbookItem::factory(),
             'product_id' => \App\Models\Product::factory(),
-            'product_variant_id' => null,
             'sort_order' => 0,
         ];
     }

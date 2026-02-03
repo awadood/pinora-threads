@@ -19,11 +19,11 @@ class BackInStockNotificationService
     public function __construct(private IStockBackInSubscriptionRepository $repository) {}
 
     /**
-     * Subscribe a user or email to back-in-stock notifications for a variant.
+     * Subscribe a user or email to back-in-stock notifications for a product.
      */
-    public function subscribe(int $variantId, ?int $userId, ?string $email): StockBackInSubscription
+    public function subscribe(int $productId, ?int $userId, ?string $email): StockBackInSubscription
     {
-        $existing = $this->repository->findExisting($variantId, $userId, $email);
+        $existing = $this->repository->findExisting($productId, $userId, $email);
 
         if ($existing instanceof StockBackInSubscription) {
             return $existing;
@@ -31,7 +31,7 @@ class BackInStockNotificationService
 
         /** @var StockBackInSubscription $subscription */
         $subscription = $this->repository->create([
-            'variant_id' => $variantId,
+            'product_id' => $productId,
             'user_id' => $userId,
             'email' => $email,
         ]);
@@ -40,14 +40,14 @@ class BackInStockNotificationService
     }
 
     /**
-     * Mark all pending subscriptions for a variant as notified. Integrate your
+     * Mark all pending subscriptions for a product as notified. Integrate your
      * real notification channel here (email/SMS/WhatsApp etc.).
      *
      * @return int number of subscriptions updated
      */
-    public function notifyAll(int $variantId): int
+    public function notifyAll(int $productId): int
     {
-        $subscriptions = $this->repository->findPendingForVariant($variantId);
+        $subscriptions = $this->repository->findPendingForProduct($productId);
 
         $now = Carbon::now();
         $updated = 0;

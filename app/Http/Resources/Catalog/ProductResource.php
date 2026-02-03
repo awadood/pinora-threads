@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Catalog;
 
+use App\Http\Resources\Media\MediaAttachmentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -27,9 +28,13 @@ class ProductResource extends JsonResource
 
             'related_products' => RelatedProductResource::collection($this->whenLoaded('relatedProducts')),
 
-            'variants' => VariantResource::collection($this->whenLoaded('variants')),
+            'variants' => ProductResource::collection($this->whenLoaded('variants')),
 
             'bundles' => ProductBundleResource::collection($this->whenLoaded('bundles')),
+
+            'attributes' => ProductAttributeResource::collection($this->whenLoaded('attributes')),
+
+            'prices' => ProductPriceResource::collection($this->whenLoaded('prices')),
 
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
 
@@ -37,10 +42,17 @@ class ProductResource extends JsonResource
                 return $this->pivot->sort;
             }),
 
-            // storefront displays thumbnail of variant selected by input query params.
-            'selected_variant' => VariantResource::make($this->whenLoaded('selectedVariant')),
+            'thumbnail_media' => MediaAttachmentResource::make($this->whenLoaded('thumbnailMedia')),
+            'hero_media' => MediaAttachmentResource::make($this->whenLoaded('heroMedia')),
+            'og_image_media' => MediaAttachmentResource::make($this->whenLoaded('ogImageMedia')),
+            'gallery_media' => MediaAttachmentResource::collection($this->whenLoaded('galleryMedia')),
 
             'variants_count' => $this->variants_count ?? 0,
+
+            'availability' => [
+                'in_stock' => $this->in_stock ?? false,
+                'country_qty' => $this->country_qty ?? 0,
+            ],
         ];
     }
 }

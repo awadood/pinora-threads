@@ -160,8 +160,8 @@ class StoreMerchController extends Controller
             productFilters: [
                 'ids_in' => $itemIds, // INTERNAL
             ],
-            variantFilters: [],
-            hasVariantConstraints: false,
+            detailFilters: [],
+            hasDetailConstraints: false,
             countryCode: $ctx->country,
             currencyCode: $ctx->currency,
             stockIds: $this->stockResolver->forCountry($ctx->country),
@@ -198,7 +198,7 @@ class StoreMerchController extends Controller
                 'category_slug' => $filter['category.slug.eq'] ?? null,
                 'collection_slug' => $filter['collection.slug.eq'] ?? null,
             ],
-            variantFilters: [
+            detailFilters: [
                 // q intentionally not supported in merchandising
                 'q' => null,
                 'attrs_eq' => $filter['attr.eq'] ?? [],
@@ -207,7 +207,7 @@ class StoreMerchController extends Controller
                 'price_lte' => $filter['price.lte'] ?? null,
                 'in_stock' => array_key_exists('in_stock.eq', $filter) ? (bool) $filter['in_stock.eq'] : null,
             ],
-            hasVariantConstraints: ! empty($filter['attr.eq'])
+            hasDetailConstraints: ! empty($filter['attr.eq'])
                 || ! empty($filter['attr.in'])
                 || array_key_exists('price.gte', $filter)
                 || array_key_exists('price.lte', $filter)

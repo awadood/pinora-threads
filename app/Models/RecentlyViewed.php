@@ -14,7 +14,6 @@ class RecentlyViewed extends AbstractModel
     protected $fillable = [
         'user_id',
         'product_id',
-        'product_variant_id',
         'viewed_at',
     ];
 
@@ -40,10 +39,5 @@ class RecentlyViewed extends AbstractModel
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

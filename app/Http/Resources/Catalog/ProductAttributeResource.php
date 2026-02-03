@@ -5,16 +5,16 @@ namespace App\Http\Resources\Catalog;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * VariantAttributeResource
+ * ProductAttributeResource
  *
  * @author Abdul Wadood
  */
-class VariantAttributeResource extends JsonResource
+class ProductAttributeResource extends JsonResource
 {
     public function toArray($request): array
     {
         return [
-            'product_variant_id' => $this->product_variant_id,
+            'product_id' => $this->product_id,
             'attribute_id' => $this->attribute_id,
             'option_id' => $this->option_id === null ? null : $this->option_id,
             'value' => $this->value,
@@ -22,7 +22,6 @@ class VariantAttributeResource extends JsonResource
             'updated_at' => $this->updated_at,
 
             'attribute' => $this->whenLoaded('attribute'),
-
             'option' => $this->whenLoaded('option'),
         ];
     }

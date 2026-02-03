@@ -19,7 +19,7 @@ class StockMovementRepository extends BaseRepository implements IStockMovementRe
 
     protected array $allowedSearchColumns = [
         'stock_id' => true,
-        'variant_id' => true,
+        'product_id' => true,
         'stock_movement_type_code' => true,
     ];
 }

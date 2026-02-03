@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Order;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Order\CartResource;
 use App\Models\CartItem;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Support\ResolvesCart;
 use Illuminate\Http\Request;
 
@@ -33,7 +33,7 @@ class CartController extends Controller
         $cart = $this->resolveCart($request);
 
         $cart->load([
-            'items.productVariant.product',
+            'items.product',
         ]);
 
         return CartResource::make($cart);
@@ -42,23 +42,23 @@ class CartController extends Controller
     /**
      * POST /api/cart/items
      *
-     * Body: { "product_variant_id": 123, "quantity": 2 }
+     * Body: { "product_id": 123, "quantity": 2 }
      */
     public function addItem(Request $request): CartResource
     {
         $data = $request->validate([
-            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $cart = $this->resolveCart($request);
 
-        /** @var ProductVariant $variant */
-        $variant = ProductVariant::findOrFail($data['product_variant_id']);
+        /** @var Product $product */
+        $product = Product::findOrFail($data['product_id']);
 
         /** @var CartItem|null $item */
         $item = $cart->items()
-            ->where('product_variant_id', $variant->id)
+            ->where('product_id', $product->id)
             ->first();
 
         if ($item) {
@@ -66,12 +66,12 @@ class CartController extends Controller
             $item->save();
         } else {
             $cart->items()->create([
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'quantity' => $data['quantity'],
             ]);
         }
 
-        $cart->refresh()->load(['items.productVariant.product']);
+        $cart->refresh()->load(['items.product']);
 
         return CartResource::make($cart);
     }
@@ -100,7 +100,7 @@ class CartController extends Controller
             $item->save();
         }
 
-        $cart->refresh()->load(['items.productVariant.product']);
+        $cart->refresh()->load(['items.product']);
 
         return CartResource::make($cart);
     }
@@ -118,7 +118,7 @@ class CartController extends Controller
 
         $item->delete();
 
-        $cart->refresh()->load(['items.productVariant.product']);
+        $cart->refresh()->load(['items.product']);
 
         return CartResource::make($cart);
     }

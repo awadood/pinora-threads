@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 /**
  * StockBackInSubscriptionController
  *
- * Manage "notify me when back in stock" subscriptions for variants.
+ * Manage "notify me when back in stock" subscriptions for products.
  *
  * @author Abdul Wadood
  */
@@ -37,8 +37,7 @@ class StockBackInSubscriptionController extends Controller
 
         return StockBackInSubscriptionResource::collection(
             $query->with([
-                'stock',
-                'variant.attributes.option.attribute',
+                'product.attributes.option.attribute',
             ])->paginate($perPage)
         );
     }
@@ -53,7 +52,7 @@ class StockBackInSubscriptionController extends Controller
         $user = $request->user();
 
         $subscription = $this->notificationService->subscribe(
-            variantId: $request->validated()['variant_id'],
+            productId: $request->validated()['product_id'],
             userId: $user?->getKey(),
             email: $request->validated()['email'] ?? $user?->email,
         );
@@ -82,9 +81,9 @@ class StockBackInSubscriptionController extends Controller
 
     public function notifyAll(Request $request)
     {
-        $data = $request->validate(['variant_id' => ['required', 'integer', 'exists:product_variants,id']]);
+        $data = $request->validate(['product_id' => ['required', 'integer', 'exists:products,id']]);
 
-        $count = $this->notificationService->notifyAll($data['variant_id']);
+        $count = $this->notificationService->notifyAll($data['product_id']);
 
         return response()->json(['message' => 'Notifications sent.', 'count' => $count]);
     }

@@ -30,8 +30,7 @@ class RecentlyViewedService
 
     public function recordView(
         ?Authenticatable $user,
-        int $productId,
-        ?int $productVariantId = null
+        int $productId
     ): void {
         if (! $user) {
             // future: anonymous/session-based tracking
@@ -41,7 +40,6 @@ class RecentlyViewedService
         RecentlyViewed::query()->create([
             'user_id' => $user->getAuthIdentifier(),
             'product_id' => $productId,
-            'product_variant_id' => $productVariantId,
         ]);
     }
 }

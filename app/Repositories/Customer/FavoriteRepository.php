@@ -28,19 +28,11 @@ class FavoriteRepository extends BaseRepository implements IFavoriteRepository
 
     public function findForUserAndProduct(
         int $userId,
-        int $productId,
-        ?int $productVariantId = null
+        int $productId
     ): ?Favorite {
-        $query = $this->query()
+        return $this->query()
             ->where('user_id', $userId)
-            ->where('product_id', $productId);
-
-        if ($productVariantId !== null) {
-            $query->where('product_variant_id', $productVariantId);
-        } else {
-            $query->whereNull('product_variant_id');
-        }
-
-        return $query->first();
+            ->where('product_id', $productId)
+            ->first();
     }
 }

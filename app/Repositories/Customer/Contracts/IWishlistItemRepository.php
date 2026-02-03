@@ -23,11 +23,7 @@ interface IWishlistItemRepository extends IBaseRepository
     public function forWishlist(int $wishlistId): Collection;
 
     /**
-     * Find an item by wishlist + product + optional variant.
+     * Find an item by wishlist + product.
      */
-    public function findUnique(
-        int $wishlistId,
-        int $productId,
-        ?int $productVariantId = null
-    ): ?\App\Models\WishlistItem;
+    public function findUnique(int $wishlistId, int $productId): ?\App\Models\WishlistItem;
 }

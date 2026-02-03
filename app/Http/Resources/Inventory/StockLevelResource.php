@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Inventory;
 
-use App\Http\Resources\Catalog\VariantResource;
+use App\Http\Resources\Catalog\ProductResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -14,21 +14,14 @@ class StockLevelResource extends JsonResource
 {
     public function toArray($request): array
     {
-        // 1) Variant thumbnail (preferred)
-        $variantAsset = optional($this->variant->thumbnailMedia)->asset;
-
-        // 2) Product thumbnail (fallback)
-        $productAsset = optional(optional($this->variant->product)->thumbnailMedia)->asset;
-
-        $asset = $variantAsset ?: $productAsset;
-
-        // 3) Prefer attachment override (and thumbnailMedia.alt_text). Fall back to asset alt text or product/variant title.
-        $altText = $asset?->alt_text ?: trim(($variant->product->name ?? '').' '.($variant->title ?? '')) ?: null;
+        $product = $this->whenLoaded('product');
+        $asset = optional($product?->thumbnailMedia)->asset;
+        $altText = $asset?->alt_text ?: ($product?->name ?? null);
 
         return [
             'id' => $this->id,
             'stock_id' => $this->stock_id,
-            'variant_id' => $this->variant_id,
+            'product_id' => $this->product_id,
             'quantity' => $this->quantity,
             'notify_below' => $this->notify_below,
             'allow_backorder' => $this->allow_backorder,
@@ -42,7 +35,7 @@ class StockLevelResource extends JsonResource
 
             'stock' => StockResource::make($this->whenLoaded('stock')),
 
-            'variant' => VariantResource::make($this->whenLoaded('variant')),
+            'product' => ProductResource::make($product),
         ];
     }
 }

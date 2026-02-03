@@ -42,7 +42,6 @@ class TaxCalculatorService
      *                                        'tax_inclusive'   => bool,
      *                                        'items'           => array<int,array{
      *                                        product_id: int,
-     *                                        product_variant_id: int,
      *                                        product_tax_class_id: int,
      *                                        quantity: int,
      *                                        unit_price: string|float,
@@ -58,7 +57,6 @@ class TaxCalculatorService
      *                             'items' => [
      *                             [
      *                             'product_id' => ...,
-     *                             'product_variant_id' => ...,
      *                             'tax' => '12.34',
      *                             'breakdown' => [
      *                             [
@@ -115,7 +113,6 @@ class TaxCalculatorService
 
             $itemsResult[] = [
                 'product_id' => (int) $item['product_id'],
-                'product_variant_id' => (int) $item['product_variant_id'],
                 'tax' => number_format($line['tax'], 2, '.', ''),
                 'breakdown' => $line['breakdown'],
             ];

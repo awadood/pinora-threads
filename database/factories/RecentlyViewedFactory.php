@@ -17,7 +17,6 @@ class RecentlyViewedFactory extends Factory
         return [
             'user_id' => null,
             'product_id' => \App\Models\Product::factory(),
-            'product_variant_id' => null,
             'viewed_at' => now(),
         ];
     }

@@ -136,7 +136,7 @@ class CatalogSeeder extends Seeder
             'color' => $upsertAttr('color', 'Color', 'select'),
             'size' => $upsertAttr('size', 'Size', 'select'),
 
-            // Text attributes (stored on product_variant_attributes.value)
+            // Text attributes (stored on product_attributes.value)
             'material_notes' => $upsertAttr('material_notes', 'Material Notes', 'text'),
             'what_included' => $upsertAttr('what_included', 'What’s Included', 'text'),
         ];
@@ -214,16 +214,18 @@ class CatalogSeeder extends Seeder
 
             if ($existing) {
                 DB::table('categories')->where('id', $existing->id)->update($data);
+
                 return (int) $existing->id;
             }
 
             $data['created_at'] = now();
+
             return (int) DB::table('categories')->insertGetId($data);
         };
 
         // Roots (LOCKED)
         $unstitched = $upsertCategory('Unstitched', null, 10);
-        $occasion   = $upsertCategory('Occasion', null, 20);
+        $occasion = $upsertCategory('Occasion', null, 20);
 
         // Unstitched -> Fabrics (LOCKED)
         $fabricNames = ['Lawn', 'Khaddar', 'Chiffon', 'Silk', 'Organza'];
@@ -279,8 +281,6 @@ class CatalogSeeder extends Seeder
             if ($existing) {
                 DB::table('collections')->where('id', $existing->id)->update([
                     'name' => $name,
-                    'meta_title' => $name,
-                    'meta_description' => $name,
                     'sort' => $index + 1,
                     'description' => $this->collectionDescription($name),
                     'active' => true,
@@ -291,8 +291,6 @@ class CatalogSeeder extends Seeder
             } else {
                 $collectionId = (int) DB::table('collections')->insertGetId([
                     'name' => $name,
-                    'meta_title' => $name,
-                    'meta_description' => $name,
                     'slug' => $slug,
                     'sort' => $index + 1,
                     'description' => $this->collectionDescription($name),
@@ -329,8 +327,8 @@ class CatalogSeeder extends Seeder
      * Returns:
      * [
      *   'products' => [product_id, ...],
-     *   'variants' => [variant_id, ...],
-     *   'by_product' => [product_id => [variant_id, ...]],
+     *   'variants' => [variant_product_id, ...],
+     *   'by_product' => [product_id => [variant_product_id, ...]],
      * ]
      */
     private function seedProductsAndVariants(array $attrs, array $cat): array
@@ -382,11 +380,27 @@ class CatalogSeeder extends Seeder
                 'product_id' => $productId,
             ]);
 
-            // Variants rule: "at least one variant" for all types.
-            $variantCount = match ($type) {
-                'variable' => random_int(2, 3),
-                default => 1, // simple + bundle => single variant by default
-            };
+            // Product attributes (select + text)
+            $sizeForProduct = $type === 'variable'
+                ? $this->pick(['S', 'M', 'L', 'XL'])
+                : $this->pick(['S', 'M', 'L']);
+
+            $this->attachVariantSelectAttr($productId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$piece]);
+            $this->attachVariantSelectAttr($productId, $attrs['attr']['fabric'], $attrs['opt']['fabric'][$fabric]);
+            $this->attachVariantSelectAttr($productId, $attrs['attr']['color'], $attrs['opt']['color'][$color]);
+            $this->attachVariantSelectAttr($productId, $attrs['attr']['size'], $attrs['opt']['size'][$sizeForProduct]);
+            $this->attachVariantTextAttr($productId, $attrs['attr']['material_notes'], $this->materialNotes($fabric));
+            $this->attachVariantTextAttr($productId, $attrs['attr']['what_included'], $this->includedText($piece));
+
+            // Product prices per currency
+            $usd = $this->randMoney(35, 250);
+            $pkr = $this->randMoney(2500, 45000);
+            $this->upsertVariantPrice($productId, 'USD', $usd, null);
+            $this->upsertVariantPrice($productId, 'PKR', $pkr, null);
+
+            // Variants: only for first 5 products
+            $productIndex = $seq;
+            $variantCount = $productIndex <= 5 ? random_int(2, 4) : 0;
 
             $byProduct[$productId] = [];
 
@@ -425,11 +439,11 @@ class CatalogSeeder extends Seeder
                 $this->attachVariantTextAttr($variantId, $attrs['attr']['what_included'], $this->includedText($piece));
 
                 // Variant prices per currency (unique per variant + currency)
-                $usd = $this->randMoney(35, 250);
-                $pkr = $this->randMoney(2500, 45000);
+                $vUsd = $this->randMoney(35, 250);
+                $vPkr = $this->randMoney(2500, 45000);
 
-                $this->upsertVariantPrice($variantId, 'USD', $usd, null);
-                $this->upsertVariantPrice($variantId, 'PKR', $pkr, null);
+                $this->upsertVariantPrice($variantId, 'USD', $vUsd, null);
+                $this->upsertVariantPrice($variantId, 'PKR', $vPkr, null);
             }
 
             // Publish product (optional but useful for dev)
@@ -456,8 +470,6 @@ class CatalogSeeder extends Seeder
         if ($existing) {
             DB::table('products')->where('id', $existing->id)->update([
                 'name' => $name,
-                'meta_title' => $name,
-                'meta_description' => "Pinora Threads: {$name}",
                 'slug' => $slug,
                 'type' => $type,
                 'description' => $description,
@@ -472,8 +484,6 @@ class CatalogSeeder extends Seeder
         return (int) DB::table('products')->insertGetId([
             'sku' => $sku,
             'name' => $name,
-            'meta_title' => $name,
-            'meta_description' => "Pinora Threads: {$name}",
             'slug' => $slug,
             'type' => $type,
             'description' => $description,
@@ -494,41 +504,59 @@ class CatalogSeeder extends Seeder
         bool $isDefault,
         bool $active
     ): int {
-        $existing = DB::table('product_variants')->where('sku', $sku)->first();
+        $existing = DB::table('products')->where('sku', $sku)->first();
         if ($existing) {
-            DB::table('product_variants')->where('id', $existing->id)->update([
-                'product_id' => $productId,
-                'name' => $name,
+            DB::table('products')->where('id', $existing->id)->update([
+                'name' => $name ?? $existing->name,
                 'description' => $description,
-                'default' => $isDefault,
+                'type' => 'simple',
                 'active' => $active,
+                'updated_at' => now(),
+            ]);
+
+            DB::table('product_variants')->insertOrIgnore([
+                'product_id' => $productId,
+                'variant_id' => (int) $existing->id,
+                'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
             return (int) $existing->id;
         }
 
-        return (int) DB::table('product_variants')->insertGetId([
-            'product_id' => $productId,
+        $slug = $this->uniqueSlug('products', Str::slug($name ?? $sku), $sku);
+
+        $variantProductId = (int) DB::table('products')->insertGetId([
             'sku' => $sku,
-            'name' => $name,
+            'name' => $name ?? $sku,
+            'slug' => $slug,
+            'type' => 'simple',
             'description' => $description,
-            'default' => $isDefault,
+            'tax_class_id' => self::TAX_CLASS_ID,
             'active' => $active,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        DB::table('product_variants')->insertOrIgnore([
+            'product_id' => $productId,
+            'variant_id' => $variantProductId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $variantProductId;
     }
 
     private function upsertVariantPrice(int $variantId, string $currencyCode, string $amount, ?string $compareAt): void
     {
-        $existing = DB::table('product_variant_prices')
-            ->where('product_variant_id', $variantId)
+        $existing = DB::table('product_prices')
+            ->where('product_id', $variantId)
             ->where('currency_code', $currencyCode)
             ->first();
 
         if ($existing) {
-            DB::table('product_variant_prices')->where('id', $existing->id)->update([
+            DB::table('product_prices')->where('id', $existing->id)->update([
                 'amount' => $amount,
                 'compare_at' => $compareAt,
                 'updated_at' => now(),
@@ -537,8 +565,8 @@ class CatalogSeeder extends Seeder
             return;
         }
 
-        DB::table('product_variant_prices')->insert([
-            'product_variant_id' => $variantId,
+        DB::table('product_prices')->insert([
+            'product_id' => $variantId,
             'currency_code' => $currencyCode,
             'amount' => $amount,
             'compare_at' => $compareAt,
@@ -549,8 +577,8 @@ class CatalogSeeder extends Seeder
 
     private function attachVariantSelectAttr(int $variantId, int $attributeId, int $optionId): void
     {
-        DB::table('product_variant_attributes')->insertOrIgnore([
-            'product_variant_id' => $variantId,
+        DB::table('product_attributes')->insertOrIgnore([
+            'product_id' => $variantId,
             'attribute_id' => $attributeId,
             'option_id' => $optionId,
             'value' => null,
@@ -559,8 +587,8 @@ class CatalogSeeder extends Seeder
 
     private function attachVariantTextAttr(int $variantId, int $attributeId, string $value): void
     {
-        DB::table('product_variant_attributes')->insertOrIgnore([
-            'product_variant_id' => $variantId,
+        DB::table('product_attributes')->insertOrIgnore([
+            'product_id' => $variantId,
             'attribute_id' => $attributeId,
             'option_id' => null,
             'value' => $value,
@@ -626,14 +654,14 @@ class CatalogSeeder extends Seeder
 
     private function seedBundleProducts(array $products): void
     {
-        // For products typed "bundle", create bundle lines pointing to other variants.
+        // For products typed "bundle", create bundle lines pointing to other products.
         $bundleProductIds = DB::table('products')->where('type', 'bundle')->pluck('id')->all();
         if (empty($bundleProductIds)) {
             return;
         }
 
-        $allVariantIds = DB::table('product_variants')->pluck('id')->all();
-        if (count($allVariantIds) < 5) {
+        $allVariantProductIds = $products['variants'] ?? [];
+        if (count($allVariantProductIds) < 5) {
             return;
         }
 
@@ -643,11 +671,11 @@ class CatalogSeeder extends Seeder
             // Avoid duplicates across reruns
             DB::table('product_bundles')->where('product_id', $bundlePid)->delete();
 
-            $pick = $this->pickMany($allVariantIds, random_int(2, 4));
+            $pick = $this->pickMany($allVariantProductIds, random_int(2, 4));
             foreach ($pick as $vid) {
                 DB::table('product_bundles')->insertOrIgnore([
                     'product_id' => $bundlePid,
-                    'product_variant_id' => (int) $vid,
+                    'bundle_item_id' => (int) $vid,
                     'quantity' => random_int(1, 2),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -658,7 +686,7 @@ class CatalogSeeder extends Seeder
 
     private function seedMediaSystem(array $collections, array $products): void
     {
-        $ownerVariant = 'App\\Models\\ProductVariant';
+        $ownerProduct = 'App\\Models\\Product';
         $ownerCategory = 'App\\Models\\Category';
         $ownerCollection = 'App\\Models\\Collection';
 
@@ -674,6 +702,10 @@ class CatalogSeeder extends Seeder
             $this->attachMedia($thumbAssetId, $ownerCategory, $categoryId, 'thumbnail', 1, true);
             $this->attachMedia($heroAssetId, $ownerCategory, $categoryId, 'hero', 1, true);
             $this->attachMedia($ogAssetId, $ownerCategory, $categoryId, 'og_image', 1, true);
+
+            $this->ensureRenditionsForRole($thumbAssetId, $ownerCategory, 'thumbnail');
+            $this->ensureRenditionsForRole($heroAssetId, $ownerCategory, 'hero');
+            $this->ensureRenditionsForRole($ogAssetId, $ownerCategory, 'og_image');
         }
 
         // Collection media: thumbnail + hero + og_image
@@ -688,30 +720,43 @@ class CatalogSeeder extends Seeder
             $this->attachMedia($thumbAssetId, $ownerCollection, $collectionId, 'thumbnail', 1, true);
             $this->attachMedia($heroAssetId, $ownerCollection, $collectionId, 'hero', 1, true);
             $this->attachMedia($ogAssetId, $ownerCollection, $collectionId, 'og_image', 1, true);
+
+            $this->ensureRenditionsForRole($thumbAssetId, $ownerCollection, 'thumbnail');
+            $this->ensureRenditionsForRole($heroAssetId, $ownerCollection, 'hero');
+            $this->ensureRenditionsForRole($ogAssetId, $ownerCollection, 'og_image');
         }
 
-        // Variant media:
+        // Product media:
         // - thumbnail (1)
         // - hero (1)
         // - og_image (1)
         // - gallery (3) with exactly one primary among gallery items
-        $variantIds = DB::table('product_variants')->pluck('id')->all();
-        foreach ($variantIds as $variantId) {
-            $variantId = (int) $variantId;
+        $allProductIds = array_values(array_unique(array_merge(
+            $products['products'] ?? [],
+            $products['variants'] ?? [],
+        )));
 
-            $thumbAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/thumbnail");
-            $heroAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/hero");
-            $ogAssetId = $this->getOrCreateImageAsset("variants/{$variantId}/og_image");
+        foreach ($allProductIds as $productId) {
+            $productId = (int) $productId;
 
-            $this->attachMedia($thumbAssetId, $ownerVariant, $variantId, 'thumbnail', 1, true);
-            $this->attachMedia($heroAssetId, $ownerVariant, $variantId, 'hero', 1, true);
-            $this->attachMedia($ogAssetId, $ownerVariant, $variantId, 'og_image', 1, true);
+            $thumbAssetId = $this->getOrCreateImageAsset("products/{$productId}/thumbnail");
+            $heroAssetId = $this->getOrCreateImageAsset("products/{$productId}/hero");
+            $ogAssetId = $this->getOrCreateImageAsset("products/{$productId}/og_image");
+
+            $this->attachMedia($thumbAssetId, $ownerProduct, $productId, 'thumbnail', 1, true);
+            $this->attachMedia($heroAssetId, $ownerProduct, $productId, 'hero', 1, true);
+            $this->attachMedia($ogAssetId, $ownerProduct, $productId, 'og_image', 1, true);
+
+            $this->ensureRenditionsForRole($thumbAssetId, $ownerProduct, 'thumbnail');
+            $this->ensureRenditionsForRole($heroAssetId, $ownerProduct, 'hero');
+            $this->ensureRenditionsForRole($ogAssetId, $ownerProduct, 'og_image');
 
             // Gallery positions 1..3 with one primary
             $galleryPrimaryPos = random_int(1, 3);
             for ($pos = 1; $pos <= 3; $pos++) {
-                $assetId = $this->getOrCreateImageAsset("variants/{$variantId}/gallery/{$pos}");
-                $this->attachMedia($assetId, $ownerVariant, $variantId, 'gallery', $pos, $pos === $galleryPrimaryPos);
+                $assetId = $this->getOrCreateImageAsset("products/{$productId}/gallery/{$pos}");
+                $this->attachMedia($assetId, $ownerProduct, $productId, 'gallery', $pos, $pos === $galleryPrimaryPos);
+                $this->ensureRenditionsForRole($assetId, $ownerProduct, 'gallery');
             }
         }
     }
@@ -724,9 +769,6 @@ class CatalogSeeder extends Seeder
 
         $existing = DB::table('media_assets')->where('disk', $disk)->where('key', $key)->first();
         if ($existing) {
-            // ensure at least basic renditions exist (idempotent)
-            $this->ensureRenditions((int) $existing->id, $key);
-
             return (int) $existing->id;
         }
 
@@ -746,30 +788,72 @@ class CatalogSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        $this->ensureRenditions($assetId, $key);
-
         return $assetId;
     }
 
-    private function ensureRenditions(int $assetId, string $key): void
+    private function ensureRenditionsForRole(int $assetId, string $ownerType, string $role): void
     {
-        $profiles = [
-            ['profile' => 'thumb_sm', 'w' => 120, 'h' => 150],
-            ['profile' => 'thumb_md', 'w' => 240, 'h' => 300],
-            ['profile' => 'plp_480w', 'w' => 480, 'h' => 600],
-            ['profile' => 'pdp_1200w', 'w' => 1200, 'h' => 1500],
-        ];
+        $profiles = $this->profilesForRole($ownerType, $role);
+        if (empty($profiles)) {
+            return;
+        }
 
-        foreach ($profiles as $p) {
+        $key = DB::table('media_assets')->where('id', $assetId)->value('key');
+        if (! $key) {
+            return;
+        }
+
+        $this->ensureRenditions($assetId, $key, $profiles);
+    }
+
+    private function profilesForRole(string $ownerType, string $role): array
+    {
+        if ($ownerType === 'App\\Models\\Product') {
+            return match ($role) {
+                'thumbnail' => ['thumb_sm', 'plp_480w'],
+                'gallery' => ['gallery_thumb', 'pdp_1200w'],
+                'hero', 'og_image' => ['pdp_1200w'],
+                default => [],
+            };
+        }
+
+        if ($ownerType === 'App\\Models\\Category' || $ownerType === 'App\\Models\\Collection') {
+            return ['thumb_sm', 'plp_480w'];
+        }
+
+        return [];
+    }
+
+    private function ensureRenditions(int $assetId, string $key, array $profiles): void
+    {
+        $renditions = config('media.renditions', []);
+
+        foreach ($profiles as $profile) {
+            $cfg = $renditions[$profile] ?? null;
+            if (! $cfg || empty($cfg['width'])) {
+                continue;
+            }
+
+            $width = (int) $cfg['width'];
+            $height = (int) round($width * 1.25);
+            $format = $cfg['format'] ?? 'jpg';
+            $ext = $format === 'webp' ? 'webp' : 'jpg';
+            $mime = $format === 'webp' ? 'image/webp' : 'image/jpeg';
+
+            $pathInfo = pathinfo($key);
+            $dir = $pathInfo['dirname'] === '.' ? '' : $pathInfo['dirname'].'/';
+            $base = $pathInfo['filename'];
+            $renditionKey = $dir.$base.'_'.$profile.'.'.$ext;
+
             DB::table('media_renditions')->insertOrIgnore([
                 'media_asset_id' => $assetId,
-                'profile' => $p['profile'],
+                'profile' => $profile,
                 'disk' => 's3',
-                'key' => str_replace('.jpg', '_'.$p['profile'].'.jpg', $key),
-                'mime_type' => 'image/jpeg',
+                'key' => $renditionKey,
+                'mime_type' => $mime,
                 'bytes' => random_int(40_000, 220_000),
-                'width' => $p['w'],
-                'height' => $p['h'],
+                'width' => $width,
+                'height' => $height,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

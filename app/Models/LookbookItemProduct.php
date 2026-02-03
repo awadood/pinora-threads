@@ -14,7 +14,6 @@ class LookbookItemProduct extends AbstractModel
     protected $fillable = [
         'lookbook_item_id',
         'product_id',
-        'product_variant_id',
         'sort_order',
     ];
 
@@ -40,10 +39,5 @@ class LookbookItemProduct extends AbstractModel
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

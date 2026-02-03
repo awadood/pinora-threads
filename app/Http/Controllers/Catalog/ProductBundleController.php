@@ -11,7 +11,7 @@ use Illuminate\Routing\Controller;
 /**
  * ProductBundleController
  *
- * Manage bundle compositions (bundle product -> child variants).
+ * Manage bundle compositions (bundle product -> child products).
  *
  * @author Abdul Wadood
  */

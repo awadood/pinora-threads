@@ -11,24 +11,24 @@ class SeoMeta extends Model
 
     protected $fillable = [
         'meta_title',
-         'meta_description',
-         'meta_robots',
-         'canonical_url',
+        'meta_description',
+        'meta_robots',
+        'canonical_url',
 
         'og_title',
-         'og_description',
-         'og_type',
-         'og_url',
-         'og_image_id',
+        'og_description',
+        'og_type',
+        'og_url',
+        'og_image_id',
 
         'twitter_card',
-         'twitter_title',
-         'twitter_description',
-         'twitter_image_id',
+        'twitter_title',
+        'twitter_description',
+        'twitter_image_id',
 
         'schema_type',
-         'schema_payload',
-         'extra',
+        'schema_payload',
+        'extra',
     ];
 
     /**
@@ -46,7 +46,7 @@ class SeoMeta extends Model
 
     // Lifecycle
 
-    //Relationships
+    // Relationships
     public function owner(): MorphTo
     {
         return $this->morphTo();

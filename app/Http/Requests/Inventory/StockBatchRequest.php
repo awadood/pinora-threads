@@ -22,7 +22,7 @@ class StockBatchRequest extends FormRequest
     {
         return [
             'stock_id' => ['required', 'integer', 'exists:stocks,id'],
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'received_at' => ['required', 'date'],
             'currency_code' => ['required', 'string', 'size:3', 'exists:currencies,code'],
             'unit_cost' => ['required', 'numeric', 'min:0'],

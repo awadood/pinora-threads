@@ -35,7 +35,7 @@ class StockBatchService
             /** @var StockBatch $batch */
             $batch = $this->stockBatches->create([
                 'stock_id' => $data['stock_id'],
-                'variant_id' => $data['variant_id'],
+                'product_id' => $data['product_id'],
                 'received_at' => $data['received_at'],
                 'currency_code' => $data['currency_code'],
                 'unit_cost' => $data['unit_cost'],
@@ -47,7 +47,7 @@ class StockBatchService
             // inside the same transaction (no nested transaction).
             $this->stockAdjustmentService->adjustInTransaction(
                 stockId: (int) $batch->stock_id,
-                variantId: (int) $batch->variant_id,
+                productId: (int) $batch->product_id,
                 quantityDelta: (int) $batch->qty_received,
                 movementTypeCode: StockMovementType::PURCHASE,
                 meta: [

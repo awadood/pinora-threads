@@ -28,7 +28,7 @@ class ProductFilterController extends Controller
                 'q' => [
                     'type' => 'search',
                     'param' => 'q',
-                    'notes' => 'Searches product name/slug OR any variant sku/title/description OR any variant attributes/options.',
+                    'notes' => 'Searches product name/slug/sku/description OR any product attributes/options.',
                 ],
                 'category' => [
                     'type' => 'single',
@@ -44,7 +44,7 @@ class ProductFilterController extends Controller
                         'eq' => 'filter[attr.{code}.eq]',
                         'in' => 'filter[attr.{code}.in]',
                     ],
-                    'notes' => 'Matches if ANY variant matches.',
+                    'notes' => 'Matches if the product attributes match.',
                 ],
                 'price' => [
                     'type' => 'range',
@@ -52,7 +52,7 @@ class ProductFilterController extends Controller
                         'min' => 'filter[price.gte]',
                         'max' => 'filter[price.lte]',
                     ],
-                    'notes' => 'Variant price in store context currency; matches if ANY variant price matches.',
+                    'notes' => 'Product price in store context currency.',
                 ],
                 'in_stock' => [
                     'type' => 'boolean',

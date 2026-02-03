@@ -5,7 +5,6 @@ namespace App\Services\Order;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\ProductPrice;
-use App\Models\ProductVariantPrice;
 use App\Models\User;
 use App\Repositories\Order\Contracts\IOrderRepository;
 use Illuminate\Support\Facades\DB;
@@ -56,15 +55,20 @@ class OrderService
             $totalTax = 0.00;
             $totalShipping = 0.00;
 
-            $cart->load('items.productVariant.product');
+            $cart->load([
+                'items.product.attributes.attribute',
+                'items.product.attributes.option',
+                'items.product.thumbnailMedia.asset',
+                'items.product.heroMedia.asset',
+                'items.product.ogImageMedia.asset',
+            ]);
 
             $orderItemsData = [];
 
             foreach ($cart->items as $item) {
-                $variant = $item->productVariant;
-                $product = $variant->product;
+                $product = $item->product;
 
-                $unitPrice = $this->resolveUnitPrice($variant->id, $product->id, $currency);
+                $unitPrice = $this->resolveUnitPrice($product->id, $currency);
 
                 $lineSubtotal = $unitPrice * $item->quantity;
                 $lineDiscount = 0.00;
@@ -75,15 +79,37 @@ class OrderService
                 $totalDiscount += $lineDiscount;
                 $totalTax += $lineTax;
 
+                $attributesSnapshot = $product->attributes->map(function ($attr) {
+                    return [
+                        'attribute_id' => $attr->attribute_id,
+                        'code' => $attr->attribute?->code,
+                        'label' => $attr->attribute?->label,
+                        'option_id' => $attr->option_id,
+                        'value' => $attr->option?->value ?? $attr->value,
+                    ];
+                })->values()->all();
+
+                $productSnapshot = [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'slug' => $product->slug,
+                    'type' => $product->type,
+                    'description' => $product->description,
+                    'tax_class_id' => $product->tax_class_id,
+                    'attributes' => $attributesSnapshot,
+                    'media' => [
+                        'thumbnail' => $product->thumbnailMedia?->asset?->urlFor('thumb_sm'),
+                        'hero' => $product->heroMedia?->asset?->urlFor('thumb_md'),
+                        'og_image' => $product->ogImageMedia?->asset?->urlFor('thumb_md'),
+                    ],
+                ];
+
                 $orderItemsData[] = [
                     'product_id' => $product->id,
-                    'product_variant_id' => $variant->id,
                     'product_name' => $product->name,
-                    'sku' => $variant->sku,
-                    'variant' => [
-                        'id' => $variant->id,
-                        'title' => $variant->title,
-                    ],
+                    'sku' => $product->sku,
+                    'product' => $productSnapshot,
                     'quantity' => $item->quantity,
                     'unit_price' => $unitPrice,
                     'subtotal' => $lineSubtotal,
@@ -177,23 +203,13 @@ class OrderService
     }
 
     /**
-     * Resolve unit price for given variant+product+currency from catalog tables.
+     * Resolve unit price for given product+currency from catalog tables.
      *
-     * 1. Try product_variant_prices
-     * 2. Fallback to product_prices
-     * 3. If none, throw
+     * 1. Try product_prices
+     * 2. If none, throw
      */
-    protected function resolveUnitPrice(int $variantId, int $productId, string $currencyCode): float
+    protected function resolveUnitPrice(int $productId, string $currencyCode): float
     {
-        /** @var ProductVariantPrice|null $vp */
-        $vp = ProductVariantPrice::where('product_variant_id', $variantId)
-            ->where('currency_code', $currencyCode)
-            ->first();
-
-        if ($vp) {
-            return (float) $vp->amount;
-        }
-
         /** @var ProductPrice|null $pp */
         $pp = ProductPrice::where('product_id', $productId)
             ->where('currency_code', $currencyCode)
@@ -203,7 +219,7 @@ class OrderService
             return (float) $pp->amount;
         }
 
-        throw new RuntimeException('Price not configured for this product/variant in currency '.$currencyCode);
+        throw new RuntimeException('Price not configured for this product in currency '.$currencyCode);
     }
 
     /**

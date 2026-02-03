@@ -19,14 +19,14 @@ class StockBackInSubscriptionRepository extends BaseRepository implements IStock
     protected string $modelClass = StockBackInSubscription::class;
 
     protected array $allowedSearchColumns = [
-        'variant_id' => true,
+        'product_id' => true,
         'user_id' => true,
         'email' => true,
     ];
 
-    public function findExisting(int $variantId, ?int $userId, ?string $email): ?StockBackInSubscription
+    public function findExisting(int $productId, ?int $userId, ?string $email): ?StockBackInSubscription
     {
-        $query = $this->query()->where('variant_id', $variantId);
+        $query = $this->query()->where('product_id', $productId);
 
         if ($userId !== null) {
             $query->where('user_id', $userId);
@@ -39,10 +39,10 @@ class StockBackInSubscriptionRepository extends BaseRepository implements IStock
         return $query->first();
     }
 
-    public function findPendingForVariant(int $variantId): Collection
+    public function findPendingForProduct(int $productId): Collection
     {
         return $this->query()
-            ->where('variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereNull('notified_at')
             ->get();
     }

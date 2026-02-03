@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StockBackInSubscription extends AbstractLoggableModel
 {
     protected $fillable = [
-        'variant_id',
+        'product_id',
         'user_id',
         'email',
         'notified_at',
@@ -32,9 +32,9 @@ class StockBackInSubscription extends AbstractLoggableModel
 
     // Relationships
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'variant_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function user(): BelongsTo

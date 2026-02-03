@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * Concrete repository for CollectionProduct model.
  *
  * Uses the same Eloquent relationship + sync/syncWithoutDetaching/detach pattern
- * as CategoryProductRepository, with the only extension being sort handling.
+ * as other catalog pivots, with the only extension being sort handling.
  *
  * @author Abdul Wadood
  */

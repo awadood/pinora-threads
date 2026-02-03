@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasSeoMeta;
+use App\Models\Traits\HasMedia;
+use App\Models\Traits\HasSeoMeta;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,12 +11,13 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
- * Represents a purchasable product with variants and catalog metadata.
+ * Represents a purchasable product with linked variants and catalog metadata.
  *
  * @author Abdul Wadood
  */
 class Product extends AbstractLoggableModel
 {
+    use HasMedia;
     use HasSeoMeta;
 
     protected $fillable = [
@@ -49,14 +51,29 @@ class Product extends AbstractLoggableModel
         return $this->belongsTo(TaxClass::class);
     }
 
-    public function variants(): HasMany
+    public function variants(): BelongsToMany
     {
-        return $this->hasMany(ProductVariant::class);
+        return $this->belongsToMany(Product::class, 'product_variants', 'product_id', 'variant_id')->withTimestamps();
+    }
+
+    public function variantParents(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_variants', 'variant_id', 'product_id')->withTimestamps();
     }
 
     public function bundles(): HasMany
     {
         return $this->hasMany(ProductBundle::class);
+    }
+
+    public function attributes(): HasMany
+    {
+        return $this->hasMany(ProductAttribute::class);
+    }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(ProductPrice::class);
     }
 
     public function categories(): BelongsToMany

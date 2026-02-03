@@ -13,7 +13,7 @@ class ProductBundle extends AbstractLoggableModel
 {
     protected $fillable = [
         'product_id',
-        'product_variant_id',
+        'bundle_item_id',
         'quantity',
     ];
 
@@ -36,8 +36,8 @@ class ProductBundle extends AbstractLoggableModel
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function variant(): BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class, 'bundle_item_id');
     }
 }

@@ -16,7 +16,7 @@ class CartItemFactory extends Factory
     {
         return [
             'cart_id' => \App\Models\Cart::factory(),
-            'product_variant_id' => \App\Models\ProductVariant::factory(),
+            'product_id' => \App\Models\Product::factory(),
             'quantity' => fake()->numberBetween(1, 5),
         ];
     }

@@ -21,7 +21,7 @@ class StockBackInSubscriptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'email' => ['nullable', 'email'],
         ];
     }

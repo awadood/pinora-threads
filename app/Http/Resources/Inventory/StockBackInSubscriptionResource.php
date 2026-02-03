@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Inventory;
 
-use App\Http\Resources\Catalog\VariantResource;
+use App\Http\Resources\Catalog\ProductResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -16,14 +16,14 @@ class StockBackInSubscriptionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'variant_id' => $this->variant_id,
+            'product_id' => $this->product_id,
             'user_id' => $this->user_id,
             'email' => $this->email,
             'notified_at' => $this->notified_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'variant' => VariantResource::make($this->whenLoaded('variant')),
+            'product' => ProductResource::make($this->whenLoaded('product')),
         ];
     }
 }

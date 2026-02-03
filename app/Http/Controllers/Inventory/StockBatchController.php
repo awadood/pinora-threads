@@ -27,9 +27,9 @@ class StockBatchController extends Controller
         private readonly IStockBatchRepository $stockBatches,
         private readonly StockBatchService $stockBatchService,
     ) {
-        $this->allowedFilters = ['stock_id', 'variant_id', 'received_at', 'qty_remaining'];
+        $this->allowedFilters = ['stock_id', 'product_id', 'received_at', 'qty_remaining'];
         $this->likeFilters = [];
-        $this->allowedSorts = ['variant_id', 'received_at', 'qty_remaining'];
+        $this->allowedSorts = ['product_id', 'received_at', 'qty_remaining'];
     }
 
     public function index(Request $request)
@@ -42,9 +42,8 @@ class StockBatchController extends Controller
         return StockBatchResource::collection(
             $query->with([
                 'stock',
-                'variant.attributes.option.attribute',
-                'variant.thumbnailMedia.asset.renditions',
-                'variant.product.thumbnailMedia.asset.renditions',
+                'product.attributes.option.attribute',
+                'product.thumbnailMedia.asset.renditions',
             ])->paginate($perPage)
         );
     }

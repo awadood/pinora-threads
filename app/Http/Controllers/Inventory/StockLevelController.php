@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 /**
  * StockLevelController
  *
- * CRUD + listing for stock levels per variant per stock location.
+ * CRUD + listing for stock levels per product per stock location.
  *
  * @author Abdul Wadood
  */
@@ -29,18 +29,16 @@ class StockLevelController extends Controller
         private IStockLevelRepository $stockLevels,
         private StockAdjustmentService $adjustmentService
     ) {
-        $this->allowedFilters = ['stock_id', 'variant_id', 'quantity', 'notify_below', 'allow_backorder', 'updated_at'];
-        $this->allowedSorts = ['quantity', 'updated_at', 'variant_id', 'stock_id', 'notify_below'];
+        $this->allowedFilters = ['stock_id', 'product_id', 'quantity', 'notify_below', 'allow_backorder', 'updated_at'];
+        $this->allowedSorts = ['quantity', 'updated_at', 'product_id', 'stock_id', 'notify_below'];
     }
 
     public function index(Request $request)
     {
         $query = $this->stockLevels->query()->with([
             'stock',
-            'variant.product',
-            'variant.attributes.option.attribute',
-            'variant.thumbnailMedia.asset.renditions',
-            'variant.product.thumbnailMedia.asset.renditions',
+            'product.attributes.option.attribute',
+            'product.thumbnailMedia.asset.renditions',
         ]);
 
         $query = $this->stockLevels->applyStatusFilter($query, data_get($request->query('filter', []), 'status'));
@@ -100,7 +98,7 @@ class StockLevelController extends Controller
 
         // Delegate to domain service (handles level create/update, movement, notifications)
         $movement = $this->adjustmentService->adjust(
-            $stockLevel->stock_id, $stockLevel->variant_id, $quantityDelta, StockMovementType::ADJUSTMENT, $meta);
+            $stockLevel->stock_id, $stockLevel->product_id, $quantityDelta, StockMovementType::ADJUSTMENT, $meta);
 
         $stockLevel->refresh(); // Refresh the stock level to get the new quantity
 

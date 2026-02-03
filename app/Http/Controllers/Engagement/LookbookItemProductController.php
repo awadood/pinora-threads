@@ -13,7 +13,7 @@ use Illuminate\Http\JsonResponse;
 /**
  * LookbookItemProductController
  *
- * Attach products / variants to a styled look.
+ * Attach products to a styled look.
  *
  * @author Abdul Wadood
  */

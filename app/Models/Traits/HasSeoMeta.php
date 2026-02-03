@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Concerns;
+namespace App\Models\Traits;
 
 use App\Models\SeoMeta;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -21,12 +21,12 @@ trait HasSeoMeta
 
         // Entity defaults (derive from model fields if present)
         $baseTitle = $ctx['base_title'] ?? ($this->meta_title ?? $this->name ?? null);
-        $baseDesc  = $ctx['base_description'] ?? ($this->meta_description ?? null);
-        $baseUrl   = $ctx['canonical_url'] ?? ($ctx['url'] ?? null);
+        $baseDesc = $ctx['base_description'] ?? ($this->meta_description ?? null);
+        $baseUrl = $ctx['canonical_url'] ?? ($ctx['url'] ?? null);
 
         // 1) Core
         $metaTitle = $seo?->meta_title ?: $baseTitle;
-        $metaDesc  = $seo?->meta_description ?: $baseDesc;
+        $metaDesc = $seo?->meta_description ?: $baseDesc;
 
         // Default robots: index/follow unless explicitly overridden
         $robots = $seo?->meta_robots ?: 'index,follow';
@@ -36,9 +36,9 @@ trait HasSeoMeta
 
         // 2) Open Graph fallbacks
         $ogTitle = $seo?->og_title ?: $metaTitle;
-        $ogDesc  = $seo?->og_description ?: $metaDesc;
-        $ogType  = $seo?->og_type ?: ($ctx['og_type'] ?? 'website');
-        $ogUrl   = $seo?->og_url ?: $canonical;
+        $ogDesc = $seo?->og_description ?: $metaDesc;
+        $ogType = $seo?->og_type ?: ($ctx['og_type'] ?? 'website');
+        $ogUrl = $seo?->og_url ?: $canonical;
 
         // OG image fallback strategy:
         // - explicit og_image_id in seo_meta
@@ -48,7 +48,7 @@ trait HasSeoMeta
         // 3) Twitter fallbacks
         $twCard = $seo?->twitter_card ?: 'summary_large_image';
         $twTitle = $seo?->twitter_title ?: $ogTitle;
-        $twDesc  = $seo?->twitter_description ?: $ogDesc;
+        $twDesc = $seo?->twitter_description ?: $ogDesc;
         $twImageId = $seo?->twitter_image_id ?? $ogImageId;
 
         // 4) Schema fallbacks

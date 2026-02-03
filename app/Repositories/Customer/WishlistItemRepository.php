@@ -28,19 +28,11 @@ class WishlistItemRepository extends BaseRepository implements IWishlistItemRepo
 
     public function findUnique(
         int $wishlistId,
-        int $productId,
-        ?int $productVariantId = null
+        int $productId
     ): ?WishlistItem {
-        $query = $this->query()
+        return $this->query()
             ->where('wishlist_id', $wishlistId)
-            ->where('product_id', $productId);
-
-        if ($productVariantId !== null) {
-            $query->where('product_variant_id', $productVariantId);
-        } else {
-            $query->whereNull('product_variant_id');
-        }
-
-        return $query->first();
+            ->where('product_id', $productId)
+            ->first();
     }
 }

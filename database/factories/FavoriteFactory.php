@@ -17,7 +17,6 @@ class FavoriteFactory extends Factory
         return [
             'user_id' => \App\Models\User::factory(),
             'product_id' => \App\Models\Product::factory(),
-            'product_variant_id' => null,
         ];
     }
 }
