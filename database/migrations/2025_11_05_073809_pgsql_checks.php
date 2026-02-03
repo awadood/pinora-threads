@@ -47,10 +47,6 @@ return new class extends Migration
             DB::statement('CREATE INDEX products_name_trgm_idx ON products USING GIN (name gin_trgm_ops)');
             DB::statement('CREATE INDEX products_slug_trgm_idx ON products USING GIN (slug gin_trgm_ops)');
 
-            // enforce each product will have one DEFAULT variant
-            DB::statement('CREATE UNIQUE INDEX product_variants_one_default_per_product
-                ON product_variants (product_id) WHERE "default" = true');
-
             // Hygiene: disallow self-relations and duplicate pairs (A,B) vs (B,A)
             DB::statement('ALTER TABLE related_products ADD CONSTRAINT related_products_no_self 
                 CHECK (product_id <> related_product_id)');
@@ -193,7 +189,6 @@ return new class extends Migration
             DB::statement('DROP INDEX IF EXISTS related_products_unique_pair');
             DB::statement('DROP INDEX IF EXISTS products_name_trgm_idx');
             DB::statement('DROP INDEX IF EXISTS products_slug_trgm_idx');
-            DB::statement('DROP INDEX IF EXISTS product_variants_one_default_per_product');
 
             // ---- Tax engine
 

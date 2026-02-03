@@ -16,10 +16,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestampsTz();
 
-            $table->unique(['user_id', 'product_id', 'product_variant_id']);
+            $table->unique(['user_id', 'product_id']);
 
             $table->index(['user_id', 'created_at']);
         });
@@ -41,10 +40,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('wishlist_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestampsTz();
 
-            $table->unique(['wishlist_id', 'product_id', 'product_variant_id']);
+            $table->unique(['wishlist_id', 'product_id']);
         });
 
         // recently_viewed
@@ -53,12 +51,11 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('visitor_key')->nullable();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestampTz('viewed_at')->useCurrent();
             $table->timestampsTz();
 
-            $table->unique(['visitor_key', 'product_id', 'product_variant_id']);
-            $table->unique(['user_id', 'product_id', 'product_variant_id']);
+            $table->unique(['visitor_key', 'product_id']);
+            $table->unique(['user_id', 'product_id']);
 
             $table->index(['product_id']);
             $table->index(['visitor_key']);
@@ -114,17 +111,16 @@ return new class extends Migration
             $table->index(['lookbook_id', 'sort_order']);
         });
 
-        // Link look items to products/variants - Lets each styled look point to multiple products; optionally to a specific variant.
+        // Link look items to products.
         Schema::create('lookbook_item_products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lookbook_item_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestampsTz();
 
-            // Prevent duplicate attachments of the same product/variant to the same look
-            $table->unique(['lookbook_item_id', 'product_id', 'product_variant_id']);
+            // Prevent duplicate attachments of the same product to the same look
+            $table->unique(['lookbook_item_id', 'product_id']);
 
             $table->index(['lookbook_item_id', 'sort_order']);
         });

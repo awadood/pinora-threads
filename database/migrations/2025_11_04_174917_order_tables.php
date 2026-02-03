@@ -27,11 +27,11 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cart_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('quantity');
             $table->timestampsTz();
 
-            $table->unique(['cart_id', 'product_variant_id']);
+            $table->unique(['cart_id', 'product_id']);
         });
 
         Schema::create('orders', function (Blueprint $table) {
@@ -85,10 +85,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained();
             $table->foreignId('product_id')->constrained();
-            $table->foreignId('product_variant_id')->constrained();
             $table->string('product_name');
             $table->string('sku');
-            $table->jsonb('variant');
+            $table->jsonb('product');
             $table->unsignedInteger('quantity');
             $table->decimal('unit_price', 12, 2);
             $table->decimal('subtotal', 12, 2); // unit*qty

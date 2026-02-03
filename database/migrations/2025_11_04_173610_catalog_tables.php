@@ -70,63 +70,56 @@ return new class extends Migration
             $table->index(['active', 'published_at']);
         });
 
-        // Variants (simple/variable/bundle product will have atleast one variant)
-        Schema::create('product_variants', function (Blueprint $table) {
+        Schema::create('product_attributes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained();
-            $table->string('sku')->unique();
-            $table->string('name')->nullable(); // specific variant name for PDP. if null, inherit.
-            $table->text('description')->nullable(); // detailed variant description for PLP/PDP. if null, inherit
-            $table->boolean('default')->default(false);
-            $table->boolean('active')->default(false);
-            $table->timestampsTz();
-
-            $table->index(['product_id', 'active']);
-        });
-
-        // Only variants can have different attributes to describe prouduct
-        Schema::create('product_variant_attributes', function (Blueprint $table) {
-            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
             $table->foreignId('option_id')->nullable()->constrained('attribute_options')->cascadeOnDelete();
             $table->string('value')->nullable();
             $table->timestampsTz();
 
-            $table->primary(['product_variant_id', 'attribute_id']);
+            $table->unique(['product_id', 'attribute_id']);
 
             // these indexes are only useful when filters are applied
             $table->index(['attribute_id', 'option_id']);
             $table->index(['attribute_id', 'value']);
         });
 
-        // Pricing per variant per currency (admin-set, no FX)
-        Schema::create('product_variant_prices', function (Blueprint $table) {
+        // admin-set pricing, no FX
+        Schema::create('product_prices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('currency_code', 3);
             $table->decimal('amount', 12, 2); // the price will always be saved like 10.00 or 9.99
             $table->decimal('compare_at', 12, 2)->nullable(); // Original price to show strikethrough and compute discount %
             $table->timestampsTz();
 
-            $table->unique(['product_variant_id', 'currency_code']);
+            $table->unique(['product_id', 'currency_code']);
 
             $table->index(['currency_code', 'amount']);
 
             $table->foreign('currency_code')->references('code')->on('currencies');
         });
 
-        // Bundles: a product of type "bundle" maps to the variants
+        Schema::create('product_variants', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('variant_id')->constrained('products')->cascadeOnDelete();
+            $table->timestampsTz();
+
+            $table->unique(['product_id', 'variant_id']);
+        });
+
         Schema::create('product_bundles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('bundle_item_id')->constrained('products')->cascadeOnDelete();
             $table->unsignedInteger('quantity')->default(1);
             $table->timestampsTz();
 
-            $table->unique(['product_id', 'product_variant_id']);
+            $table->unique(['product_id', 'bundle_item_id']);
         });
 
-        // Related products (manual)
         Schema::create('related_products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
@@ -178,12 +171,12 @@ return new class extends Migration
          *
          * API Contract
          * - Client uses short keys for owner_type:
-         *     variant | category | collection
+         *     product | category | collection
          * - DB stores owner_type as fully-qualified model class:
-         *     App\Models\ProductVariant, ...
+         *     App\Models\Product, ...
          *
          * Roles (v1)
-         * - variant:   thumbnail, gallery, hero, og_image
+         * - product:   thumbnail, gallery, hero, og_image
          * - category:  thumbnail, hero, og_image
          * - collection: thumbnail, hero, og_image
          *
@@ -398,6 +391,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('seo_meta');
         Schema::dropIfExists('merch_section_items');
         Schema::dropIfExists('merch_sections');
         Schema::dropIfExists('media_videos');
@@ -409,9 +403,9 @@ return new class extends Migration
         Schema::dropIfExists('category_product');
         Schema::dropIfExists('related_products');
         Schema::dropIfExists('product_bundles');
-        Schema::dropIfExists('product_variant_prices');
-        Schema::dropIfExists('product_variant_attributes');
         Schema::dropIfExists('product_variants');
+        Schema::dropIfExists('product_prices');
+        Schema::dropIfExists('product_attributes');
         Schema::dropIfExists('products');
         Schema::dropIfExists('collections');
         Schema::dropIfExists('categories');
