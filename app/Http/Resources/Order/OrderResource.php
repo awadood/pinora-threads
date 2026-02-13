@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Order;
 
+use App\Services\Order\OrderClaimService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,11 +18,18 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $links = app(OrderClaimService::class);
+
         return [
             'id' => $this->id,
             'number' => $this->number,
             'user_id' => $this->user_id,
             'currency_code' => $this->currency_code,
+            'guest_token' => $this->guest_token,
+            'claim_status' => $this->claim_status,
+            'customer_name' => $this->customer_name,
+            'customer_email' => $this->customer_email,
+            'customer_phone' => $this->customer_phone,
             'order_status_code' => $this->order_status_code,
             'billing_address_id' => $this->billing_address_id,
             'shipping_address_id' => $this->shipping_address_id,
@@ -49,6 +57,8 @@ class OrderResource extends JsonResource
             'refunded_at' => $this->refunded_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'tracking_url' => $links->buildTrackingUrl($this->resource),
+            'claim_url' => $links->buildClaimUrl($this->resource),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
         ];
     }

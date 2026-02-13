@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Order;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Order\CartResource;
+use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Support\ResolvesCart;
@@ -32,9 +33,7 @@ class CartController extends Controller
     {
         $cart = $this->resolveCart($request);
 
-        $cart->load([
-            'items.product',
-        ]);
+        $this->loadCartForResponse($cart);
 
         return CartResource::make($cart);
     }
@@ -71,7 +70,8 @@ class CartController extends Controller
             ]);
         }
 
-        $cart->refresh()->load(['items.product']);
+        $cart->refresh();
+        $this->loadCartForResponse($cart);
 
         return CartResource::make($cart);
     }
@@ -100,7 +100,8 @@ class CartController extends Controller
             $item->save();
         }
 
-        $cart->refresh()->load(['items.product']);
+        $cart->refresh();
+        $this->loadCartForResponse($cart);
 
         return CartResource::make($cart);
     }
@@ -118,7 +119,8 @@ class CartController extends Controller
 
         $item->delete();
 
-        $cart->refresh()->load(['items.product']);
+        $cart->refresh();
+        $this->loadCartForResponse($cart);
 
         return CartResource::make($cart);
     }
@@ -132,7 +134,23 @@ class CartController extends Controller
 
         $cart->items()->delete();
         $cart->refresh();
+        $this->loadCartForResponse($cart);
 
         return CartResource::make($cart);
+    }
+
+    private function loadCartForResponse(Cart $cart): void
+    {
+        $currencyCode = $cart->currency_code;
+
+        $cart->load([
+            'items.cart',
+            'items.product' => function ($query) use ($currencyCode) {
+                $query->with([
+                    'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $currencyCode),
+                    'thumbnailMedia.asset.renditions',
+                ]);
+            },
+        ]);
     }
 }

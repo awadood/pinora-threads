@@ -16,7 +16,6 @@ class MediaAssetRepository extends BaseRepository implements IMediaAssetReposito
     protected array $allowedSearchColumns = [
         'type' => true,
         'key' => true,
-        'cdn_url' => true,
         'checksum' => true,
         'mime_type' => true,
     ];
@@ -44,7 +43,6 @@ class MediaAssetRepository extends BaseRepository implements IMediaAssetReposito
             $term = (string) $filters['q'];
             $q->where(function ($qq) use ($term) {
                 $qq->where('key', 'like', "%{$term}%")
-                    ->orWhere('cdn_url', 'like', "%{$term}%")
                     ->orWhere('checksum', 'like', "%{$term}%");
             });
         }

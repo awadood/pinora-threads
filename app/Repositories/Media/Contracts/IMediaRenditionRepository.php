@@ -18,7 +18,7 @@ interface IMediaRenditionRepository extends IBaseRepository
      *
      * Semantics:
      * - Inserts missing profiles.
-     * - Updates existing profiles fields (disk/key/cdn_url/dimensions/bytes/mime_type).
+     * - Updates existing profiles fields (disk/key/dimensions/bytes/mime_type).
      */
     public function upsertForAsset(MediaAsset $asset, array $profiles): int;
 }

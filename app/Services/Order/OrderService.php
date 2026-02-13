@@ -4,10 +4,12 @@ namespace App\Services\Order;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\ProductPrice;
+use App\Models\ShipmentMethod;
 use App\Models\User;
 use App\Repositories\Order\Contracts\IOrderRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -22,13 +24,18 @@ use RuntimeException;
  */
 class OrderService
 {
-    public function __construct(protected IOrderRepository $orders) {}
+    public function __construct(
+        protected IOrderRepository $orders,
+        protected ProductPriceResolver $prices,
+        protected ShipmentRateService $shippingRates,
+        protected OrderClaimService $claimService,
+    ) {}
 
     /**
      * Create an order from the given cart.
      *
      * Expected payload keys (validated in CheckoutRequest):
-     *  - email, first_name, last_name
+     *  - email, full_name, phone
      *  - billing_address, shipping_address (arrays)
      *  - billing_address_id, shipping_address_id (optional)
      */
@@ -38,17 +45,40 @@ class OrderService
             throw new RuntimeException('Cart is empty.');
         }
 
-        $user = $this->resolveOrCreateUser($payload, $authUser);
+        $customerEmail = $authUser?->email ?? (string) ($payload['email'] ?? '');
+        if ($customerEmail === '') {
+            throw new RuntimeException('Email is required.');
+        }
 
-        // Attach cart to user if not already
-        if (! $cart->user_id) {
-            $cart->user_id = $user->id;
+        $existingUser = $authUser ?: User::where('email', $customerEmail)->first();
+        $claimStatus = $authUser
+            ? Order::CLAIM_STATUS_CLAIMED
+            : ($existingUser ? Order::CLAIM_STATUS_PENDING : Order::CLAIM_STATUS_NEW);
+        $guestToken = $authUser ? null : (string) Str::uuid();
+
+        $requestedShipping = $payload['shipping_method_code'] ?? null;
+        if ($requestedShipping) {
+            $available = collect($this->shippingRates->listForCart($cart))
+                ->firstWhere('code', $requestedShipping);
+            if (! $available) {
+                throw new RuntimeException('Selected shipping method is not available.');
+            }
+
+            if ($cart->shipping_method_code !== $requestedShipping) {
+                $cart->shipping_method_code = $requestedShipping;
+                $cart->save();
+            }
+        }
+
+        // Attach cart to user if authenticated
+        if ($authUser && ! $cart->user_id) {
+            $cart->user_id = $authUser->id;
             $cart->save();
         }
 
         $currency = $cart->currency_code;
 
-        return DB::transaction(function () use ($cart, $user, $payload, $currency) {
+        $order = DB::transaction(function () use ($cart, $authUser, $payload, $currency, $customerEmail, $claimStatus, $guestToken) {
             // 1. Compute totals
             $itemsSubtotal = 0.00;
             $totalDiscount = 0.00;
@@ -68,7 +98,7 @@ class OrderService
             foreach ($cart->items as $item) {
                 $product = $item->product;
 
-                $unitPrice = $this->resolveUnitPrice($product->id, $currency);
+                $unitPrice = $this->prices->resolveForProduct($product, $currency);
 
                 $lineSubtotal = $unitPrice * $item->quantity;
                 $lineDiscount = 0.00;
@@ -119,20 +149,45 @@ class OrderService
                 ];
             }
 
+            $shippingMethodCode = $cart->shipping_method_code;
+            if ($shippingMethodCode) {
+                $shippingPrice = $this->shippingRates->resolveForMethod($shippingMethodCode, $currency, $itemsSubtotal);
+                $totalShipping = (float) ($shippingPrice ?? 0.00);
+            }
+
             $total = $itemsSubtotal - $totalDiscount + $totalTax + $totalShipping;
 
             // 2. Generate order number (unix timestamp with retry on collision)
             $orderNumber = $this->generateOrderNumber();
 
             // 3. Create order
+            $isPickup = $shippingMethodCode === ShipmentMethod::PICKUP;
+
+            $billingAddress = is_array($payload['billing_address'] ?? null)
+                ? $payload['billing_address']
+                : null;
+            $shippingAddress = is_array($payload['shipping_address'] ?? null)
+                ? $payload['shipping_address']
+                : $billingAddress;
+
+            if (! $isPickup && (! is_array($billingAddress) || ! is_array($shippingAddress))) {
+                throw new RuntimeException('Billing and shipping addresses are required for delivery orders.');
+            }
+
             $orderAttributes = [
                 'number' => $orderNumber,
-                'user_id' => $user->id,
+                'user_id' => $authUser?->id,
+                'cart_id' => $cart->id,
+                'guest_token' => $guestToken,
                 'currency_code' => $currency,
+                'customer_name' => $payload['full_name'],
+                'customer_email' => $customerEmail,
+                'customer_phone' => $payload['phone'],
+                'claim_status' => $claimStatus,
                 'billing_address_id' => $payload['billing_address_id'] ?? null,
                 'shipping_address_id' => $payload['shipping_address_id'] ?? null,
-                'billing_address' => $payload['billing_address'],
-                'shipping_address' => $payload['shipping_address'],
+                'billing_address' => $billingAddress,
+                'shipping_address' => $shippingAddress,
                 'tax_inclusive' => false, // can be adjusted via future TaxService
                 'items_subtotal' => $itemsSubtotal,
                 'total_discount' => $totalDiscount,
@@ -143,10 +198,10 @@ class OrderService
                 'shipment' => null,
                 'promotions' => null,
                 'taxes' => null,
-                'payment_method' => null,
+                'payment_method' => $payload['payment_method'] ?? null,
                 'payment_txn_id' => null,
                 'idempotency_key' => null,
-                'shipping_method' => null,
+                'shipping_method' => $shippingMethodCode,
                 'tracking_number' => null,
                 'carrier' => null,
             ];
@@ -164,6 +219,12 @@ class OrderService
 
             return $order->fresh(['items']);
         });
+
+        DB::afterCommit(function () use ($order) {
+            $this->sendOrderConfirmation($order);
+        });
+
+        return $order;
     }
 
     /**
@@ -178,30 +239,6 @@ class OrderService
         $order->save();
     }
 
-    protected function resolveOrCreateUser(array $payload, ?User $authUser = null): User
-    {
-        if ($authUser) {
-            return $authUser;
-        }
-
-        $email = $payload['email'];
-
-        /** @var User|null $user */
-        $user = User::where('email', $email)->first();
-
-        if (! $user) {
-            $user = User::create([
-                'name' => trim(($payload['first_name'] ?? '').' '.($payload['last_name'] ?? '')),
-                'email' => $email,
-                'password' => bcrypt(str()->random(32)),
-            ]);
-
-            // TODO: assign customer role via Spatie roles, e.g. $user->assignRole('customer');
-        }
-
-        return $user;
-    }
-
     /**
      * Resolve unit price for given product+currency from catalog tables.
      *
@@ -210,16 +247,7 @@ class OrderService
      */
     protected function resolveUnitPrice(int $productId, string $currencyCode): float
     {
-        /** @var ProductPrice|null $pp */
-        $pp = ProductPrice::where('product_id', $productId)
-            ->where('currency_code', $currencyCode)
-            ->first();
-
-        if ($pp) {
-            return (float) $pp->amount;
-        }
-
-        throw new RuntimeException('Price not configured for this product in currency '.$currencyCode);
+        return $this->prices->resolve($productId, $currencyCode);
     }
 
     /**
@@ -234,6 +262,20 @@ class OrderService
         }
 
         return $number;
+    }
+
+    protected function sendOrderConfirmation(Order $order): void
+    {
+        try {
+            $trackingUrl = $this->claimService->buildTrackingUrl($order);
+            $claimUrl = $this->claimService->buildClaimUrl($order);
+
+            Mail::to($order->customer_email)->send(
+                new \App\Mail\OrderPlacedMail($order, $trackingUrl, $claimUrl)
+            );
+        } catch (\Throwable $e) {
+            // Silent by design: order placement should not fail if email fails.
+        }
     }
 
     protected function initiatePayment(Order $order): void

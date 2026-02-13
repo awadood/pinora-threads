@@ -68,55 +68,55 @@ class PlpRepository implements IPlpRepository
 
     private function applyProductFilters(Builder $query, ProductListQuery $q): void
     {
-        $f = $q->productFilters;
+        $f = is_array($q->productFilters) ? $q->productFilters : [];
 
         if ($q->profile === ProductFilters::PROFILE_STOREFRONT) {
             $query->where('products.active', true);
-        } elseif (array_key_exists('active', $f) && $f['active'] !== null) {
-            $query->where('products.active', $f['active']);
+        } elseif (array_key_exists('active', $f) && ($f['active'] ?? null) !== null) {
+            $query->where('products.active', $f['active'] ?? null);
         }
 
         if ($q->profile === ProductFilters::PROFILE_ADMIN) {
-            if (! empty($f['type'])) {
-                $query->where('products.type', $f['type']);
+            if (! empty($f['type'] ?? null)) {
+                $query->where('products.type', $f['type'] ?? null);
             }
-            if (! empty($f['type_in']) && is_array($f['type_in'])) {
-                $query->whereIn('products.type', $f['type_in']);
+            if (! empty($f['type_in'] ?? null) && is_array($f['type_in'])) {
+                $query->whereIn('products.type', $f['type_in'] ?? []);
             }
-            if (! empty($f['sku'])) {
-                $query->where('products.sku', $f['sku']);
+            if (! empty($f['sku'] ?? null)) {
+                $query->where('products.sku', $f['sku'] ?? null);
             }
-            if (! empty($f['slug'])) {
-                $query->where('products.slug', $f['slug']);
+            if (! empty($f['slug'] ?? null)) {
+                $query->where('products.slug', $f['slug'] ?? null);
             }
-            if (! empty($f['name']) && is_string($f['name'])) {
+            if (! empty($f['name'] ?? null) && is_string($f['name'])) {
                 $query->where('products.name', 'ilike', '%'.$f['name'].'%');
             }
         }
 
-        if (! empty($f['category_slug'])) {
-            $slug = $f['category_slug'];
+        if (! empty($f['category_slug'] ?? null)) {
+            $slug = $f['category_slug'] ?? null;
             $query->whereHas('categories', fn (Builder $c) => $c->where('slug', $slug));
         }
 
-        if (! empty($f['collection_slug'])) {
-            $slug = $f['collection_slug'];
+        if (! empty($f['collection_slug'] ?? null)) {
+            $slug = $f['collection_slug'] ?? null;
             $query->whereHas('collections', fn (Builder $c) => $c->where('slug', $slug));
         }
 
-        if (! empty($f['ids_in']) && is_array($f['ids_in'])) {
-            $query->whereIn('products.id', $f['ids_in']);
+        if (! empty($f['ids_in'] ?? null) && is_array($f['ids_in'])) {
+            $query->whereIn('products.id', $f['ids_in'] ?? []);
         }
     }
 
     private function applyDetailFilters(Builder $query, ProductListQuery $q): void
     {
-        $f = $q->detailFilters;
+        $f = is_array($q->detailFilters) ? $q->detailFilters : [];
         $currency = $q->currencyCode;
         $stockIds = $q->stockIds;
 
-        if (! empty($f['q'])) {
-            $term = trim((string) $f['q']);
+        if (! empty($f['q'] ?? null)) {
+            $term = trim((string) ($f['q'] ?? ''));
             $like = '%'.$term.'%';
 
             $query->where(function (Builder $w) use ($like) {
@@ -140,36 +140,38 @@ class PlpRepository implements IPlpRepository
             });
         }
 
-        if (! empty($f['attrs_eq'])) {
-            foreach ($f['attrs_eq'] as $code => $value) {
+        if (! empty($f['attrs_eq'] ?? null)) {
+            foreach (($f['attrs_eq'] ?? []) as $code => $value) {
                 $values = is_array($value) ? $value : [$value];
                 $this->applyAttributeFilter($query, $code, $values);
             }
         }
 
-        if (! empty($f['attrs_in'])) {
-            foreach ($f['attrs_in'] as $code => $values) {
+        if (! empty($f['attrs_in'] ?? null)) {
+            foreach (($f['attrs_in'] ?? []) as $code => $values) {
                 $this->applyAttributeFilter($query, $code, $values);
             }
         }
 
-        if ($f['price_gte'] !== null || $f['price_lte'] !== null) {
-            $query->whereExists(function ($sub) use ($currency, $f) {
+        $priceGte = $f['price_gte'] ?? null;
+        $priceLte = $f['price_lte'] ?? null;
+        if ($priceGte !== null || $priceLte !== null) {
+            $query->whereExists(function ($sub) use ($currency, $priceGte, $priceLte) {
                 $sub->selectRaw('1')
                     ->from('product_prices as pp')
                     ->whereColumn('pp.product_id', 'products.id')
                     ->where('pp.currency_code', $currency);
 
-                if ($f['price_gte'] !== null) {
-                    $sub->where('pp.amount', '>=', $f['price_gte']);
+                if ($priceGte !== null) {
+                    $sub->where('pp.amount', '>=', $priceGte);
                 }
-                if ($f['price_lte'] !== null) {
-                    $sub->where('pp.amount', '<=', $f['price_lte']);
+                if ($priceLte !== null) {
+                    $sub->where('pp.amount', '<=', $priceLte);
                 }
             });
         }
 
-        if ($f['in_stock'] === true && count($stockIds) > 0) {
+        if (($f['in_stock'] ?? null) === true && count($stockIds) > 0) {
             $query->whereExists(function ($sub) use ($stockIds) {
                 $sub->selectRaw('1')
                     ->from('stock_levels as sl')

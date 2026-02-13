@@ -34,7 +34,6 @@ class OrderController extends Controller
      *
      * Guest or auth:
      *  - resolve cart by X-Cart-Key
-     *  - if guest, create or reuse user by email
      *  - create order from cart using OrderService
      *  - attach cart to user and mark as checked_out
      */

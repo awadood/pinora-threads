@@ -16,8 +16,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = 'admin@pinorathreads.com';
-        User::firstOrCreate(['email' => $email], ['name' => 'Administrator', 'password' => Hash::make('password')]);
+        User::firstOrCreate(
+            ['email' => 'admin@pinorathreads.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('password'),
+                'phone' => '03006815558',
+                'active' => true,
+            ]
+        );
 
         $this->call([
             CoreTablesSeeder::class,

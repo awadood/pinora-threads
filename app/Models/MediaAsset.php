@@ -38,20 +38,20 @@ class MediaAsset extends AbstractLoggableModel
 
     /**
      * Get the url for the given profile. if the profile does not exists then
-     * either cdn_url or key is returned.
+     * rendition key or asset key is returned.
      *
-     * @return string the selected url
+     * @return string|null the selected storage key
      */
     public function urlFor(?string $profile): ?string
     {
         if ($profile) {
             $rendition = $this->renditions->firstWhere('profile', $profile);
             if ($rendition) {
-                return $rendition->cdn_url ?: $rendition->key;
+                return $rendition->key;
             }
         }
 
-        return $this->cdn_url ?: $this->key;
+        return $this->key;
     }
 
     // Lifecycle

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Inventory;
 
 use App\Http\Resources\Catalog\ProductResource;
+use App\Support\Media\MediaUrl;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -30,7 +31,7 @@ class StockLevelResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'image' => $asset?->urlFor('thumb_sm'),
+            'image' => MediaUrl::fromKeyOrUrl($asset?->urlFor('thumb_sm')),
             'image_alt' => $altText,
 
             'stock' => StockResource::make($this->whenLoaded('stock')),

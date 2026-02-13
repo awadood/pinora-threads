@@ -1,8 +1,11 @@
 <?php
 
 return [
+    'frontend_url' => env('STOREFRONT_FRONTEND_URL', 'http://localhost:3000'),
     'cookie_name' => env('STOREFRONT_COOKIE_NAME', 'store_ctx'),
     'ttl_days' => (int) env('STOREFRONT_TTL_DAYS', 30),
+    'claim_link_ttl_minutes' => (int) env('STOREFRONT_CLAIM_LINK_TTL_MINUTES', 1440),
+    'claim_link_secret' => env('STOREFRONT_CLAIM_LINK_SECRET', ''),
 
     // Allowed explicit override values (query param)
     'allowed_countries' => ['US', 'PK', 'GB', 'CA'],

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Services\Order\OrderClaimService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -19,6 +20,10 @@ class AuthController extends Controller
         }
         $request->session()->regenerate();
 
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+        app(OrderClaimService::class)->claimOrdersForUser($user);
+
         return response()->json();
     }
 
@@ -31,6 +36,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => ['Invalid credentials.']]);
         }
         $user = $request->user();
+        app(OrderClaimService::class)->claimOrdersForUser($user);
         $token = $user->createToken('access_token')->plainTextToken;
 
         return response()->json(['token' => $token]);

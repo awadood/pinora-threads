@@ -52,6 +52,8 @@ use App\Http\Controllers\Media\MediaAttachmentController;
 use App\Http\Controllers\Media\MediaRenditionController;
 use App\Http\Controllers\Media\MediaVideoController;
 use App\Http\Controllers\Order\CartController;
+use App\Http\Controllers\Order\CartShippingController;
+use App\Http\Controllers\Order\GuestOrderController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Payment\InvoiceController;
 use App\Http\Controllers\Payment\PaymentAttemptController;
@@ -152,11 +154,16 @@ Route::post('stock-back-in-subscriptions', [StockBackInSubscriptionController::c
 
 // Order
 Route::get('cart', [CartController::class, 'show']);
+Route::get('cart/shipping-methods', [CartShippingController::class, 'index']);
+Route::put('cart/shipping-methods', [CartShippingController::class, 'update']);
 Route::post('cart/items', [CartController::class, 'addItem']);
 Route::put('cart/items/{item}', [CartController::class, 'updateItem']);
 Route::delete('cart/items/{item}', [CartController::class, 'removeItem']);
 Route::delete('cart/clear', [CartController::class, 'clear']);
 Route::post('cart/checkout', [OrderController::class, 'checkout']);
+Route::get('orders/track', [GuestOrderController::class, 'track']);
+Route::get('orders/claim', [GuestOrderController::class, 'showClaim']);
+Route::post('orders/claim', [GuestOrderController::class, 'claim']);
 
 // Payment
 Route::get('invoices', [InvoiceController::class, 'indexCustomer']);

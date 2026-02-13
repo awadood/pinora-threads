@@ -12,7 +12,7 @@ interface IMediaAssetRepository extends IBaseRepository
      * Paginated listing for media assets for admin search/browse.
      *
      * Semantics:
-     * - Supports filtering by type (image/video) and free-text search on key/cdn_url/checksum.
+     * - Supports filtering by type (image/video) and free-text search on key/checksum.
      */
     public function paginateForAdmin(array $filters, int $perPage = 20): LengthAwarePaginator;
 

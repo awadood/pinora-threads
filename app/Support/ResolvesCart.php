@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\Cart;
+use App\Models\ShipmentMethod;
+use App\Support\Storefront\StoreContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -41,10 +43,13 @@ trait ResolvesCart
         if (! $cart) {
             $currencyCode = $this->resolveCurrencyCode($request);
 
+            $defaultShipping = ShipmentMethod::query()->where('code', ShipmentMethod::SELF)->where('active', true)->first();
+
             $cart = Cart::create([
                 'user_id' => $user?->id,
                 'cookie_key' => $cookieKey,
                 'currency_code' => $currencyCode,
+                'shipping_method_code' => $defaultShipping?->code,
             ]);
         } else {
             if ($user && ! $cart->user_id) {
@@ -58,6 +63,11 @@ trait ResolvesCart
 
     protected function resolveCurrencyCode(Request $request): string
     {
+        $ctx = $request->attributes->get('store_ctx');
+        if ($ctx instanceof StoreContext && $ctx->currency) {
+            return $ctx->currency;
+        }
+
         $headerCurrency = $request->header('X-Currency-Code');
         if (in_array($headerCurrency, ['PKR', 'USD'], true)) {
             return $headerCurrency;

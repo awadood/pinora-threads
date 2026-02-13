@@ -40,7 +40,6 @@ class MediaRenditionRepository extends BaseRepository implements IMediaRendition
                 'profile' => $p['profile'],
                 'disk' => $p['disk'] ?? 's3',
                 'key' => $p['key'],
-                'cdn_url' => $p['cdn_url'] ?? null,
                 'mime_type' => $p['mime_type'] ?? null,
                 'bytes' => $p['bytes'] ?? null,
                 'width' => $p['width'] ?? null,
@@ -57,7 +56,7 @@ class MediaRenditionRepository extends BaseRepository implements IMediaRendition
         MediaRendition::upsert(
             $rows,
             ['media_asset_id', 'profile'],
-            ['disk', 'key', 'cdn_url', 'mime_type', 'bytes', 'width', 'height', 'updated_at']
+            ['disk', 'key', 'mime_type', 'bytes', 'width', 'height', 'updated_at']
         );
 
         return count($rows);

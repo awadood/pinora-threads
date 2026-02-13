@@ -151,6 +151,27 @@ return new class extends Migration
             $table->index(['shipment_method_code', 'carrier']);
         });
 
+        Schema::create('shipment_rates', function (Blueprint $table) {
+            $table->id();
+            $table->string('shipment_method_code');
+            $table->string('currency_code', 3);
+            $table->decimal('min_subtotal', 12, 2)->nullable();
+            $table->decimal('max_subtotal', 12, 2)->nullable();
+            $table->decimal('price', 12, 2);
+            $table->boolean('active')->default(true);
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestampsTz();
+
+            $table->foreign('shipment_method_code')->references('code')->on('shipment_methods');
+            $table->foreign('currency_code')->references('code')->on('currencies');
+
+            $table->index(['shipment_method_code', 'currency_code', 'active']);
+            $table->index(['currency_code', 'active']);
+
+            $table->unique(['shipment_method_code', 'currency_code', 'min_subtotal', 'max_subtotal']);
+            $table->unique(['shipment_method_code', 'currency_code', 'sort_order']);
+        });
+
         Schema::create('cod_postal_codes', function (Blueprint $table) {
             $table->id();
             $table->string('country_code', 2);
@@ -222,6 +243,8 @@ return new class extends Migration
         Schema::dropIfExists('promotion_redemptions');
         Schema::dropIfExists('promotion_coupons');
         Schema::dropIfExists('promotions');
+        Schema::dropIfExists('cod_postal_codes');
+        Schema::dropIfExists('shipment_rates');
         Schema::dropIfExists('shipments');
         Schema::dropIfExists('refunds');
         Schema::dropIfExists('payment_attempts');

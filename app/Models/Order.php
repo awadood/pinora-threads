@@ -13,10 +13,22 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Order extends AbstractLoggableModel
 {
+    const CLAIM_STATUS_NEW = 'new';
+
+    const CLAIM_STATUS_PENDING = 'pending';
+
+    const CLAIM_STATUS_CLAIMED = 'claimed';
+
     protected $fillable = [
         'number',
         'user_id',
+        'cart_id',
+        'guest_token',
         'currency_code',
+        'customer_name',
+        'customer_email',
+        'customer_phone',
+        'claim_status',
         'order_status_code',
         'billing_address_id',
         'shipping_address_id',

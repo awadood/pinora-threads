@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CoreTablesSeeder extends Seeder
 {
@@ -42,6 +43,22 @@ class CoreTablesSeeder extends Seeder
             ['code' => 'b2b', 'name' => 'B2B'],
             ['code' => 'vip', 'name' => 'VIP'],
         ], ['code'], ['name']);
+
+        if (Schema::hasTable('shipment_rates')) {
+            DB::table('shipment_rates')->upsert([
+                // PKR rates
+                ['shipment_method_code' => 'pickup', 'currency_code' => 'PKR', 'min_subtotal' => null, 'max_subtotal' => null, 'price' => 0, 'active' => true, 'sort_order' => 10],
+                ['shipment_method_code' => 'self', 'currency_code' => 'PKR', 'min_subtotal' => null, 'max_subtotal' => null, 'price' => 250, 'active' => true, 'sort_order' => 20],
+                ['shipment_method_code' => 'courier', 'currency_code' => 'PKR', 'min_subtotal' => null, 'max_subtotal' => 14999, 'price' => 350, 'active' => true, 'sort_order' => 30],
+                ['shipment_method_code' => 'courier', 'currency_code' => 'PKR', 'min_subtotal' => 15000, 'max_subtotal' => null, 'price' => 0, 'active' => true, 'sort_order' => 31],
+
+                // USD rates
+                ['shipment_method_code' => 'pickup', 'currency_code' => 'USD', 'min_subtotal' => null, 'max_subtotal' => null, 'price' => 0, 'active' => true, 'sort_order' => 10],
+                ['shipment_method_code' => 'self', 'currency_code' => 'USD', 'min_subtotal' => null, 'max_subtotal' => null, 'price' => 5, 'active' => true, 'sort_order' => 20],
+                ['shipment_method_code' => 'courier', 'currency_code' => 'USD', 'min_subtotal' => null, 'max_subtotal' => 99.99, 'price' => 8, 'active' => true, 'sort_order' => 30],
+                ['shipment_method_code' => 'courier', 'currency_code' => 'USD', 'min_subtotal' => 100, 'max_subtotal' => null, 'price' => 0, 'active' => true, 'sort_order' => 31],
+            ], ['shipment_method_code', 'currency_code', 'sort_order'], ['min_subtotal', 'max_subtotal', 'price', 'active']);
+        }
     }
 
     private function seedTable(string $table, array $rows): void

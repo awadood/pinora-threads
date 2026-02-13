@@ -16,6 +16,7 @@ class Cart extends AbstractModel
         'user_id',
         'cookie_key',
         'currency_code',
+        'shipping_method_code',
         'expires_at',
         'checked_out_at',
     ];
@@ -42,6 +43,11 @@ class Cart extends AbstractModel
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_code', 'code');
+    }
+
+    public function shippingMethod(): BelongsTo
+    {
+        return $this->belongsTo(ShipmentMethod::class, 'shipping_method_code', 'code');
     }
 
     public function items(): HasMany

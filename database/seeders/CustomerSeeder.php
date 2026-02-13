@@ -28,6 +28,8 @@ class CustomerSeeder extends Seeder
             [
                 'name' => 'US Customer',
                 'password' => Hash::make('password'),
+                'phone' => fake()->numerify('300#######'),
+                'active' => true,
             ]
         );
         $pkUser = User::firstOrCreate(
@@ -35,6 +37,8 @@ class CustomerSeeder extends Seeder
             [
                 'name' => 'PK Customer',
                 'password' => Hash::make('password'),
+                'phone' => fake()->numerify('300#######'),
+                'active' => true,
             ]
         );
 

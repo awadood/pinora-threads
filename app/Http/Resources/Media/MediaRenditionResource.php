@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Media;
 
+use App\Support\Media\MediaUrl;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -19,7 +20,7 @@ class MediaRenditionResource extends JsonResource
             'profile' => $this->profile,
             'disk' => $this->disk,
             'key' => $this->key,
-            'url' => config('app.cdn_base_url').'/'.ltrim($this->key ?? '', '/'),
+            'url' => MediaUrl::fromKeyOrUrl($this->key),
             'mime_type' => $this->mime_type,
             'bytes' => $this->bytes,
             'width' => $this->width,

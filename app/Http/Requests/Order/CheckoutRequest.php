@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Order;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 
 /**
  * CheckoutRequest
@@ -22,24 +21,26 @@ class CheckoutRequest extends FormRequest
 
     public function rules(): array
     {
-        $method = Str::lower($this->method());
-
-        $rules = [
+        return [
             'email' => ['required', 'email'],
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'billing_address' => ['required', 'array'],
-            'billing_address.line1' => ['required', 'string', 'max:255'],
-            'billing_address.city' => ['required', 'string', 'max:255'],
-            'billing_address.country_code' => ['required', 'string', 'size:2'],
-            'shipping_address' => ['required', 'array'],
-            'shipping_address.line1' => ['required', 'string', 'max:255'],
-            'shipping_address.city' => ['required', 'string', 'max:255'],
-            'shipping_address.country_code' => ['required', 'string', 'size:2'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'],
+            'billing_address' => ['required_unless:shipping_method_code,pickup', 'array'],
+            'billing_address.line1' => ['required_unless:shipping_method_code,pickup', 'string', 'max:255'],
+            'billing_address.city' => ['required_unless:shipping_method_code,pickup', 'string', 'max:255'],
+            'billing_address.state' => ['nullable', 'string', 'max:255'],
+            'billing_address.postal_code' => ['nullable', 'string', 'max:20'],
+            'billing_address.country_code' => ['required_unless:shipping_method_code,pickup', 'string', 'size:2'],
+            'shipping_address' => ['required_unless:shipping_method_code,pickup', 'array'],
+            'shipping_address.line1' => ['required_unless:shipping_method_code,pickup', 'string', 'max:255'],
+            'shipping_address.city' => ['required_unless:shipping_method_code,pickup', 'string', 'max:255'],
+            'shipping_address.state' => ['nullable', 'string', 'max:255'],
+            'shipping_address.postal_code' => ['nullable', 'string', 'max:20'],
+            'shipping_address.country_code' => ['required_unless:shipping_method_code,pickup', 'string', 'size:2'],
             'billing_address_id' => ['nullable', 'integer', 'exists:addresses,id'],
             'shipping_address_id' => ['nullable', 'integer', 'exists:addresses,id'],
+            'payment_method' => ['nullable', 'string', 'max:50'],
+            'shipping_method_code' => ['nullable', 'string', 'exists:shipment_methods,code'],
         ];
-
-        return $rules;
     }
 }
