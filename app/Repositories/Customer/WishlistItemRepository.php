@@ -18,10 +18,21 @@ class WishlistItemRepository extends BaseRepository implements IWishlistItemRepo
 {
     protected string $modelClass = WishlistItem::class;
 
-    public function forWishlist(int $wishlistId): Collection
+    public function forWishlist(int $wishlistId, string $currencyCode): Collection
     {
         return $this->query()
             ->where('wishlist_id', $wishlistId)
+            ->with([
+                'product' => function ($productQuery) use ($currencyCode) {
+                    $productQuery
+                        ->where('active', true)
+                        ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+                        ->with([
+                            'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $currencyCode),
+                            'thumbnailMedia.asset.renditions',
+                        ]);
+                },
+            ])
             ->orderByDesc('created_at')
             ->get();
     }

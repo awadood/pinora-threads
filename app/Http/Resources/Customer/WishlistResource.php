@@ -19,6 +19,8 @@ class WishlistResource extends JsonResource
             'title' => $this->title,
             'public' => $this->public,
             'share_token' => $this->share_token,
+            'items_count' => $this->whenCounted('items'),
+            'items' => WishlistItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

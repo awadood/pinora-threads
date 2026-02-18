@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Resources\Customer\WishlistResource;
 use App\Models\Wishlist;
 use App\Services\Customer\WishlistService;
+use App\Support\Storefront\StoreContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -22,7 +23,7 @@ class WishlistController extends Controller
 
     public function index(Request $request)
     {
-        $lists = $this->service->listForUser($request->user());
+        $lists = $this->service->listForUser($request->user())->loadCount('items');
 
         return WishlistResource::collection($lists);
     }
@@ -44,6 +45,20 @@ class WishlistController extends Controller
         if ($wishlist->user_id !== $request->user()->getAuthIdentifier()) {
             abort(403);
         }
+
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
+        $wishlist->loadCount('items');
+        $wishlist->load([
+            'items.product' => function ($productQuery) use ($ctx) {
+                $productQuery
+                    ->where('active', true)
+                    ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+                    ->with([
+                        'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $ctx->currency),
+                        'thumbnailMedia.asset.renditions',
+                    ]);
+            },
+        ]);
 
         return WishlistResource::make($wishlist);
     }
@@ -76,6 +91,8 @@ class WishlistController extends Controller
         if (! $wishlist || ! $wishlist->public) {
             abort(404);
         }
+
+        $wishlist->loadCount('items');
 
         return WishlistResource::make($wishlist);
     }

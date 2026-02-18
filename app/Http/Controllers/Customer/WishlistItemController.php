@@ -6,6 +6,7 @@ use App\Http\Resources\Customer\WishlistItemResource;
 use App\Models\Wishlist;
 use App\Models\WishlistItem;
 use App\Services\Customer\WishlistItemService;
+use App\Support\Storefront\StoreContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -27,7 +28,8 @@ class WishlistItemController extends Controller
             abort(403);
         }
 
-        $items = $this->service->listForWishlist($wishlist);
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
+        $items = $this->service->listForWishlist($wishlist, $ctx->currency);
 
         return WishlistItemResource::collection($items);
     }
@@ -43,6 +45,19 @@ class WishlistItemController extends Controller
             $wishlist,
             $validated['product_id']
         );
+
+        $ctx = $request->attributes->get('store_ctx') ?? app(StoreContext::class);
+        $item->load([
+            'product' => function ($productQuery) use ($ctx) {
+                $productQuery
+                    ->where('active', true)
+                    ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+                    ->with([
+                        'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $ctx->currency),
+                        'thumbnailMedia.asset.renditions',
+                    ]);
+            },
+        ]);
 
         return WishlistItemResource::make($item);
     }

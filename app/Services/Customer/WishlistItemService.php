@@ -24,9 +24,9 @@ class WishlistItemService
     /**
      * @return \Illuminate\Support\Collection<int, WishlistItem>
      */
-    public function listForWishlist(Wishlist $wishlist)
+    public function listForWishlist(Wishlist $wishlist, string $currencyCode)
     {
-        return $this->items->forWishlist($wishlist->getKey());
+        return $this->items->forWishlist($wishlist->getKey(), $currencyCode);
     }
 
     public function addToWishlist(

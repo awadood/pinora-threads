@@ -20,7 +20,7 @@ interface IWishlistItemRepository extends IBaseRepository
      *
      * @return Collection<int, \App\Models\WishlistItem>
      */
-    public function forWishlist(int $wishlistId): Collection;
+    public function forWishlist(int $wishlistId, string $currencyCode): Collection;
 
     /**
      * Find an item by wishlist + product.

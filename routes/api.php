@@ -34,7 +34,6 @@ use App\Http\Controllers\Core\StateController;
 use App\Http\Controllers\Core\StockMovementTypeController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\CustomerProfileController;
-use App\Http\Controllers\Customer\FavoriteController;
 use App\Http\Controllers\Customer\RecentlyViewedController;
 use App\Http\Controllers\Customer\WishlistController;
 use App\Http\Controllers\Customer\WishlistItemController;
@@ -131,7 +130,7 @@ Route::get('products/{slug}/variants', [ProductVariantController::class, 'indexB
 Route::get('products/{slug}/related', [RelatedProductController::class, 'indexByProductSlug']); // maybe optional
 
 // Customer
-Route::get('wishlists/shared/{share_token}', [WishlistController::class, 'showByShareToken']);
+Route::get('wishlists/shared/{token}', [WishlistController::class, 'showShared']);
 
 // Engagement
 Route::get('testimonials', [TestimonialController::class, 'index']);
@@ -394,11 +393,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('addresses/{address}', [AddressController::class, 'update']);
     Route::delete('addresses/{address}', [AddressController::class, 'destroy']);
 
-    // Favorites for current user
-    Route::get('favorites', [FavoriteController::class, 'index']);
-    Route::post('favorites', [FavoriteController::class, 'store']);      // body: product_id
-    Route::delete('favorites/{favorite}', [FavoriteController::class, 'destroy']);
-
     // Wishlists for current user
     Route::get('wishlists', [WishlistController::class, 'index']);
     Route::post('wishlists', [WishlistController::class, 'store']);
@@ -407,6 +401,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('wishlists/{wishlist}', [WishlistController::class, 'destroy']);
 
     // Wishlist items for a given wishlist
+    Route::get('wishlists/{wishlist}/items', [WishlistItemController::class, 'index']);
     Route::post('wishlists/{wishlist}/items', [WishlistItemController::class, 'store']);
     Route::delete('wishlists/{wishlist}/items/{item}', [WishlistItemController::class, 'destroy']);
 

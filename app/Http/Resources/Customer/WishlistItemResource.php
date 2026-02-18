@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Customer;
 
+use App\Http\Resources\Catalog\ProductResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -17,6 +18,7 @@ class WishlistItemResource extends JsonResource
             'id' => $this->id,
             'wishlist_id' => $this->wishlist_id,
             'product_id' => $this->product_id,
+            'product' => ProductResource::make($this->whenLoaded('product')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

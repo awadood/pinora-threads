@@ -11,18 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Favorites
-        Schema::create('favorites', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->timestampsTz();
-
-            $table->unique(['user_id', 'product_id']);
-
-            $table->index(['user_id', 'created_at']);
-        });
-
         // Wishlists
         Schema::create('wishlists', function (Blueprint $table) {
             $table->id();
@@ -138,6 +126,5 @@ return new class extends Migration
         Schema::dropIfExists('recently_viewed');
         Schema::dropIfExists('wishlist_items');
         Schema::dropIfExists('wishlists');
-        Schema::dropIfExists('favorites');
     }
 };
