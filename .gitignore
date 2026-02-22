@@ -1,5 +1,6 @@
 **/*.log
 **/.DS_Store
+.env*
 _ide_helper_models.php
 .phpactor.json
 .phpunit.result.cache
