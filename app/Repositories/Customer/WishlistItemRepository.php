@@ -26,7 +26,7 @@ class WishlistItemRepository extends BaseRepository implements IWishlistItemRepo
                 'product' => function ($productQuery) use ($currencyCode) {
                     $productQuery
                         ->where('active', true)
-                        ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+                        ->withCount('variants as variants_count')
                         ->with([
                             'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $currencyCode),
                             'thumbnailMedia.asset.renditions',

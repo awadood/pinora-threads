@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
+        health: '/api/health',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();

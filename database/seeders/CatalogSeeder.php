@@ -23,16 +23,16 @@ class CatalogSeeder extends Seeder
         DB::transaction(function () {
             $this->guardPrereqs();
 
-            // 1) Attributes + options
-            $attrs = $this->seedAttributes();
+            // 1) Attributes + options (seeded by CoreTablesSeeder)
+            $attrs = $this->loadAttributes();
 
-            // 2) Categories (tree)
-            $cat = $this->seedCategories();
+            // 2) Categories (seeded by CoreTablesSeeder)
+            $cat = $this->loadCategories();
 
             // 3) Collections + collection_country
             $collections = $this->seedCollections();
 
-            // 4) Products + variants + prices + variant attributes + category assignment
+            // 4) Products + prices + attributes + category assignment + relationship-only variants
             $products = $this->seedProductsAndVariants($attrs, $cat);
 
             // 5) Attach products to collections (manual curation)
@@ -72,188 +72,120 @@ class CatalogSeeder extends Seeder
         }
     }
 
-    /**
-     * Returns:
-     * [
-     *   'attr' => ['piece_type' => 1, ...],
-     *   'opt'  => ['piece_type' => ['3-piece suit' => 10, ...], ...],
-     * ]
-     */
-    private function seedAttributes(): array
+    private function loadAttributes(): array
     {
-        $upsertAttr = function (string $code, string $label, string $type = 'select', bool $active = true): int {
-            $existing = DB::table('attributes')->where('code', $code)->first();
-
-            if ($existing) {
-                DB::table('attributes')->where('id', $existing->id)->update([
-                    'label' => $label,
-                    'type' => $type,
-                    'active' => $active,
-                    'updated_at' => now(),
-                ]);
-
-                return (int) $existing->id;
-            }
-
-            return (int) DB::table('attributes')->insertGetId([
-                'code' => $code,
-                'label' => $label,
-                'type' => $type,
-                'active' => $active,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        };
-
-        $upsertOption = function (int $attributeId, string $value, int $sort): int {
-            $existing = DB::table('attribute_options')
-                ->where('attribute_id', $attributeId)
-                ->where('value', $value)
-                ->first();
-
-            if ($existing) {
-                DB::table('attribute_options')->where('id', $existing->id)->update([
-                    'sort' => $sort,
-                    'updated_at' => now(),
-                ]);
-
-                return (int) $existing->id;
-            }
-
-            return (int) DB::table('attribute_options')->insertGetId([
-                'attribute_id' => $attributeId,
-                'value' => $value,
-                'sort' => $sort,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        };
-
-        $attrIds = [
-            // Select attributes
-            'piece_type' => $upsertAttr('piece_type', 'Piece Type', 'select'),
-            'fabric' => $upsertAttr('fabric', 'Fabric', 'select'),
-            'color' => $upsertAttr('color', 'Color', 'select'),
-            'size' => $upsertAttr('size', 'Size', 'select'),
-
-            // Text attributes (stored on product_attributes.value)
-            'material_notes' => $upsertAttr('material_notes', 'Material Notes', 'text'),
-            'what_included' => $upsertAttr('what_included', 'What’s Included', 'text'),
+        $requiredAttributes = [
+            'piece_type',
+            'fabric',
+            'season',
+            'color_family',
+            'stock_status',
+            'occasion',
+            'embellishment',
+            'material_notes',
+            'what_included',
         ];
 
-        $options = [
-            'piece_type' => [
-                '3-piece suit',
-                '2-piece suit',
-                '1-piece (fabric)',
-                'dupatta',
-                'shawl',
-            ],
-            'fabric' => [
-                'Lawn',
-                'Khaddar',
-                'Cotton',
-                'Silk',
-                'Chiffon',
-                'Linen',
-            ],
-            'color' => [
-                'Black',
-                'White',
-                'Off White',
-                'Navy',
-                'Maroon',
-                'Teal',
-                'Mustard',
-                'Olive',
-                'Pink',
-                'Beige',
-            ],
-            'size' => [
-                'XS', 'S', 'M', 'L', 'XL',
-            ],
+        $attributes = DB::table('attributes')
+            ->whereIn('code', $requiredAttributes)
+            ->pluck('id', 'code')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        foreach ($requiredAttributes as $code) {
+            if (! isset($attributes[$code])) {
+                throw new \RuntimeException("Missing attribute [$code]. Run CoreTablesSeeder before CatalogSeeder.");
+            }
+        }
+
+        $optionAttributes = [
+            'piece_type',
+            'fabric',
+            'occasion',
+            'season',
+            'embellishment',
+            'color_family',
+            'stock_status',
         ];
 
-        $optIds = [];
-        foreach ($options as $code => $values) {
-            $attrId = $attrIds[$code];
-            $optIds[$code] = [];
+        $optionRows = DB::table('attribute_options')
+            ->join('attributes', 'attributes.id', '=', 'attribute_options.attribute_id')
+            ->whereIn('attributes.code', $optionAttributes)
+            ->orderBy('attribute_options.sort')
+            ->select([
+                'attributes.code as attribute_code',
+                'attribute_options.id as option_id',
+                'attribute_options.value as option_value',
+            ])
+            ->get();
 
-            $sort = 1;
-            foreach ($values as $v) {
-                $optIds[$code][$v] = $upsertOption($attrId, $v, $sort);
-                $sort++;
+        $options = [];
+        foreach ($optionRows as $row) {
+            if (! isset($options[$row->attribute_code])) {
+                $options[$row->attribute_code] = [];
+            }
+            $options[$row->attribute_code][$row->option_value] = (int) $row->option_id;
+        }
+
+        $requiredOptions = [
+            'piece_type' => ['2 Piece', '3 Piece'],
+            'fabric' => ['Lawn', 'Khaddar', 'Cotton', 'Silk', 'Chiffon', 'Linen', 'Georgette'],
+            'occasion' => ['Everyday', 'Festive', 'Wedding', 'Party'],
+            'season' => ['Summer', 'Winter', 'Mid-Season'],
+            'embellishment' => ['Printed', 'Digital Print', 'Embroidered', 'Handwork', 'Plain', 'Sequins', 'Mirror Work'],
+            'color_family' => ['Black', 'White', 'Blue', 'Green', 'Red', 'Maroon', 'Pink', 'Purple', 'Yellow', 'Beige', 'Brown', 'Grey', 'Multi'],
+            'stock_status' => ['In Stock', 'Out of Stock', 'Coming Soon'],
+        ];
+
+        foreach ($requiredOptions as $attributeCode => $values) {
+            foreach ($values as $value) {
+                if (! isset($options[$attributeCode][$value])) {
+                    throw new \RuntimeException("Missing option [$value] for attribute [$attributeCode]. Run CoreTablesSeeder.");
+                }
             }
         }
 
         return [
-            'attr' => $attrIds,
-            'opt' => $optIds,
+            'attr' => $attributes,
+            'opt' => $options,
         ];
     }
 
-    private function seedCategories(): array
+    private function loadCategories(): array
     {
-        $upsertCategory = function (string $name, ?int $parentId, int $sort): int {
-            $slug = Str::slug($name);
+        $typeRoot = DB::table('categories')
+            ->where('slug', 'type')
+            ->whereNull('parent_id')
+            ->first();
 
-            $existing = DB::table('categories')
-                ->where('slug', $slug)
-                ->when($parentId === null, fn ($q) => $q->whereNull('parent_id'))
-                ->when($parentId !== null, fn ($q) => $q->where('parent_id', $parentId))
-                ->first();
-
-            $data = [
-                'name' => $name,
-                'slug' => $slug,
-                'parent_id' => $parentId,
-                'sort' => $sort,
-                'active' => true,
-                'updated_at' => now(),
-            ];
-
-            if ($existing) {
-                DB::table('categories')->where('id', $existing->id)->update($data);
-
-                return (int) $existing->id;
-            }
-
-            $data['created_at'] = now();
-
-            return (int) DB::table('categories')->insertGetId($data);
-        };
-
-        // Roots (LOCKED)
-        $unstitched = $upsertCategory('Unstitched', null, 10);
-        $occasion = $upsertCategory('Occasion', null, 20);
-
-        // Unstitched -> Fabrics (LOCKED)
-        $fabricNames = ['Lawn', 'Khaddar', 'Chiffon', 'Silk', 'Organza'];
-        $fabricLeafIds = [];
-        $pos = 1;
-        foreach ($fabricNames as $name) {
-            $fabricLeafIds[] = $upsertCategory($name, $unstitched, $pos * 10);
-            $pos++;
+        if (! $typeRoot) {
+            throw new \RuntimeException('Missing Type root category. Run CoreTablesSeeder before CatalogSeeder.');
         }
 
-        // Occasion -> (LOCKED)
-        $occasionNames = ['Everyday Wear', 'Festive Wear', 'Wedding Wear', 'Party Wear'];
-        $occasionLeafIds = [];
-        $pos = 1;
-        foreach ($occasionNames as $name) {
-            $occasionLeafIds[] = $upsertCategory($name, $occasion, $pos * 10);
-            $pos++;
+        $typeLeaves = DB::table('categories')
+            ->where('parent_id', $typeRoot->id)
+            ->orderBy('sort')
+            ->get(['id', 'name']);
+
+        $requiredLeafNames = ['Suit', 'Saree', 'Dupatta', 'Shawl'];
+        $leafMap = [];
+
+        foreach ($requiredLeafNames as $name) {
+            $leaf = $typeLeaves->first(fn ($row) => Str::lower($row->name) === Str::lower($name));
+            if (! $leaf) {
+                throw new \RuntimeException("Missing Type child category [$name]. Run CoreTablesSeeder.");
+            }
+            $leafMap[$name] = (int) $leaf->id;
         }
 
         return [
             'roots' => [
-                'unstitched' => $unstitched,
-                'occasion' => $occasion,
+                'type' => (int) $typeRoot->id,
             ],
-            'leaf' => array_values(array_merge($fabricLeafIds, $occasionLeafIds)),
+            'leaf' => array_values($leafMap),
+            'leaf_map' => $leafMap,
             'leaf_by_root' => [
-                'unstitched' => array_values($fabricLeafIds),
-                'occasion' => array_values($occasionLeafIds),
+                'type' => array_values($leafMap),
             ],
         ];
     }
@@ -334,10 +266,13 @@ class CatalogSeeder extends Seeder
     private function seedProductsAndVariants(array $attrs, array $cat): array
     {
         $leafCategoryIds = array_values($cat['leaf']);
+        $categoryMap = $cat['leaf_map'] ?? [];
 
         $products = [];
         $variants = [];
         $byProduct = [];
+        $simpleProductIds = [];
+        $variableProductIds = [];
 
         $seq = 1;
 
@@ -355,11 +290,26 @@ class CatalogSeeder extends Seeder
         );
 
         foreach ($typePlan as $type) {
-            $piece = $this->pick(array_keys($attrs['opt']['piece_type']));
-            $fabric = $this->pick(array_keys($attrs['opt']['fabric']));
-            $color = $this->pick(array_keys($attrs['opt']['color']));
+            $categoryName = ! empty($categoryMap)
+                ? (string) $this->pick(array_keys($categoryMap))
+                : null;
+            $categoryId = $categoryName !== null
+                ? (int) $categoryMap[$categoryName]
+                : (int) $this->pick($leafCategoryIds);
 
-            $productName = $this->buildProductName($piece, $fabric, $color);
+            $pieceType = $categoryName === 'Suit'
+                ? $this->pick(array_keys($attrs['opt']['piece_type']))
+                : null;
+            $fabric = $this->pick(array_keys($attrs['opt']['fabric']));
+            $season = $this->pick(array_keys($attrs['opt']['season']));
+            $colorFamily = $this->pick(array_keys($attrs['opt']['color_family']));
+            $stockStatus = $type === 'bundle'
+                ? 'Coming Soon'
+                : $this->pick(array_keys($attrs['opt']['stock_status']));
+            $occasions = $this->pickMany(array_keys($attrs['opt']['occasion']), random_int(1, 2));
+            $embellishments = $this->pickMany(array_keys($attrs['opt']['embellishment']), random_int(1, 3));
+
+            $productName = $this->buildProductName($categoryName ?? 'Product', $pieceType, $fabric, $colorFamily);
             $productSku = $this->sku('PRD', $seq);
             $slug = $this->uniqueSlug('products', Str::slug($productName), $productSku);
 
@@ -368,83 +318,46 @@ class CatalogSeeder extends Seeder
                 name: $productName,
                 slug: $slug,
                 type: $type,
-                description: $this->buildProductDescription($piece, $fabric, $color),
+                description: $this->buildProductDescription($categoryName ?? 'Product', $pieceType, $fabric, $colorFamily),
             );
 
             $products[] = $productId;
+            $byProduct[$productId] = [];
+
+            if ($type === 'simple') {
+                $simpleProductIds[] = $productId;
+            }
+            if ($type === 'variable') {
+                $variableProductIds[] = $productId;
+            }
 
             // Assign to one leaf category
-            $categoryId = (int) $this->pick($leafCategoryIds);
+            DB::table('category_product')->where('product_id', $productId)->delete();
             DB::table('category_product')->insertOrIgnore([
                 'category_id' => $categoryId,
                 'product_id' => $productId,
             ]);
 
-            // Product attributes (select + text)
-            $sizeForProduct = $type === 'variable'
-                ? $this->pick(['S', 'M', 'L', 'XL'])
-                : $this->pick(['S', 'M', 'L']);
+            // Product attributes (single-select + multiselect + text)
+            DB::table('product_attributes')->where('product_id', $productId)->delete();
 
-            $this->attachVariantSelectAttr($productId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$piece]);
-            $this->attachVariantSelectAttr($productId, $attrs['attr']['fabric'], $attrs['opt']['fabric'][$fabric]);
-            $this->attachVariantSelectAttr($productId, $attrs['attr']['color'], $attrs['opt']['color'][$color]);
-            $this->attachVariantSelectAttr($productId, $attrs['attr']['size'], $attrs['opt']['size'][$sizeForProduct]);
-            $this->attachVariantTextAttr($productId, $attrs['attr']['material_notes'], $this->materialNotes($fabric));
-            $this->attachVariantTextAttr($productId, $attrs['attr']['what_included'], $this->includedText($piece));
+            if ($pieceType !== null) {
+                $this->attachProductSelectAttr($productId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$pieceType]);
+            }
+            $this->attachProductSelectAttr($productId, $attrs['attr']['fabric'], $attrs['opt']['fabric'][$fabric]);
+            $this->attachProductSelectAttr($productId, $attrs['attr']['season'], $attrs['opt']['season'][$season]);
+            $this->attachProductSelectAttr($productId, $attrs['attr']['color_family'], $attrs['opt']['color_family'][$colorFamily]);
+            $this->attachProductSelectAttr($productId, $attrs['attr']['stock_status'], $attrs['opt']['stock_status'][$stockStatus]);
+            $this->attachProductMultiSelectAttr($productId, $attrs['attr']['occasion'], $attrs['opt']['occasion'], $occasions);
+            $this->attachProductMultiSelectAttr($productId, $attrs['attr']['embellishment'], $attrs['opt']['embellishment'], $embellishments);
+            $this->attachProductTextAttr($productId, $attrs['attr']['material_notes'], $this->materialNotes($fabric));
+            $this->attachProductTextAttr($productId, $attrs['attr']['what_included'], $this->includedText($categoryName ?? 'Product', $pieceType));
 
             // Product prices per currency
             $usd = $this->randMoney(35, 250);
             $pkr = $this->randMoney(2500, 45000);
-            $this->upsertVariantPrice($productId, 'USD', $usd, null);
-            $this->upsertVariantPrice($productId, 'PKR', $pkr, null);
-
-            // Variants: only for first 5 products
-            $productIndex = $seq;
-            $variantCount = $productIndex <= 5 ? random_int(2, 4) : 0;
-
-            $byProduct[$productId] = [];
-
-            for ($v = 1; $v <= $variantCount; $v++) {
-                $variantSku = $this->sku('VAR', $seq, $v);
-
-                // IMPORTANT: schema column is "name" (not title)
-                $variantName = $variantCount > 1 ? "{$productName} - Option {$v}" : null;
-
-                $variantId = $this->upsertVariant(
-                    productId: $productId,
-                    sku: $variantSku,
-                    name: $variantName,
-                    description: null,
-                    isDefault: $v === 1,
-                    active: true,
-                );
-
-                $variants[] = $variantId;
-                $byProduct[$productId][] = $variantId;
-
-                // Variant attributes (select)
-                $this->attachVariantSelectAttr($variantId, $attrs['attr']['piece_type'], $attrs['opt']['piece_type'][$piece]);
-                $this->attachVariantSelectAttr($variantId, $attrs['attr']['fabric'], $attrs['opt']['fabric'][$fabric]);
-                $this->attachVariantSelectAttr($variantId, $attrs['attr']['color'], $attrs['opt']['color'][$color]);
-
-                // Size: vary a bit for variable products
-                $size = $type === 'variable'
-                    ? $this->pick(['S', 'M', 'L', 'XL'])
-                    : $this->pick(['S', 'M', 'L']);
-
-                $this->attachVariantSelectAttr($variantId, $attrs['attr']['size'], $attrs['opt']['size'][$size]);
-
-                // Variant attributes (text)
-                $this->attachVariantTextAttr($variantId, $attrs['attr']['material_notes'], $this->materialNotes($fabric));
-                $this->attachVariantTextAttr($variantId, $attrs['attr']['what_included'], $this->includedText($piece));
-
-                // Variant prices per currency (unique per variant + currency)
-                $vUsd = $this->randMoney(35, 250);
-                $vPkr = $this->randMoney(2500, 45000);
-
-                $this->upsertVariantPrice($variantId, 'USD', $vUsd, null);
-                $this->upsertVariantPrice($variantId, 'PKR', $vPkr, null);
-            }
+            $this->upsertProductPrice($productId, 'USD', $usd, null);
+            $this->upsertProductPrice($productId, 'PKR', $pkr, null);
 
             // Publish product (optional but useful for dev)
             DB::table('products')->where('id', $productId)->update([
@@ -454,12 +367,40 @@ class CatalogSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
+            // product_variants is relationship-only; clear stale rows on rerun.
+            DB::table('product_variants')->where('product_id', $productId)->delete();
+
             $seq++;
+        }
+
+        // Variant relations: link variable products to sellable simple products.
+        foreach ($variableProductIds as $productId) {
+            $candidates = array_values(array_filter($simpleProductIds, fn ($id) => (int) $id !== (int) $productId));
+            if (empty($candidates)) {
+                continue;
+            }
+
+            shuffle($candidates);
+            $max = min(4, count($candidates));
+            $pickCount = $max <= 1 ? 1 : random_int(2, $max);
+            $picked = array_slice($candidates, 0, $pickCount);
+
+            foreach ($picked as $variantId) {
+                DB::table('product_variants')->insertOrIgnore([
+                    'product_id' => (int) $productId,
+                    'variant_id' => (int) $variantId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $variants[] = (int) $variantId;
+                $byProduct[$productId][] = (int) $variantId;
+            }
         }
 
         return [
             'products' => $products,
-            'variants' => $variants,
+            'variants' => array_values(array_unique($variants)),
             'by_product' => $byProduct,
         ];
     }
@@ -496,62 +437,10 @@ class CatalogSeeder extends Seeder
         ]);
     }
 
-    private function upsertVariant(
-        int $productId,
-        string $sku,
-        ?string $name,
-        ?string $description,
-        bool $isDefault,
-        bool $active
-    ): int {
-        $existing = DB::table('products')->where('sku', $sku)->first();
-        if ($existing) {
-            DB::table('products')->where('id', $existing->id)->update([
-                'name' => $name ?? $existing->name,
-                'description' => $description,
-                'type' => 'simple',
-                'active' => $active,
-                'updated_at' => now(),
-            ]);
-
-            DB::table('product_variants')->insertOrIgnore([
-                'product_id' => $productId,
-                'variant_id' => (int) $existing->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            return (int) $existing->id;
-        }
-
-        $slug = $this->uniqueSlug('products', Str::slug($name ?? $sku), $sku);
-
-        $variantProductId = (int) DB::table('products')->insertGetId([
-            'sku' => $sku,
-            'name' => $name ?? $sku,
-            'slug' => $slug,
-            'type' => 'simple',
-            'description' => $description,
-            'tax_class_id' => self::TAX_CLASS_ID,
-            'active' => $active,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        DB::table('product_variants')->insertOrIgnore([
-            'product_id' => $productId,
-            'variant_id' => $variantProductId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return $variantProductId;
-    }
-
-    private function upsertVariantPrice(int $variantId, string $currencyCode, string $amount, ?string $compareAt): void
+    private function upsertProductPrice(int $productId, string $currencyCode, string $amount, ?string $compareAt): void
     {
         $existing = DB::table('product_prices')
-            ->where('product_id', $variantId)
+            ->where('product_id', $productId)
             ->where('currency_code', $currencyCode)
             ->first();
 
@@ -566,7 +455,7 @@ class CatalogSeeder extends Seeder
         }
 
         DB::table('product_prices')->insert([
-            'product_id' => $variantId,
+            'product_id' => $productId,
             'currency_code' => $currencyCode,
             'amount' => $amount,
             'compare_at' => $compareAt,
@@ -575,23 +464,64 @@ class CatalogSeeder extends Seeder
         ]);
     }
 
-    private function attachVariantSelectAttr(int $variantId, int $attributeId, int $optionId): void
+    private function attachProductSelectAttr(int $productId, int $attributeId, int $optionId): void
     {
+        // Enforce single-select behavior at seed-time.
+        DB::table('product_attributes')
+            ->where('product_id', $productId)
+            ->where('attribute_id', $attributeId)
+            ->delete();
+
         DB::table('product_attributes')->insertOrIgnore([
-            'product_id' => $variantId,
+            'product_id' => $productId,
             'attribute_id' => $attributeId,
             'option_id' => $optionId,
             'value' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
-    private function attachVariantTextAttr(int $variantId, int $attributeId, string $value): void
+    private function attachProductMultiSelectAttr(int $productId, int $attributeId, array $optionMap, array $selectedValues): void
     {
+        DB::table('product_attributes')
+            ->where('product_id', $productId)
+            ->where('attribute_id', $attributeId)
+            ->delete();
+
+        foreach (array_values(array_unique($selectedValues)) as $value) {
+            if (! isset($optionMap[$value])) {
+                continue;
+            }
+
+            DB::table('product_attributes')->insertOrIgnore([
+                'product_id' => $productId,
+                'attribute_id' => $attributeId,
+                'option_id' => (int) $optionMap[$value],
+                'value' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function attachProductTextAttr(int $productId, int $attributeId, string $value): void
+    {
+        // With unique(product_id, attribute_id, option_id), NULL option_id is not unique-safe in PostgreSQL.
+        // Clear old text rows first to keep reruns idempotent.
+        DB::table('product_attributes')
+            ->where('product_id', $productId)
+            ->where('attribute_id', $attributeId)
+            ->whereNull('option_id')
+            ->delete();
+
         DB::table('product_attributes')->insertOrIgnore([
-            'product_id' => $variantId,
+            'product_id' => $productId,
             'attribute_id' => $attributeId,
             'option_id' => null,
             'value' => $value,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 
@@ -654,14 +584,14 @@ class CatalogSeeder extends Seeder
 
     private function seedBundleProducts(array $products): void
     {
-        // For products typed "bundle", create bundle lines pointing to other products.
+        // product_bundles is relationship-only; bundle items are existing sellable products.
         $bundleProductIds = DB::table('products')->where('type', 'bundle')->pluck('id')->all();
         if (empty($bundleProductIds)) {
             return;
         }
 
-        $allVariantProductIds = $products['variants'] ?? [];
-        if (count($allVariantProductIds) < 5) {
+        $allProductIds = $products['products'] ?? [];
+        if (count($allProductIds) < 5) {
             return;
         }
 
@@ -671,11 +601,19 @@ class CatalogSeeder extends Seeder
             // Avoid duplicates across reruns
             DB::table('product_bundles')->where('product_id', $bundlePid)->delete();
 
-            $pick = $this->pickMany($allVariantProductIds, random_int(2, 4));
-            foreach ($pick as $vid) {
+            $candidates = array_values(array_filter($allProductIds, fn ($id) => (int) $id !== $bundlePid));
+            if (empty($candidates)) {
+                continue;
+            }
+
+            $max = min(4, count($candidates));
+            $pickCount = $max <= 1 ? 1 : random_int(2, $max);
+            $pick = $this->pickMany($candidates, $pickCount);
+
+            foreach ($pick as $productId) {
                 DB::table('product_bundles')->insertOrIgnore([
                     'product_id' => $bundlePid,
-                    'bundle_item_id' => (int) $vid,
+                    'bundle_item_id' => (int) $productId,
                     'quantity' => random_int(1, 2),
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -731,10 +669,7 @@ class CatalogSeeder extends Seeder
         // - hero (1)
         // - og_image (1)
         // - gallery (3) with exactly one primary among gallery items
-        $allProductIds = array_values(array_unique(array_merge(
-            $products['products'] ?? [],
-            $products['variants'] ?? [],
-        )));
+        $allProductIds = array_values(array_unique($products['products'] ?? []));
 
         foreach ($allProductIds as $productId) {
             $productId = (int) $productId;
@@ -884,121 +819,30 @@ class CatalogSeeder extends Seeder
 
     private function seedMerchSections(array $products, array $collections, array $cat): void
     {
-        // Sections are homogeneous by schema: product OR collection OR category.
-        // Seed home sections (mix of curated + query).
-        $sections = [
-            [
-                'code' => 'home_shop_by_collection',
-                'name' => 'Shop by Collection',
-                'surface' => 'home',
-                'item_type' => 'collection',
-                'mode' => 'curated',
-                'default_limit' => 6,
-                'country_code' => null,
-                'sort' => 10,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                'code' => 'home_new_arrivals',
-                'name' => 'New Arrivals',
-                'surface' => 'home',
-                'item_type' => 'product',
-                'mode' => 'curated',
-                'default_limit' => 8,
-                'country_code' => null,
-                'sort' => 20,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                'code' => 'home_shop_by_occasion',
-                'name' => 'Shop by Occasion',
-                'surface' => 'home',
-                'item_type' => 'category',
-                'mode' => 'curated',
-                'default_limit' => 6,
-                'country_code' => null,
-                'sort' => 30,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                // NEW: Unstitched items (Lawn/Khaddar/Chiffon/Silk/Organza)
-                'code' => 'home_shop_by_fabric',
-                'name' => 'Shop by Fabric',
-                'surface' => 'home',
-                'item_type' => 'category',
-                'mode' => 'curated',
-                'default_limit' => 6,
-                'country_code' => null,
-                'sort' => 40,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                // just add one collection
-                'code' => 'home_capsule_collection',
-                'name' => 'Capsule Collection',
-                'surface' => 'home',
-                'item_type' => 'collection',
-                'mode' => 'curated',
-                'default_limit' => 1,
-                'country_code' => null,
-                'sort' => 50,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                'code' => 'home_featured_products',
-                'name' => 'Featured Products',
-                'surface' => 'home',
-                'item_type' => 'product',
-                'mode' => 'curated',
-                'default_limit' => 8,
-                'country_code' => null,
-                'sort' => 60,
-                'active' => true,
-                'query_payload' => null,
-            ],
-            [
-                'code' => 'home_best_sellers_query',
-                'name' => 'Best Sellers (Query)',
-                'surface' => 'home',
-                'item_type' => 'product',
-                'mode' => 'query',
-                'default_limit' => 8,
-                'country_code' => null,
-                'sort' => 70,
-                'active' => true,
-                // normalized shape used by your storefront query-mode section:
-                // ['sort' => ..., 'filter' => [...]]
-                'query_payload' => [
-                    'sort' => 'newest',
-                    'filter' => [
-                        // Example: drive best-sellers from a dedicated collection.
-                        // Replace slug to match your seeded/real collection.
-                        'collection.slug.eq' => 'best-sellers',
-                    ],
-                ],
-            ],
-        ];
+        $codes = $this->curatedMerchSectionCodes();
+        $sections = DB::table('merch_sections')
+            ->whereIn('code', $codes)
+            ->where('mode', 'curated')
+            ->orderBy('sort')
+            ->get(['id', 'code', 'item_type', 'default_limit']);
 
-        foreach ($sections as $s) {
-            $sectionId = $this->upsertMerchSection($s);
+        $found = $sections->pluck('code')->all();
+        $missing = array_values(array_diff($codes, $found));
+        if (! empty($missing)) {
+            throw new \RuntimeException('Missing curated merch sections: '.implode(', ', $missing).'. Run CoreTablesSeeder before CatalogSeeder.');
+        }
 
-            if ($s['mode'] !== 'curated') {
-                continue;
-            }
+        foreach ($sections as $section) {
+            $sectionId = (int) $section->id;
+            $limit = (int) $section->default_limit;
 
-            // Curated items
             DB::table('merch_section_items')->where('merch_section_id', $sectionId)->delete();
 
-            if ($s['item_type'] === 'product') {
-                $items = match ($s['code']) {
-                    'home_featured_products' => array_slice($products['products'], 0, (int) $s['default_limit']),
-                    'home_new_arrivals' => array_slice($products['products'], 0, (int) $s['default_limit']),
-                    default => array_slice($products['products'], 0, (int) $s['default_limit']),
+            if ($section->item_type === 'product') {
+                $items = match ($section->code) {
+                    'home_featured_products' => array_slice($products['products'], 0, $limit),
+                    'home_new_arrivals' => array_slice($products['products'], 0, $limit),
+                    default => array_slice($products['products'], 0, $limit),
                 };
 
                 $pos = 1;
@@ -1014,15 +858,15 @@ class CatalogSeeder extends Seeder
                     ]);
                     $pos++;
                 }
+
+                continue;
             }
 
-            if ($s['item_type'] === 'collection') {
+            if ($section->item_type === 'collection') {
                 $collectionIds = array_values($collections);
-
-                // capsule collection: only one
-                $items = $s['code'] === 'home_capsule_collection'
+                $items = $section->code === 'home_capsule_collection'
                     ? array_slice($collectionIds, 0, 1)
-                    : array_slice($collectionIds, 0, (int) $s['default_limit']);
+                    : array_slice($collectionIds, 0, $limit);
 
                 $pos = 1;
                 foreach ($items as $cid) {
@@ -1037,18 +881,14 @@ class CatalogSeeder extends Seeder
                     ]);
                     $pos++;
                 }
+
+                continue;
             }
 
-            if ($s['item_type'] === 'category') {
+            if ($section->item_type === 'category') {
                 $leafByRoot = $cat['leaf_by_root'] ?? [];
-
-                $pool = match ($s['code']) {
-                    'home_shop_by_occasion' => $leafByRoot['occasion'] ?? ($cat['leaf'] ?? []),
-                    'home_shop_by_fabric' => $leafByRoot['unstitched'] ?? ($cat['leaf'] ?? []),
-                    default => $cat['leaf'] ?? [],
-                };
-
-                $items = array_slice(array_values($pool), 0, (int) $s['default_limit']);
+                $pool = $leafByRoot['type'] ?? ($cat['leaf'] ?? []);
+                $items = array_slice(array_values($pool), 0, $limit);
 
                 $pos = 1;
                 foreach ($items as $cid) {
@@ -1063,91 +903,60 @@ class CatalogSeeder extends Seeder
                     ]);
                     $pos++;
                 }
+
+                continue;
             }
+
+            throw new \RuntimeException("Unsupported item_type [{$section->item_type}] for merch section [{$section->code}].");
         }
     }
 
-    private function upsertMerchSection(array $s): int
+    private function curatedMerchSectionCodes(): array
     {
-        $existing = DB::table('merch_sections')->where('code', $s['code'])->first();
-
-        // Normalize query_payload:
-        // - curated: null
-        // - query: array with keys { sort, filter }
-        $payload = $s['query_payload'] ?? null;
-        if (is_array($payload)) {
-            $payload = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        } elseif (is_string($payload)) {
-            $decoded = json_decode($payload, true);
-            $payload = (json_last_error() === JSON_ERROR_NONE)
-                ? json_encode($decoded, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
-                : null;
-        } elseif ($payload !== null) {
-            $payload = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        }
-
-        $data = [
-            'name' => $s['name'],
-            'surface' => $s['surface'],
-            'item_type' => $s['item_type'],
-            'mode' => $s['mode'],
-            'default_limit' => (int) $s['default_limit'],
-            'country_code' => $s['country_code'],
-            'starts_at' => $s['starts_at'] ?? null,
-            'ends_at' => $s['ends_at'] ?? null,
-            'sort' => (int) $s['sort'],
-            'active' => (bool) $s['active'],
-            'query_payload' => $payload,
-            'updated_at' => now(),
+        return [
+            'home_shop_by_collection',
+            'home_new_arrivals',
+            'home_shop_by_occasion',
+            'home_shop_by_fabric',
+            'home_capsule_collection',
+            'home_featured_products',
         ];
-
-        if ($existing) {
-            DB::table('merch_sections')->where('id', $existing->id)->update($data);
-
-            return (int) $existing->id;
-        }
-
-        $data['code'] = $s['code'];
-        $data['created_at'] = now();
-
-        return (int) DB::table('merch_sections')->insertGetId($data);
     }
 
     // -----------------------------
     // Helpers (naming + text)
     // -----------------------------
 
-    private function buildProductName(string $piece, string $fabric, string $color): string
+    private function buildProductName(string $categoryName, ?string $pieceType, string $fabric, string $colorFamily): string
     {
-        $pieceLabel = match ($piece) {
-            '3-piece suit' => '3-Piece Unstitched Suit',
-            '2-piece suit' => '2-Piece Unstitched Suit',
-            '1-piece (fabric)' => '1-Piece Fabric',
-            'dupatta' => 'Dupatta',
-            'shawl' => 'Shawl',
-            default => 'Product',
-        };
+        $pieceLabel = $pieceType ? "{$pieceType} " : '';
 
-        return "Pinora Threads {$pieceLabel} - {$fabric} - {$color}";
+        return "Pinora Threads {$pieceLabel}{$categoryName} - {$fabric} - {$colorFamily}";
     }
 
-    private function buildProductDescription(string $piece, string $fabric, string $color): string
+    private function buildProductDescription(string $categoryName, ?string $pieceType, string $fabric, string $colorFamily): string
     {
         return implode("\n", array_filter([
-            "Premium {$fabric} in {$color}.",
-            $this->includedText($piece),
+            "Premium {$fabric} in {$colorFamily}.",
+            $this->includedText($categoryName, $pieceType),
             'Care: Dry clean recommended. Color may vary due to lighting and device display.',
         ]));
     }
 
-    private function includedText(string $piece): string
+    private function includedText(string $categoryName, ?string $pieceType): string
     {
-        return match ($piece) {
-            '3-piece suit' => 'Includes: Shirt, Trouser, Dupatta.',
-            '2-piece suit' => 'Includes: Shirt, Trouser.',
-            '1-piece (fabric)' => 'Includes: Fabric cut (unstitched).',
-            'dupatta' => 'Includes: Dupatta only.',
-            'shawl' => 'Includes: Shawl only.',
+        if ($categoryName === 'Suit') {
+            return match ($pieceType) {
+                '3 Piece' => 'Includes: Shirt, Trouser, Dupatta.',
+                '2 Piece' => 'Includes: Shirt, Trouser.',
+                default => 'Includes: Suit set.',
+            };
+        }
+
+        return match ($categoryName) {
+            'Saree' => 'Includes: Saree and blouse piece.',
+            'Dupatta' => 'Includes: Dupatta only.',
+            'Shawl' => 'Includes: Shawl only.',
             default => 'Includes: As shown.',
         };
     }
@@ -1161,6 +970,7 @@ class CatalogSeeder extends Seeder
             'Silk' => 'Smooth silk hand-feel with natural sheen.',
             'Chiffon' => 'Flowy chiffon drape, delicate handling recommended.',
             'Linen' => 'Linen blend with crisp texture.',
+            'Georgette' => 'Textured georgette with a fluid drape and light crepe feel.',
             default => 'Quality fabric with comfortable wear.',
         };
     }

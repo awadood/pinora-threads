@@ -48,7 +48,7 @@ class PlpRepository implements IPlpRepository
         $query = Product::query()
             ->select('products.*')
             ->distinct()
-            ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+            ->withCount('variants as variants_count')
             ->with([
                 'prices' => fn ($p) => $p->where('currency_code', $q->currencyCode),
                 'thumbnailMedia.asset.renditions',

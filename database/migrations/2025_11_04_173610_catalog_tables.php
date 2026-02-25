@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('label');
-            $table->enum('type', ['text', 'select'])->default('text');
+            $table->enum('type', ['text', 'select', 'multiselect'])->default('text');
             $table->boolean('active')->default(true);
             $table->timestampsTz();
         });
@@ -78,7 +78,7 @@ return new class extends Migration
             $table->string('value')->nullable();
             $table->timestampsTz();
 
-            $table->unique(['product_id', 'attribute_id']);
+            $table->unique(['product_id', 'attribute_id', 'option_id']);
 
             // these indexes are only useful when filters are applied
             $table->index(['attribute_id', 'option_id']);

@@ -51,7 +51,7 @@ class WishlistItemController extends Controller
             'product' => function ($productQuery) use ($ctx) {
                 $productQuery
                     ->where('active', true)
-                    ->withCount(['variants as variants_count' => fn ($v) => $v->where('active', true)])
+                    ->withCount('variants as variants_count')
                     ->with([
                         'prices' => fn ($priceQuery) => $priceQuery->where('currency_code', $ctx->currency),
                         'thumbnailMedia.asset.renditions',
