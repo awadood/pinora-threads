@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A concrete SKU derived from a product’s attributes (size/color etc.).
+ * A curated merchandising item linked to a section.
+ *
+ * For item_type="attribute", item_id references attribute_options.id.
  *
  * @author Abdul Wadood
  */

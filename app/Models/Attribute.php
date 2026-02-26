@@ -36,6 +36,6 @@ class Attribute extends AbstractLoggableModel
 
     public function options(): HasMany
     {
-        return $this->hasMany(AttributeOption::class);
+        return $this->hasMany(AttributeOption::class)->orderBy('sort');
     }
 }

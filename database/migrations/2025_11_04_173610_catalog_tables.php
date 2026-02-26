@@ -171,7 +171,7 @@ return new class extends Migration
          *
          * API Contract
          * - Client uses short keys for owner_type:
-         *     product | category | collection
+         *     product | category | collection | attribute.
          * - DB stores owner_type as fully-qualified model class:
          *     App\Models\Product, ...
          *
@@ -179,6 +179,7 @@ return new class extends Migration
          * - product:   thumbnail, gallery, hero, og_image
          * - category:  thumbnail, hero, og_image
          * - collection: thumbnail, hero, og_image
+         * - attribute: thumbnail
          *
          * Ordering + Primary
          * - position is server-controlled for ordered roles (gallery).
@@ -303,7 +304,7 @@ return new class extends Migration
             $table->string('name'); // Admin-facing label
             $table->string('surface', 50)->default('home'); // Used for grouping/admin UX (home, plp, pdp, etc.)
 
-            $table->enum('item_type', ['product', 'collection', 'category']); // Homogeneous constraint
+            $table->enum('item_type', ['product', 'collection', 'category', 'attribute']); // Homogeneous constraint; "attribute" points to attribute_options.id
             $table->enum('mode', ['curated', 'query'])->default('curated'); // Unified system with two strategies
             $table->unsignedSmallInteger('default_limit')->default(8); // Default item count returned to storefront
             $table->string('country_code', 2)->nullable(); // Optional country scoping (StoreContext country code)
@@ -328,7 +329,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('merch_section_id')->constrained('merch_sections')->cascadeOnDelete();
 
-            $table->enum('item_type', ['product', 'collection', 'category']); // Repeated for safety; must match section.item_type
+            $table->enum('item_type', ['product', 'collection', 'category', 'attribute']); // Repeated for safety; for "attribute", item_id maps to attribute_options.id
             $table->unsignedBigInteger('item_id');
             $table->unsignedSmallInteger('position')->default(1); // Ordered list for curated mode
             $table->boolean('active')->default(true);

@@ -31,7 +31,9 @@ class AttributeOptionController extends Controller
 
     public function indexByAttribute(Attribute $attribute, Request $request)
     {
-        $query = $this->options->query()->where('attribute_id', $attribute->id);
+        $query = $this->options->query()
+            ->where('attribute_id', $attribute->id)
+            ->with(['attribute', 'thumbnailMedia.asset.renditions']);
         $query = $this->applySorting($query, $request);
 
         return AttributeOptionResource::collection($query->get());
@@ -41,12 +43,16 @@ class AttributeOptionController extends Controller
     {
         $option = $this->options->create($request->validated());
 
+        $option->loadMissing(['attribute', 'thumbnailMedia.asset.renditions']);
+
         return AttributeOptionResource::make($option)->response()->setStatusCode(201);
     }
 
     public function update(AttributeOptionRequest $request, AttributeOption $attributeOption)
     {
         $attributeOption->update($request->validated());
+
+        $attributeOption->loadMissing(['attribute', 'thumbnailMedia.asset.renditions']);
 
         return AttributeOptionResource::make($attributeOption);
     }

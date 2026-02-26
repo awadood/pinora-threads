@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Catalog;
 
+use App\Http\Resources\Media\MediaAttachmentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -20,6 +21,14 @@ class AttributeOptionResource extends JsonResource
             'sort' => $this->sort,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            'attribute' => $this->whenLoaded('attribute', fn () => [
+                'id' => $this->attribute?->id,
+                'code' => $this->attribute?->code,
+                'label' => $this->attribute?->label,
+            ]),
+
+            'thumbnail_media' => MediaAttachmentResource::make($this->whenLoaded('thumbnailMedia')),
         ];
     }
 }

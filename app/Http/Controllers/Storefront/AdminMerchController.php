@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Supported features:
  * - CRUD sections
- * - Assign curated items (products/collections/categories) with ordering
+ * - Assign curated items (products/collections/categories/attribute options) with ordering
  * - Configure query-mode sections by submitting PLP-style query params
  *
  * Locked rules:

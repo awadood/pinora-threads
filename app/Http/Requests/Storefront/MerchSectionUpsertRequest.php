@@ -29,7 +29,7 @@ class MerchSectionUpsertRequest extends FormRequest
             'name' => ['required', 'string', 'max:160'],
             'surface' => ['sometimes', 'string', 'max:50'],
 
-            'item_type' => ['required', Rule::in(['product', 'collection', 'category'])],
+            'item_type' => ['required', Rule::in(['product', 'collection', 'category', 'attribute'])],
             'mode' => ['required', Rule::in(['curated', 'query'])],
 
             'default_limit' => ['sometimes', 'integer', 'min:1', 'max:50'],

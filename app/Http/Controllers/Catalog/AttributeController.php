@@ -31,7 +31,7 @@ class AttributeController extends Controller
     public function index(Request $request)
     {
         $query = $this->applySorting(
-            $this->applyFilters($this->attributes->query()->with('options'), $request),
+            $this->applyFilters($this->attributes->query()->with('options.thumbnailMedia.asset.renditions'), $request),
             $request
         );
 
@@ -40,6 +40,8 @@ class AttributeController extends Controller
 
     public function show(Attribute $attribute)
     {
+        $attribute->loadMissing('options.thumbnailMedia.asset.renditions');
+
         return AttributeResource::make($attribute);
     }
 

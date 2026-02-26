@@ -45,8 +45,11 @@ class CatalogSeeder extends Seeder
             // 7) Media assets + attachments + renditions (deterministic)
             $this->seedMediaSystem($collections, $products);
 
-            // 8) Merchandising sections (Featured, New Arrivals, etc.)
-            $this->seedMerchSections($products, $collections, $cat);
+            // 8) Attribute-option media used by attribute-based merch sections
+            $this->seedMerchAttributeOptionMedia($attrs);
+
+            // 9) Merchandising sections (Featured, New Arrivals, etc.)
+            $this->seedMerchSections($products, $collections, $cat, $attrs);
         });
     }
 
@@ -696,6 +699,34 @@ class CatalogSeeder extends Seeder
         }
     }
 
+    private function seedMerchAttributeOptionMedia(array $attrs): void
+    {
+        $ownerAttributeOption = 'App\\Models\\AttributeOption';
+        $attributeCodes = ['fabric', 'occasion'];
+
+        foreach ($attributeCodes as $attributeCode) {
+            $attributeId = (int) ($attrs['attr'][$attributeCode] ?? 0);
+            if ($attributeId <= 0) {
+                continue;
+            }
+
+            $options = DB::table('attribute_options')
+                ->where('attribute_id', $attributeId)
+                ->orderBy('sort')
+                ->get(['id', 'value']);
+
+            foreach ($options as $option) {
+                $optionId = (int) $option->id;
+                $optionSlug = Str::slug((string) $option->value);
+
+                $thumbAssetId = $this->getOrCreateImageAsset("attribute-options/{$attributeCode}/{$optionSlug}/thumbnail");
+
+                $this->attachMedia($thumbAssetId, $ownerAttributeOption, $optionId, 'thumbnail', 1, true);
+                $this->ensureRenditionsForRole($thumbAssetId, $ownerAttributeOption, 'thumbnail');
+            }
+        }
+    }
+
     private function getOrCreateImageAsset(string $seedPath): int
     {
         // Deterministic disk+key so reruns do not create orphaned assets.
@@ -753,6 +784,10 @@ class CatalogSeeder extends Seeder
         }
 
         if ($ownerType === 'App\\Models\\Category' || $ownerType === 'App\\Models\\Collection') {
+            return ['thumb_sm', 'plp_480w'];
+        }
+
+        if ($ownerType === 'App\\Models\\AttributeOption') {
             return ['thumb_sm', 'plp_480w'];
         }
 
@@ -817,7 +852,7 @@ class CatalogSeeder extends Seeder
         ]);
     }
 
-    private function seedMerchSections(array $products, array $collections, array $cat): void
+    private function seedMerchSections(array $products, array $collections, array $cat, array $attrs): void
     {
         $codes = $this->curatedMerchSectionCodes();
         $sections = DB::table('merch_sections')
@@ -896,6 +931,31 @@ class CatalogSeeder extends Seeder
                         'merch_section_id' => $sectionId,
                         'item_type' => 'category',
                         'item_id' => (int) $cid,
+                        'position' => $pos,
+                        'active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $pos++;
+                }
+
+                continue;
+            }
+
+            if ($section->item_type === 'attribute') {
+                // item_id stores attribute_options.id for curated attribute-option sections.
+                $items = match ($section->code) {
+                    'home_shop_by_fabric' => array_slice(array_values($attrs['opt']['fabric'] ?? []), 0, $limit),
+                    'home_shop_by_occasion' => array_slice(array_values($attrs['opt']['occasion'] ?? []), 0, $limit),
+                    default => [],
+                };
+
+                $pos = 1;
+                foreach ($items as $optionId) {
+                    DB::table('merch_section_items')->insertOrIgnore([
+                        'merch_section_id' => $sectionId,
+                        'item_type' => 'attribute',
+                        'item_id' => (int) $optionId,
                         'position' => $pos,
                         'active' => true,
                         'created_at' => now(),

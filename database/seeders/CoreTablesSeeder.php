@@ -233,9 +233,9 @@ class CoreTablesSeeder extends Seeder
             ],
             [
                 'code' => 'home_shop_by_occasion',
-                'name' => 'Shop by Type',
+                'name' => 'Shop by Occasion',
                 'surface' => 'home',
-                'item_type' => 'category',
+                'item_type' => 'attribute', // item_id in merch_section_items refers to attribute_options.id
                 'mode' => 'curated',
                 'default_limit' => 6,
                 'country_code' => null,
@@ -245,9 +245,9 @@ class CoreTablesSeeder extends Seeder
             ],
             [
                 'code' => 'home_shop_by_fabric',
-                'name' => 'Shop by Type',
+                'name' => 'Shop by Fabric',
                 'surface' => 'home',
-                'item_type' => 'category',
+                'item_type' => 'attribute', // item_id in merch_section_items refers to attribute_options.id
                 'mode' => 'curated',
                 'default_limit' => 6,
                 'country_code' => null,

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Resources\Catalog\CategoryResource;
 use App\Http\Resources\Catalog\CollectionResource;
 use App\Http\Resources\Catalog\ProductResource;
+use App\Http\Resources\Catalog\AttributeOptionResource;
+use App\Models\AttributeOption;
 use App\Models\Category;
 use App\Models\Collection;
 use App\Models\MerchSection;
@@ -35,6 +37,7 @@ use Illuminate\Routing\Controller;
  * - item_type=product supports curated + query
  * - item_type=collection supports curated only
  * - item_type=category supports curated only
+ * - item_type=attribute supports curated only (item_id references attribute_options.id)
  *
  * @author Abdul Wadood
  */
@@ -99,6 +102,21 @@ class StoreMerchController extends Controller
             return response()->json([
                 'section' => $this->sectionPayload($section),
                 'categories' => CategoryResource::collection($categories),
+            ]);
+        }
+
+        if ($section->item_type === 'attribute') {
+            if ($section->mode !== 'curated') {
+                return response()->json([
+                    'message' => "Section mode='{$section->mode}' not supported for item_type='attribute'.",
+                ], 422);
+            }
+
+            $attributeOptionItems = $this->resolveCuratedAttributeOptions($section, $limit);
+
+            return response()->json([
+                'section' => $this->sectionPayload($section),
+                'attribute_options' => AttributeOptionResource::collection($attributeOptionItems),
             ]);
         }
 
@@ -295,6 +313,46 @@ class StoreMerchController extends Controller
                 'thumbnailMedia.asset.renditions',
                 'heroMedia.asset.renditions',
             ])
+            ->get()
+            ->keyBy('id');
+
+        // Preserve curated order
+        $out = [];
+        foreach ($ids as $id) {
+            if (isset($rows[$id])) {
+                $out[] = $rows[$id];
+            }
+        }
+
+        return collect($out);
+    }
+
+    /**
+     * Curated attribute options (v1).
+     *
+     * Rule:
+     * - Order is preserved by merch_section_items.position.
+     * - Only options belonging to active attributes are returned.
+     */
+    private function resolveCuratedAttributeOptions(MerchSection $section, int $limit)
+    {
+        $ids = $section->items()
+            ->where('active', true)
+            ->orderBy('position')
+            ->limit($limit)
+            ->pluck('item_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        if (count($ids) === 0) {
+            return collect();
+        }
+
+        $rows = AttributeOption::query()
+            ->whereIn('id', $ids)
+            ->whereHas('attribute', fn ($q) => $q->where('active', true))
+            ->with(['attribute', 'thumbnailMedia.asset.renditions'])
             ->get()
             ->keyBy('id');
 

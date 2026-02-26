@@ -20,11 +20,12 @@ final class OwnerTypeResolver
             'product' => \App\Models\Product::class,
             'category' => \App\Models\Category::class,
             'collection' => \App\Models\Collection::class,
+            'attribute_option' => \App\Models\AttributeOption::class,
         ];
     }
 
     /**
-     * Normalize the client key (product/category/collection)
+     * Normalize the client key (product/category/collection/attribute_option)
      */
     public static function normalizeKey(string $ownerTypeKey): string
     {
@@ -32,7 +33,7 @@ final class OwnerTypeResolver
 
         if ($key === '' || ! Arr::exists(self::allowed(), $key)) {
             throw ValidationException::withMessages([
-                'owner_type' => 'Invalid owner_type. Allowed: product, category, collection.',
+                'owner_type' => 'Invalid owner_type. Allowed: product, category, collection, attribute_option.',
             ]);
         }
 
@@ -67,6 +68,7 @@ final class OwnerTypeResolver
             'product' => ['thumbnail', 'gallery', 'hero', 'og_image'],
             'category' => ['thumbnail', 'hero', 'og_image'],
             'collection' => ['hero', 'og_image'],
+            'attribute_option' => ['thumbnail'],
         ];
     }
 

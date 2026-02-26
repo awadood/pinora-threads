@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Represents a selectable value for an attribute (e.g., Red, XL).
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AttributeOption extends AbstractLoggableModel
 {
+    use HasMedia;
+
     protected $fillable = [
         'attribute_id',
         'value',
@@ -34,5 +38,10 @@ class AttributeOption extends AbstractLoggableModel
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class);
+    }
+
+    public function thumbnailMedia(): MorphOne
+    {
+        return $this->primaryMediaForRole('thumbnail');
     }
 }
