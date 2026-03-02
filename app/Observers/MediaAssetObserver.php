@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Jobs\Media\GenerateMediaRenditionsJob;
+use App\Jobs\GenerateMediaRenditionsJob;
 use App\Models\MediaAsset;
 
 class MediaAssetObserver
