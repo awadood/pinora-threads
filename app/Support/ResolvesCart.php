@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  *
  * Currency resolution is currently simplified:
  *  - If X-Currency-Code is provided and valid, use it.
- *  - Else, map Cloudflare CF-IPCountry header to currency:
+ *  - Else, map CloudFront-Viewer-Country header to currency:
  *      PK -> PKR
  *      US -> USD
  *  - Else default to PKR.
@@ -73,7 +73,7 @@ trait ResolvesCart
             return $headerCurrency;
         }
 
-        $country = $request->header('CF-IPCountry');
+        $country = strtoupper(trim((string) $request->header('CloudFront-Viewer-Country', '')));
 
         return match ($country) {
             'PK' => 'PKR',

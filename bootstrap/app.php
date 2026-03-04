@@ -30,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->appendToGroup('api', [\App\Http\Middleware\ResolveStoreContext::class]);
 
-        // geoip country identification if cloudfront is in front of app - two headers for/proto are more than enough
+        // If CloudFront/proxy is in front of app, trust forwarded headers as needed.
         // $middleware->trustProxies('127.0.0.1', Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -3,8 +3,6 @@
 namespace App\Support\Storefront;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use MaxMind\Db\Reader;
 
 final class StoreContextResolver
 {
@@ -32,10 +30,10 @@ final class StoreContextResolver
             }
         }
 
-        // 3) GeoIP best-effort
-        $geoCountry = $this->resolveCountryByGeoIp($request);
-        if ($geoCountry !== null && $this->isAllowedCountry($geoCountry)) {
-            return new StoreContext($geoCountry, $this->countryToCurrency($geoCountry), 'geoip');
+        // 3) CloudFront viewer country header (best-effort)
+        $cloudFrontCountry = $this->resolveCountryByCloudFrontHeader($request);
+        if ($cloudFrontCountry !== null && $this->isAllowedCountry($cloudFrontCountry)) {
+            return new StoreContext($cloudFrontCountry, $this->countryToCurrency($cloudFrontCountry), 'cloudfront');
         }
 
         // 4) Defaults
@@ -109,38 +107,15 @@ final class StoreContextResolver
         ];
     }
 
-    private function resolveCountryByGeoIp(Request $request): ?string
+    private function resolveCountryByCloudFrontHeader(Request $request): ?string
     {
-        $ip = $request->ip() ?? '0.0.0.0';
+        $country = strtoupper(trim((string) $request->header('CloudFront-Viewer-Country', '')));
 
-        // Skip private/local IPs
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        if ($country === '' || strlen($country) !== 2 || ! ctype_alpha($country)) {
             return null;
         }
 
-        $cacheTtl = (int) config('storefront.geoip_cache_ttl_minutes', 60);
-        $cacheKey = 'geoip_country:'.$ip;
-
-        return Cache::remember($cacheKey, now()->addMinutes($cacheTtl), function () use ($ip) {
-            $dbPath = (string) config('storefront.geoip_db_path');
-            if (! is_file($dbPath)) {
-                return null;
-            }
-
-            try {
-                $reader = new Reader($dbPath);
-                $record = $reader->get($ip);
-
-                $iso = $record['country']['iso_code'] ?? null;
-                if (! is_string($iso) || strlen($iso) !== 2) {
-                    return null;
-                }
-
-                return strtoupper($iso);
-            } catch (\Throwable $e) {
-                return null;
-            }
-        });
+        return $country;
     }
 
     private function isAllowedCountry(string $country): bool
