@@ -37,8 +37,8 @@ class CheckoutRequest extends FormRequest
             'shipping_address.state' => ['nullable', 'string', 'max:255'],
             'shipping_address.postal_code' => ['nullable', 'string', 'max:20'],
             'shipping_address.country_code' => ['required_unless:shipping_method_code,pickup', 'string', 'size:2'],
-            'billing_address_id' => ['nullable', 'integer', 'exists:addresses,id'],
-            'shipping_address_id' => ['nullable', 'integer', 'exists:addresses,id'],
+            'billing_address_id' => ['nullable', 'integer', 'exists:customer_addresses,id'],
+            'shipping_address_id' => ['nullable', 'integer', 'exists:customer_addresses,id'],
             'payment_method' => ['nullable', 'string', 'max:50'],
             'shipping_method_code' => ['nullable', 'string', 'exists:shipment_methods,code'],
         ];

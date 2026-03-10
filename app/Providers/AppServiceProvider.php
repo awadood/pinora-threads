@@ -27,13 +27,13 @@ use App\Repositories\Catalog\PlpRepository;
 use App\Repositories\Catalog\ProductBundleRepository;
 use App\Repositories\Catalog\ProductPriceRepository;
 use App\Repositories\Catalog\ProductRepository;
-use App\Repositories\Customer\AddressRepository;
-use App\Repositories\Customer\Contracts\IAddressRepository;
-use App\Repositories\Customer\Contracts\ICustomerProfileRepository;
+use App\Repositories\Customer\CustomerAddressRepository;
+use App\Repositories\Customer\Contracts\ICustomerAddressRepository;
+use App\Repositories\Customer\Contracts\ICustomerAccountRepository;
 use App\Repositories\Customer\Contracts\IRecentlyViewedRepository;
 use App\Repositories\Customer\Contracts\IWishlistItemRepository;
 use App\Repositories\Customer\Contracts\IWishlistRepository;
-use App\Repositories\Customer\CustomerProfileRepository;
+use App\Repositories\Customer\CustomerAccountRepository;
 use App\Repositories\Customer\RecentlyViewedRepository;
 use App\Repositories\Customer\WishlistItemRepository;
 use App\Repositories\Customer\WishlistRepository;
@@ -119,8 +119,8 @@ class AppServiceProvider extends ServiceProvider
         ICollectionProductRepository::class => CollectionProductRepository::class,
 
         // Customer
-        IAddressRepository::class => AddressRepository::class,
-        ICustomerProfileRepository::class => CustomerProfileRepository::class,
+        ICustomerAddressRepository::class => CustomerAddressRepository::class,
+        ICustomerAccountRepository::class => CustomerAccountRepository::class,
         IRecentlyViewedRepository::class => RecentlyViewedRepository::class,
         IWishlistItemRepository::class => WishlistItemRepository::class,
         IWishlistRepository::class => WishlistRepository::class,

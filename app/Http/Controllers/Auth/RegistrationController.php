@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Rules\PhoneNumberRule;
+use App\Models\CustomerStat;
 use App\Models\CustomerGroup;
-use App\Models\CustomerProfile;
+use App\Models\CustomerAccount;
 use App\Models\User;
 use App\Support\Constant;
 use Illuminate\Auth\Events\Registered;
@@ -40,13 +41,16 @@ class RegistrationController extends Controller
 
         // $user->assignRole('customer'); // Optional
 
-        CustomerProfile::firstOrCreate([
+        CustomerAccount::firstOrCreate([
             'user_id' => $user->id,
         ], [
-            'tax_class_id' => 1,      // safe default
-            'preferred_currency' => 'PKR',  // or infer from locale
+            'preferred_currency' => strtoupper((string) config('storefront.default_currency', 'PKR')),
             'marketing_email_opt_in' => false,
             'marketing_sms_opt_in' => false,
+        ]);
+
+        CustomerStat::firstOrCreate([
+            'user_id' => $user->id,
         ]);
         // event(new Registered($user)); // Fire Registered event (hooks for emails/analytics)
         // $user->sendEmailVerificationNotification(); //Optional - how to handle notifications

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Order;
 
-use App\Http\Resources\Catalog\ProductResource;
 use App\Support\Media\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

@@ -7,6 +7,8 @@ use App\Models\Traits\MustVerifyPhone;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -75,5 +77,20 @@ class User extends Authenticatable
     public function customerGroups(): BelongsToMany
     {
         return $this->belongsToMany(CustomerGroup::class)->withTimestamps();
+    }
+
+    public function customerAccount(): HasOne
+    {
+        return $this->hasOne(CustomerAccount::class);
+    }
+
+    public function customerAddresses(): HasMany
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    public function customerStat(): HasOne
+    {
+        return $this->hasOne(CustomerStat::class);
     }
 }

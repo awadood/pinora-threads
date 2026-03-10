@@ -54,8 +54,8 @@ return new class extends Migration
              */
             $table->enum('claim_status', ['new', 'pending', 'claimed']);
             $table->string('order_status_code')->default(OrderStatus::PENDING);
-            $table->foreignId('billing_address_id')->nullable()->constrained('addresses');
-            $table->foreignId('shipping_address_id')->nullable()->constrained('addresses');
+            $table->foreignId('billing_address_id')->nullable()->constrained('customer_addresses');
+            $table->foreignId('shipping_address_id')->nullable()->constrained('customer_addresses');
             $table->jsonb('shipping_address')->nullable();
             $table->jsonb('billing_address')->nullable();
 

@@ -29,4 +29,3 @@ final class MediaUrl
         return $base.'/'.ltrim($raw, '/');
     }
 }
-

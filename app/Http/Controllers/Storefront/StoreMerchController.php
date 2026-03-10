@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Http\Resources\Catalog\AttributeOptionResource;
 use App\Http\Resources\Catalog\CategoryResource;
 use App\Http\Resources\Catalog\CollectionResource;
 use App\Http\Resources\Catalog\ProductResource;
-use App\Http\Resources\Catalog\AttributeOptionResource;
 use App\Models\AttributeOption;
 use App\Models\Category;
 use App\Models\Collection;

@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @author Abdul Wadood
  */
-class Address extends AbstractLoggableModel
+class CustomerAddress extends AbstractLoggableModel
 {
+    protected $table = 'customer_addresses';
+
     protected $fillable = [
         'user_id',
         'label',
@@ -22,22 +24,7 @@ class Address extends AbstractLoggableModel
         'postal_code',
         'country_code',
         'phone',
-        'default_shipping',
-        'default_billing',
     ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'default_shipping' => 'boolean',
-            'default_billing' => 'boolean',
-        ];
-    }
 
     // Lifecycle
 

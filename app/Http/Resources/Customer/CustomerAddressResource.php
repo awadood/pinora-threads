@@ -5,14 +5,24 @@ namespace App\Http\Resources\Customer;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * AddressResource
+ * CustomerAddressResource
  *
  * @author Abdul Wadood
  */
-class AddressResource extends JsonResource
+class CustomerAddressResource extends JsonResource
 {
     public function toArray($request): array
     {
+        $defaultShippingAddressId = $request?->attributes?->get('default_shipping_address_id');
+        $defaultBillingAddressId = $request?->attributes?->get('default_billing_address_id');
+
+        $defaultShipping = $defaultShippingAddressId !== null
+            ? (int) $this->id === (int) $defaultShippingAddressId
+            : (bool) ($this->default_shipping ?? false);
+        $defaultBilling = $defaultBillingAddressId !== null
+            ? (int) $this->id === (int) $defaultBillingAddressId
+            : (bool) ($this->default_billing ?? false);
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -25,8 +35,8 @@ class AddressResource extends JsonResource
             'postal_code' => $this->postal_code,
             'country_code' => $this->country_code,
             'phone' => $this->phone,
-            'default_shipping' => $this->default_shipping,
-            'default_billing' => $this->default_billing,
+            'default_shipping' => $defaultShipping,
+            'default_billing' => $defaultBilling,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

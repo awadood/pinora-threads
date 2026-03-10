@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\Address;
+use App\Models\CustomerAddress;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * AddressFactory
+ * CustomerAddressFactory
  */
-class AddressFactory extends Factory
+class CustomerAddressFactory extends Factory
 {
-    protected $model = Address::class;
+    protected $model = CustomerAddress::class;
 
     public function definition(): array
     {
@@ -25,8 +25,6 @@ class AddressFactory extends Factory
             'postal_code' => fake()->postcode(),
             'country_code' => fake()->randomElement(['US', 'PK']),
             'phone' => fake()->optional()->e164PhoneNumber(),
-            'default_shipping' => false,
-            'default_billing' => false,
         ];
     }
 }

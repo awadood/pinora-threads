@@ -17,11 +17,11 @@ return [
         'order_statuses' => [
             ['code' => 'pending',   'name' => 'Pending',   'sort_order' => 10],
             ['code' => 'paid',      'name' => 'Paid',      'sort_order' => 20],
-            ['code' => 'picking',   'name' => 'Picking',   'sort_order' => 30],
-            ['code' => 'shipped',   'name' => 'Shipped',   'sort_order' => 40],
-            ['code' => 'delivered', 'name' => 'Delivered', 'sort_order' => 50],
-            ['code' => 'closed',    'name' => 'Closed',    'sort_order' => 60],
-            ['code' => 'cancelled', 'name' => 'Cancelled', 'sort_order' => 70],
+            ['code' => 'shipped',   'name' => 'Shipped',   'sort_order' => 30],
+            ['code' => 'delivered', 'name' => 'Delivered', 'sort_order' => 40],
+            ['code' => 'closed',    'name' => 'Closed',    'sort_order' => 50],
+            ['code' => 'cancelled', 'name' => 'Cancelled', 'sort_order' => 60],
+            ['code' => 'returned',  'name' => 'Returned',  'sort_order' => 70],
             ['code' => 'refunded',  'name' => 'Refunded',  'sort_order' => 80],
         ],
 

@@ -2,24 +2,25 @@
 
 namespace Database\Factories;
 
-use App\Models\CustomerProfile;
+use App\Models\CustomerAccount;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * CustomerProfileFactory
+ * CustomerAccountFactory
  */
-class CustomerProfileFactory extends Factory
+class CustomerAccountFactory extends Factory
 {
-    protected $model = CustomerProfile::class;
+    protected $model = CustomerAccount::class;
 
     public function definition(): array
     {
         return [
             'user_id' => \App\Models\User::factory(),
-            'tax_class_id' => \App\Models\TaxClass::factory(),
             'marketing_email_opt_in' => fake()->boolean(),
             'marketing_sms_opt_in' => fake()->boolean(),
             'preferred_currency' => fake()->randomElement(['USD', 'PKR']),
+            'default_shipping_address_id' => null,
+            'default_billing_address_id' => null,
         ];
     }
 }

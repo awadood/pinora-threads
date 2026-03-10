@@ -17,7 +17,7 @@ class CustomerSeeder extends Seeder
     {
         DB::transaction(function () {
             $this->seedUsersAndGroups();
-            $this->seedProfilesAndAddresses();
+            $this->seedAccountsAndCustomerAddresses();
         });
     }
 
@@ -63,35 +63,10 @@ class CustomerSeeder extends Seeder
         }
     }
 
-    protected function seedProfilesAndAddresses(): void
+    protected function seedAccountsAndCustomerAddresses(): void
     {
-        // Profiles
-        DB::table('customer_profiles')->updateOrInsert(
-            ['user_id' => $this->usUserId],
-            [
-                'tax_class_id' => 1,
-                'marketing_email_opt_in' => true,
-                'marketing_sms_opt_in' => false,
-                'preferred_currency' => 'USD',
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
-
-        DB::table('customer_profiles')->updateOrInsert(
-            ['user_id' => $this->pkUserId],
-            [
-                'tax_class_id' => 1,
-                'marketing_email_opt_in' => false,
-                'marketing_sms_opt_in' => true,
-                'preferred_currency' => 'PKR',
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
-
-        // Addresses
-        DB::table('addresses')->updateOrInsert(
+        // Customer addresses
+        DB::table('customer_addresses')->updateOrInsert(
             ['user_id' => $this->usUserId, 'label' => 'Home'],
             [
                 'name' => 'US Customer',
@@ -102,14 +77,12 @@ class CustomerSeeder extends Seeder
                 'postal_code' => '94105',
                 'country_code' => 'US',
                 'phone' => '+14155550100',
-                'default_shipping' => true,
-                'default_billing' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
         );
 
-        DB::table('addresses')->updateOrInsert(
+        DB::table('customer_addresses')->updateOrInsert(
             ['user_id' => $this->pkUserId, 'label' => 'Home'],
             [
                 'name' => 'PK Customer',
@@ -120,10 +93,77 @@ class CustomerSeeder extends Seeder
                 'postal_code' => null,
                 'country_code' => 'PK',
                 'phone' => '+923001112222',
-                'default_shipping' => true,
-                'default_billing' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
+            ]
+        );
+
+        $usAddressId = DB::table('customer_addresses')
+            ->where('user_id', $this->usUserId)
+            ->where('label', 'Home')
+            ->value('id');
+        $pkAddressId = DB::table('customer_addresses')
+            ->where('user_id', $this->pkUserId)
+            ->where('label', 'Home')
+            ->value('id');
+
+        // Accounts
+        DB::table('customer_accounts')->updateOrInsert(
+            ['user_id' => $this->usUserId],
+            [
+                'marketing_email_opt_in' => true,
+                'marketing_email_consented_at' => now()->subDays(20),
+                'marketing_email_revoked_at' => null,
+                'marketing_email_consent_ip' => '127.0.0.1',
+                'marketing_email_consent_source' => 'seed',
+                'marketing_sms_opt_in' => false,
+                'marketing_sms_consented_at' => null,
+                'marketing_sms_revoked_at' => now()->subDays(10),
+                'marketing_sms_consent_ip' => '127.0.0.1',
+                'marketing_sms_consent_source' => 'seed',
+                'preferred_currency' => 'USD',
+                'default_shipping_address_id' => $usAddressId,
+                'default_billing_address_id' => $usAddressId,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        DB::table('customer_accounts')->updateOrInsert(
+            ['user_id' => $this->pkUserId],
+            [
+                'marketing_email_opt_in' => false,
+                'marketing_email_consented_at' => null,
+                'marketing_email_revoked_at' => now()->subDays(15),
+                'marketing_email_consent_ip' => '127.0.0.1',
+                'marketing_email_consent_source' => 'seed',
+                'marketing_sms_opt_in' => true,
+                'marketing_sms_consented_at' => now()->subDays(7),
+                'marketing_sms_revoked_at' => null,
+                'marketing_sms_consent_ip' => '127.0.0.1',
+                'marketing_sms_consent_source' => 'seed',
+                'preferred_currency' => 'PKR',
+                'default_shipping_address_id' => $pkAddressId,
+                'default_billing_address_id' => $pkAddressId,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        // Stats
+        DB::table('customer_stats')->updateOrInsert(
+            ['user_id' => $this->usUserId],
+            [
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        DB::table('customer_stats')->updateOrInsert(
+            ['user_id' => $this->pkUserId],
+            [
+                'updated_at' => now(),
+                'created_at' => now(),
             ]
         );
     }

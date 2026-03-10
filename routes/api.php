@@ -32,8 +32,8 @@ use App\Http\Controllers\Core\ShipmentMethodController;
 use App\Http\Controllers\Core\ShipmentStatusController;
 use App\Http\Controllers\Core\StateController;
 use App\Http\Controllers\Core\StockMovementTypeController;
-use App\Http\Controllers\Customer\AddressController;
-use App\Http\Controllers\Customer\CustomerProfileController;
+use App\Http\Controllers\Customer\CustomerAddressController;
+use App\Http\Controllers\Customer\CustomerAccountController;
 use App\Http\Controllers\Customer\RecentlyViewedController;
 use App\Http\Controllers\Customer\WishlistController;
 use App\Http\Controllers\Customer\WishlistItemController;
@@ -195,6 +195,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])->middleware('throttle:6,1');
     Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1']);
     Route::get('/user', [AuthController::class, 'user']); // Who am I
+    Route::put('/user', [AuthController::class, 'updateUser']);
+    Route::put('/user/password', [AuthController::class, 'updatePassword']);
 
     // Activity logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index']);      // list + filters
@@ -383,15 +385,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Customer profile (1–1 with user)
-    Route::get('customer/profile', [CustomerProfileController::class, 'show']);
-    Route::put('customer/profile', [CustomerProfileController::class, 'upsert']);
+    // Customer account (1-1 with user)
+    Route::get('customer/account', [CustomerAccountController::class, 'show']);
+    Route::put('customer/account', [CustomerAccountController::class, 'upsert']);
 
     // Addresses for current user
-    Route::get('addresses', [AddressController::class, 'index']);
-    Route::post('addresses', [AddressController::class, 'store']);
-    Route::put('addresses/{address}', [AddressController::class, 'update']);
-    Route::delete('addresses/{address}', [AddressController::class, 'destroy']);
+    Route::get('addresses', [CustomerAddressController::class, 'index']);
+    Route::post('addresses', [CustomerAddressController::class, 'store']);
+    Route::put('addresses/{address}', [CustomerAddressController::class, 'update']);
+    Route::delete('addresses/{address}', [CustomerAddressController::class, 'destroy']);
 
     // Wishlists for current user
     Route::get('wishlists', [WishlistController::class, 'index']);
